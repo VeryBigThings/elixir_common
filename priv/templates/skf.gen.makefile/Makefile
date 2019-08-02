@@ -4,10 +4,11 @@
 	test_ci \
 	compile \
 	capture-backup \
-	latest.dump \
 	import-latest-db \
-	seed-db reset-db \
-	reseed-db set-remotes \
+	seed-db \
+	reset-db \
+	reseed-db \
+	set-remotes \
 	devstack \
 	devstack-build \
 	devstack-clean \
@@ -16,19 +17,14 @@
 
 DEFAULT_GOAL: help
 
-<%= if cloud == "heroku" do %>
-DEVELOPMENT?=https://git.heroku.com/<%= app %>_backend-develop.git
-STAGING?=https://git.heroku.com/<%= app %>_backend-stage.git
-PRODUCTION?=https://git.heroku.com/<%= app %>_backend-prod.git
-<% end %>
-
+# TODO read database name from Mix.Config
 PGDATABASE?=<%= app %>_backend_dev
 
 export LOCAL_USER_ID ?= $(shell id -u $$USER)
 
-# ============= #
-# POOR MANS CLI #
-# ============= #
+# -------------------
+# --- DEFINITIONS ---
+# -------------------
 
 require-%:
 	@ if [ "${${*}}" = "" ]; then \
@@ -36,14 +32,12 @@ require-%:
 		exit 1; \
 	fi
 
+# -----------------
+# --- MIX TASKS ---
+# -----------------
+
 dev:
 	@MIX_ENV=dev mix ecto.setup && iex -S mix phx.server 
-
-heroku-console:
-	@MIX_ENV=dev heroku run "iex -S mix" --remote develop
-	
-heroku-logs:
-	@MIX_ENV=dev heroku logs --tail --remote develop
 
 test:
 	@MIX_ENV=test mix test
@@ -51,34 +45,57 @@ test:
 compile:
 	@mix do deps.get, compile
 
-capture-backup: require-REMOTE
-	heroku pg:backups:capture --remote ${REMOTE}
-
-latest.dump: require-REMOTE
-	heroku pg:backups:download --remote ${REMOTE}
-
-import-latest-db: require-PGDATABASE latest.dump
-	dropdb --if-exists ${PGDATABASE} && \
-	createdb ${PGDATABASE} && \
-	pg_restore --verbose --clean --no-acl --no-owner --dbname=${PGDATABASE} latest.dump
-
 reset-db:
-	mix do ecto.reset
+	@mix do ecto.reset
 
 seed-db:
-	mix seed
+	@mix seed
 
 reseed-db: reset-db seed-db
 
+<%= if cloud && cloud == "heroku" do %>
+# --------------
+# --- HEROKU ---
+#  -------------
+
+DEVELOPMENT?=https://git.heroku.com/<%= app %>_backend-develop.git
+STAGING?=https://git.heroku.com/<%= app %>_backend-stage.git
+PRODUCTION?=https://git.heroku.com/<%= app %>_backend-prod.git
+
+## Set Heroku remotes
 set-remotes: require-DEVELOPMENT require-STAGING require-PRODUCTION
-	@git remote rm development || true
-	@git remote rm staging || true
-	@git remote rm production || true
-	git remote add development ${DEVELOPMENT}
-	git remote add staging ${STAGING}
-	git remote add production ${PRODUCTION}
+	@git remote rm development || true && git remote add development ${DEVELOPMENT}
+	@git remote rm staging || true && git remote add staging ${STAGING}
+	@git remote rm production || true && git remote add production ${PRODUCTION}
 
 
+## Attach to IEx console on Heroku {REMOTE}
+heroku-console: require-REMOTE
+	@MIX_ENV=dev heroku run "iex -S mix" --remote ${REMOTE}
+	
+## Show (and tail) Heroku logs from given {REMOTE}
+heroku-logs: require-REMOTE
+	@MIX_ENV=dev heroku logs --tail --remote ${REMOTE}
+
+## Backup database on given Heroku {REMOTE}
+heroku-capture-backup: require-REMOTE
+	heroku pg:backups:capture --remote ${REMOTE}
+
+## Pull latest database backup from Heroku {REMOTE}
+heroku-latest.dump: require-REMOTE
+	heroku pg:backups:download --remote ${REMOTE}
+
+import-latest-db: require-PGDATABASE heroku-latest.dump
+	dropdb --if-exists ${PGDATABASE} && \
+	createdb ${PGDATABASE} && \
+	pg_restore --verbose --clean --no-acl --no-owner --dbname=${PGDATABASE} heroku-latest.dump
+
+## Deploy to Heroku (CI task)
+heroku-ci-deploy: require-CIRCLE_BRANCH require-HEROKU_API_KEY require-HEROKU_APP_NAME
+	@git push --force https://heroku:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git ${CIRCLE_BRANCH}:master
+<% end %>
+
+<%= if docker do %>
 # -----------------------
 # --- DOCKER DEVSTACK ---
 # -----------------------
@@ -105,14 +122,11 @@ devstack-run:
 		docker-compose exec web mix deps.get && \
 		docker-compose exec web mix ecto.setup && \
 		docker-compose exec web iex -S mix phx.server
+<% end %>
 
-## Git push code to heroku
-heroku-deploy: require-CIRCLE_BRANCH require-HEROKU_API_KEY require-HEROKU_APP_NAME
-	@git push --force https://heroku:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git ${CIRCLE_BRANCH}:master
-
-#
-# HELP
-#
+# ------------
+# --- HELP ---
+# ------------
 
 ## Shows the help menu
 help:

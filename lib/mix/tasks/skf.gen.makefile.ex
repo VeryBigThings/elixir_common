@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Skf.Gen.Makefile do
   use Mix.Task
 
   @template Path.join(["skf.gen.makefile", "Makefile"])
-  @switches [cloud: :string]
+  @switches [docker: :boolean, cloud: :string]
 
   @shortdoc "Generated docker files for development environment"
   def run(args) do
