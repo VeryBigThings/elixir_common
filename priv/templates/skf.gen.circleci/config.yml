@@ -1,0 +1,94 @@
+version: 2
+jobs:
+  build:
+    parallelism: 1
+    docker:
+      - image: circleci/elixir:1.8.1
+        environment:
+          MIX_ENV: "test"
+          TEST_DATABASE_URL: "postgres://postgres:@localhost/<%= app %>_test"
+          TEST_REDIS_URL: "redis://localhost:6379/0"
+          GUARDIAN_SECRET_KEY: "verylongsecret"
+          SECRET_KEY_BASE: "EvenMuchLongerSecretThatMustBeAtleast64BytesBecauseCookieStoreExpectsIt"
+      - image: circleci/postgres:10-alpine-postgis
+        environment:
+          POSTGRES_USER: "postgres"
+          POSTGRES_DB: "<%= app %>_test"
+          POSTGRES_PASSWORD: ""
+      - image: circleci/redis:4-alpine
+    working_directory: ~/app
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - run:
+          name: Wait for PG
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
+          name: Wait for Redis
+          command: dockerize -wait tcp://localhost:6379 -timeout 1m
+      - restore_cache:
+          keys:
+            - $CACHE_VERSION-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+      - run: mix do deps.get, compile
+      - save_cache:
+          key: $CACHE_VERSION-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          paths:
+            - deps
+            - _build
+      - run: mix do ecto.create, ecto.migrate
+      - run: mix test
+  deploy:
+    docker:
+      - image: buildpack-deps:trusty
+    steps:
+      - checkout
+      - run:
+          name: Deploy master to $RELEASE_ENVIRONMENT
+          command: 'git push --force https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git $CIRCLE_BRANCH:master'
+workflows:
+  version: 2
+  release_ci:
+    jobs:
+      - build:
+          context: <%= app %>-backend-dev-env
+          filters:
+            branches:
+              only:
+                - develop
+      - deploy:
+          context: <%= app %>-backend-dev-env
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - develop
+  release_stage:
+    jobs:
+      - build:
+          context: <%= app %>-backend-stage-env
+          filters:
+            branches:
+              only: release
+      - deploy:
+          context: <%= app %>-backend-stage-env
+          requires:
+            - build
+          filters:
+            branches:
+              only: release
+  release_prod:
+    jobs:
+      - build:
+          context: <%= app %>-backend-prod-env
+          filters:
+            branches:
+              only: master
+      - deploy:
+          context: <%= app %>-backend-prod-env
+          requires:
+            - build
+          filters:
+            branches:
+              only: master

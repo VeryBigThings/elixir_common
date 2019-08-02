@@ -3,8 +3,9 @@ defmodule Mix.Tasks.Skf.Gen.Makefile do
 
   @template Path.join(["skf.gen.makefile", "Makefile"])
   @switches [cloud: :string, docker: :boolean]
+  @defaults [cloud: "heroku", docker: true]
 
-  @shortdoc "Generated docker files for development environment"
+  @shortdoc "Generate Makefile"
   def run(args) do
     if Mix.Project.umbrella? do
       Mix.raise "mix phx.gen.json can only be run inside an application directory"
@@ -14,7 +15,7 @@ defmodule Mix.Tasks.Skf.Gen.Makefile do
 
     app = Mix.Project.config[:app]
 
-    bindings = Keyword.merge([app: app], opts)
+    bindings = Keyword.merge([app: app], Enum.into(opts, @defaults))
 
     @template
     |> Skafolder.eval_from_templates(bindings)
