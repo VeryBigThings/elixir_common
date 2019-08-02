@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Skf.Gen.Makefile do
   use Mix.Task
 
   @template Path.join(["skf.gen.makefile", "Makefile"])
-  @switches [docker: :boolean, cloud: :string]
+  @switches [cloud: :string, docker: :boolean]
 
   @shortdoc "Generated docker files for development environment"
   def run(args) do
@@ -17,7 +17,7 @@ defmodule Mix.Tasks.Skf.Gen.Makefile do
     bindings = Keyword.merge([app: app], opts)
 
     @template
-    |> Scaffolder.eval_from_templates(bindings)
-    |> Scaffolder.generate_file(Path.join([File.cwd!, "Makefile"]))
+    |> Skafolder.eval_from_templates(bindings)
+    |> Skafolder.generate_file(Path.join([File.cwd!, "Makefile"]))
   end
 end

@@ -1,6 +1,6 @@
-defmodule Scaffolder do
+defmodule Skafolder do
   @moduledoc """
-  Documentation for Scaffolder.
+  Documentation for Skafolder.
   """
 
   def generate_file(content, file) do
@@ -17,7 +17,7 @@ defmodule Scaffolder do
   end
 
   def template_paths do
-    base_path = :code.priv_dir(:scaffolder)
+    base_path = :code.priv_dir(:skafolder)
     [ Path.join([base_path, "templates"]) ]
   end
 end
