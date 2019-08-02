@@ -1,19 +1,25 @@
 .PHONY: \
 	dev \
 	test \
-	test_ci \
 	compile \
-	capture-backup \
-	import-latest-db \
 	seed-db \
 	reset-db \
 	reseed-db \
+<%= if cloud && cloud == "heroku" do %>
 	set-remotes \
+	heroku-console \
+	heroku-capture-backup \
+	heroku-latest.dump \
+	import-latest-db \
+	heroku-ci-deploy \
+<% end %>
+<%= if docker do %>
 	devstack \
 	devstack-build \
 	devstack-clean \
 	devstack-shell \
 	devstack-run
+<% end %>
 
 DEFAULT_GOAL: help
 
