@@ -29,10 +29,10 @@ jobs:
           command: dockerize -wait tcp://localhost:6379 -timeout 1m
       - restore_cache:
           keys:
-            - $CACHE_VERSION-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            -  {{ .Environment.CACHE_VERSION }}.-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
       - run: mix do deps.get, compile
       - save_cache:
-          key: $CACHE_VERSION-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          key: {{ .Environment.CACHE_VERSION }}-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths:
             - deps
             - _build
