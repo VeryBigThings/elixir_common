@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Skf.Gen.Docker do
   @templates [
     Path.join(["skf.gen.docker", "Dockerfile"]),
     Path.join(["skf.gen.docker", ".dockerignore"]),
+    Path.join(["skf.gen.docker", ".env.development"]),
     Path.join(["skf.gen.docker", "entrypoint.sh"]),
     Path.join(["skf.gen.docker", "docker-compose.yml"])
   ]
