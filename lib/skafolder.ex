@@ -1,6 +1,6 @@
-defmodule Scaffolder do
+defmodule Skafolder do
   @moduledoc """
-  Documentation for Scaffolder.
+  Documentation for Skafolder.
   """
 
   def generate_file(content, file) do
@@ -17,7 +17,13 @@ defmodule Scaffolder do
   end
 
   def template_paths do
-    base_path = :code.priv_dir(:scaffolder)
+    base_path = :code.priv_dir(:skafolder)
     [ Path.join([base_path, "templates"]) ]
   end
+
+  def random_string(length) when length > 31 do
+    :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
+  end
+  def random_string(_), do: Mix.raise "The secret should be at least 32 characters long"
+
 end
