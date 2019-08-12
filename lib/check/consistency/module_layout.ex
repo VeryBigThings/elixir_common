@@ -6,6 +6,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
 
     1. @moduledoc
     2. @behaviour
+    3. use
   """
   @explanation [check: @checkdoc]
 
@@ -17,6 +18,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
   @expected_order Map.new(Enum.with_index(~w/
     moduledoc
     behaviour
+    use
   /a))
 
   @doc false

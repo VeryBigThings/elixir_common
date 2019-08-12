@@ -10,6 +10,8 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
 
       @behaviour GenServer
       @behaviour Supervisor
+
+      use GenServer
     end
     """
     |> to_source_file
@@ -28,5 +30,19 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> assert_issue(@described_check)
 
     assert issue.message == "Invalid placement of moduledoc."
+  end
+
+  test "behaviour must appear before use" do
+    [issue] =
+      """
+      defmodule Test do
+        use GenServer
+        @behaviour GenServer
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "Invalid placement of behaviour."
   end
 end
