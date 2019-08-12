@@ -64,10 +64,14 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
   defp error(issue_meta, part, module, file_pos) do
     format_issue(
       issue_meta,
-      message: "Invalid placement of #{part}.",
+      message: "Invalid placement of #{part_to_string(part)}.",
       trigger: inspect(module),
       line_no: Keyword.get(file_pos, :line),
       column: Keyword.get(file_pos, :column)
     )
   end
+
+  defp part_to_string(:moduledoc), do: "module documentation"
+  defp part_to_string(:module_attribute), do: "module attribute"
+  defp part_to_string(part), do: "#{part}"
 end

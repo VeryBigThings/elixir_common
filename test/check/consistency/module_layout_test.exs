@@ -40,7 +40,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of moduledoc."
+    assert issue.message == "Invalid placement of module documentation."
   end
 
   test "behaviour must appear before use" do
@@ -124,6 +124,6 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of module_attribute."
+    assert issue.message == "Invalid placement of module attribute."
   end
 end
