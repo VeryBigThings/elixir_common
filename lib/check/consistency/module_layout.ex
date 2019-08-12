@@ -4,9 +4,20 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
   @checkdoc """
   Module parts should appear in the following order:
 
-    1. @moduledoc
-    2. @behaviour
-    3. use
+     1. @moduledoc
+     2. @behaviour
+     3. use
+     4. import
+     5. alias
+     6. require
+     7. custom module attributes
+     8. defstruct
+     9. types
+    10. @callback
+    11. @macrocallback
+    12. @optional_callbacks
+
+  This order has been taken from https://github.com/christopheradams/elixir_style_guide#module-attribute-ordering.
   """
   @explanation [check: @checkdoc]
 
