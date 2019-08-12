@@ -93,6 +93,11 @@ defmodule VbtCredo.ModulePartExtractor do
        when attribute in ~w/moduledoc behaviour type callback macrocallback optional_callbacks/a,
        do: add_module_element(state, attribute, meta)
 
+  defp analyze(state, {:@, _meta, [{ignore_attribute, _, _}]})
+       when ignore_attribute in ~w/after_compile before_compile compile impl deprecated doc
+       typedoc dialyzer external_resource file on_definition on_load vsn spec/a,
+       do: state
+
   defp analyze(state, {:@, meta, _}),
     do: add_module_element(state, :module_attribute, meta)
 
