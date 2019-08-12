@@ -21,6 +21,9 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
   """
   @explanation [check: @checkdoc]
 
+  # `use Credo.Check` required that module attributes are already defined, so we need to place these attributes
+  # before use/alias expressions.
+  # credo:disable-for-lines:4 VbtCredo.Check.Consistency.ModuleLayout
   use Credo.Check, base_priority: :high
 
   alias Credo.Code
