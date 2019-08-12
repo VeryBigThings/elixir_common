@@ -7,7 +7,7 @@ defmodule VbtCredo.ModulePartExtractor do
   @doc """
   Extracts modules and their parts from the AST obtained from an Elixir source file.
 
-  iex> {:ok, ast} = Code.string_to_quoted(~s(
+  iex> {:ok, ast} = Code.string_to_quoted(~s/
   ...>   defmodule SomeModule do
   ...>     @moduledoc "Some module doc"
   ...>
@@ -27,12 +27,14 @@ defmodule VbtCredo.ModulePartExtractor do
   ...>     defstruct a: 1, b: 2
   ...>
   ...>     @type x :: pos_integer
+  ...>
+  ...>     @callback callback() :: any
   ...>   end
   ...>
   ...>   defmodule AnotherModule do
   ...>     @moduledoc "Another module doc"
   ...>   end
-  ...> ))
+  ...> /)
   iex> VbtCredo.ModulePartExtractor.analyze(ast)
   [
     {SomeModule, [
@@ -45,9 +47,10 @@ defmodule VbtCredo.ModulePartExtractor do
       require: [line: 14],
       module_attribute: [line: 16],
       defstruct: [line: 18],
-      type: [line: 20]
+      type: [line: 20],
+      callback: [line: 22]
     ]},
-    {AnotherModule, [moduledoc: [line: 24]]}
+    {AnotherModule, [moduledoc: [line: 26]]}
   ]
   """
   @spec analyze(Macro.t()) :: [{module, [{module_part, location}]}]
@@ -69,7 +72,7 @@ defmodule VbtCredo.ModulePartExtractor do
   end
 
   defp analyze(state, {:@, meta, [{attribute, _, _}]})
-       when attribute in ~w/moduledoc behaviour type/a,
+       when attribute in ~w/moduledoc behaviour type callback/a,
        do: add_module_element(state, attribute, meta)
 
   defp analyze(state, {:@, meta, _}),

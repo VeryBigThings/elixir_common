@@ -25,6 +25,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
     module_attribute
     defstruct
     type
+    callback
   /a))
 
   @doc false

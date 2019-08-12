@@ -25,6 +25,8 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       defstruct x: 1, y: 2
 
       @type x :: pos_integer
+
+      @callback callback() :: any
     end
     """
     |> to_source_file
@@ -141,5 +143,19 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> assert_issue(@described_check)
 
     assert issue.message == "Invalid placement of defstruct."
+  end
+
+  test "type must appear before callback" do
+    [issue] =
+      """
+      defmodule Test do
+        @callback callback() :: any
+        @type x :: pos_integer
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "Invalid placement of type."
   end
 end
