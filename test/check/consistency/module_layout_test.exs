@@ -50,7 +50,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of module documentation."
+    assert issue.message == "moduledoc must appear before behaviour"
   end
 
   test "behaviour must appear before use" do
@@ -64,7 +64,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of behaviour."
+    assert issue.message == "behaviour must appear before use"
   end
 
   test "use must appear before import" do
@@ -78,7 +78,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of use."
+    assert issue.message == "use must appear before import"
   end
 
   test "import must appear before alias" do
@@ -92,7 +92,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of import."
+    assert issue.message == "import must appear before alias"
   end
 
   test "alias must appear before require" do
@@ -106,7 +106,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of alias."
+    assert issue.message == "alias must appear before require"
   end
 
   test "require must appear before module attribute" do
@@ -120,7 +120,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of require."
+    assert issue.message == "require must appear before module attribute"
   end
 
   test "module attribute must appear before defstruct" do
@@ -134,7 +134,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of module attribute."
+    assert issue.message == "module attribute must appear before defstruct"
   end
 
   test "defstruct must appear before opaque" do
@@ -148,7 +148,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of defstruct."
+    assert issue.message == "defstruct must appear before opaque"
   end
 
   test "opaque must appear before type" do
@@ -162,7 +162,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of opaque."
+    assert issue.message == "opaque must appear before type"
   end
 
   test "type must appear before typep" do
@@ -176,7 +176,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of type."
+    assert issue.message == "type must appear before typep"
   end
 
   test "typep must appear before callback" do
@@ -190,7 +190,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of typep."
+    assert issue.message == "typep must appear before callback"
   end
 
   test "callback must appear before macrocallback" do
@@ -204,7 +204,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of callback."
+    assert issue.message == "callback must appear before macrocallback"
   end
 
   test "macrocallback must appear before optional_callbacks" do
@@ -218,6 +218,6 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> to_source_file
       |> assert_issue(@described_check)
 
-    assert issue.message == "Invalid placement of macrocallback."
+    assert issue.message == "macrocallback must appear before optional_callbacks"
   end
 end

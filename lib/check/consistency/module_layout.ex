@@ -25,7 +25,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
 
   # `use Credo.Check` required that module attributes are already defined, so we need to place these attributes
   # before use/alias expressions.
-  # credo:disable-for-lines:4 VbtCredo.Check.Consistency.ModuleLayout
+  # credo:disable-for-next-line VbtCredo.Check.Consistency.ModuleLayout
   use Credo.Check, base_priority: :high
 
   alias Credo.Code
@@ -68,32 +68,36 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
   defp module_errors(module, parts, issue_meta) do
     Enum.reduce(
       parts,
-      %{module: module, section: -1, errors: []},
+      %{module: module, section: nil, errors: []},
       &check_part_location(&2, &1, issue_meta)
     ).errors
   end
 
   defp check_part_location(state, {part, file_pos}, issue_meta) do
-    part_section = section(part)
+    state =
+      if is_nil(state.section) or section(part) >= section(state.section),
+        do: state,
+        else:
+          update_in(
+            state.errors,
+            &[error(issue_meta, part, state.section, state.module, file_pos) | &1]
+          )
 
-    if part_section >= state.section,
-      do: %{state | section: part_section},
-      else: update_in(state.errors, &[error(issue_meta, part, state.module, file_pos) | &1])
+    %{state | section: part}
   end
 
   defp section(part), do: Map.fetch!(@expected_order, part)
 
-  defp error(issue_meta, part, module, file_pos) do
+  defp error(issue_meta, part, current_section, module, file_pos) do
     format_issue(
       issue_meta,
-      message: "Invalid placement of #{part_to_string(part)}.",
+      message: "#{part_to_string(part)} must appear before #{part_to_string(current_section)}",
       trigger: inspect(module),
       line_no: Keyword.get(file_pos, :line),
       column: Keyword.get(file_pos, :column)
     )
   end
 
-  defp part_to_string(:moduledoc), do: "module documentation"
   defp part_to_string(:module_attribute), do: "module attribute"
   defp part_to_string(part), do: "#{part}"
 end
