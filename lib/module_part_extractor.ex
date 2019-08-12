@@ -10,9 +10,15 @@ defmodule VbtCredo.ModulePartExtractor do
   iex> {:ok, ast} = Code.string_to_quoted(~s(
   ...>   defmodule SomeModule do
   ...>     @moduledoc "Some module doc"
+  ...>
   ...>     @behaviour GenServer
+  ...>
   ...>     use GenServer
+  ...>
   ...>     import GenServer
+  ...>
+  ...>     alias GenServer
+  ...>     alias Mod1.{Mod2, Mod3}
   ...>   end
   ...>
   ...>   defmodule AnotherModule do
@@ -23,11 +29,13 @@ defmodule VbtCredo.ModulePartExtractor do
   [
     {SomeModule, [
       moduledoc: [line: 3],
-      behaviour: [line: 4],
-      use: [line: 5],
-      import: [line: 6]
+      behaviour: [line: 5],
+      use: [line: 7],
+      import: [line: 9],
+      alias: [line: 11],
+      alias: [line: 12]
     ]},
-    {AnotherModule, [moduledoc: [line: 10]]}
+    {AnotherModule, [moduledoc: [line: 16]]}
   ]
   """
   @spec analyze(Macro.t()) :: [{module, [{module_part, location}]}]
@@ -59,6 +67,9 @@ defmodule VbtCredo.ModulePartExtractor do
 
   defp analyze(state, {:import, meta, _}),
     do: add_module_element(state, :import, meta)
+
+  defp analyze(state, {:alias, meta, _}),
+    do: add_module_element(state, :alias, meta)
 
   defp analyze(state, _ast), do: state
 

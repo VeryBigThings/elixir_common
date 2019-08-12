@@ -20,6 +20,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
     behaviour
     use
     import
+    alias
   /a))
 
   @doc false

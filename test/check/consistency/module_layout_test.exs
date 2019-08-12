@@ -14,6 +14,9 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       use GenServer
 
       import GenServer
+
+      alias GenServer
+      alias Mod1.{Mod2, Mod3}
     end
     """
     |> to_source_file
@@ -60,5 +63,19 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> assert_issue(@described_check)
 
     assert issue.message == "Invalid placement of use."
+  end
+
+  test "import must appear before alias" do
+    [issue] =
+      """
+      defmodule Test do
+        alias GenServer
+        import GenServer
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "Invalid placement of import."
   end
 end
