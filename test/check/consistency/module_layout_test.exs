@@ -24,7 +24,9 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
 
       defstruct x: 1, y: 2
 
+      @opaque y :: pos_integer
       @type x :: pos_integer
+      @typep z :: pos_integer
 
       @callback callback() :: any
 
@@ -135,11 +137,11 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
     assert issue.message == "Invalid placement of module attribute."
   end
 
-  test "defstruct must appear before type" do
+  test "defstruct must appear before opaque" do
     [issue] =
       """
       defmodule Test do
-        @type x :: pos_integer
+        @opaque x :: pos_integer
         defstruct x: 1, y: 2
       end
       """
@@ -149,11 +151,25 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
     assert issue.message == "Invalid placement of defstruct."
   end
 
-  test "type must appear before callback" do
+  test "opaque must appear before type" do
     [issue] =
       """
       defmodule Test do
-        @callback callback() :: any
+        @type y :: pos_integer
+        @opaque x :: pos_integer
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "Invalid placement of opaque."
+  end
+
+  test "type must appear before typep" do
+    [issue] =
+      """
+      defmodule Test do
+        @typep y :: pos_integer
         @type x :: pos_integer
       end
       """
@@ -161,6 +177,20 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> assert_issue(@described_check)
 
     assert issue.message == "Invalid placement of type."
+  end
+
+  test "typep must appear before callback" do
+    [issue] =
+      """
+      defmodule Test do
+        @callback callback() :: any
+        @typep x :: pos_integer
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "Invalid placement of typep."
   end
 
   test "callback must appear before macrocallback" do

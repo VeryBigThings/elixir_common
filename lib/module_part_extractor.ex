@@ -10,7 +10,9 @@ defmodule VbtCredo.ModulePartExtractor do
           | :require
           | :module_attribute
           | :defstruct
+          | :opaque
           | :type
+          | :typep
           | :callback
           | :macrocallback
           | :optional_callbacks
@@ -38,7 +40,9 @@ defmodule VbtCredo.ModulePartExtractor do
   ...>
   ...>     defstruct a: 1, b: 2
   ...>
+  ...>     @opaque y :: pos_integer
   ...>     @type x :: pos_integer
+  ...>     @typep z :: pos_integer
   ...>
   ...>     @callback callback() :: any
   ...>
@@ -63,12 +67,14 @@ defmodule VbtCredo.ModulePartExtractor do
       require: [line: 14],
       module_attribute: [line: 16],
       defstruct: [line: 18],
-      type: [line: 20],
-      callback: [line: 22],
-      macrocallback: [line: 24],
-      optional_callbacks: [line: 26]
+      opaque: [line: 20],
+      type: [line: 21],
+      typep: [line: 22],
+      callback: [line: 24],
+      macrocallback: [line: 26],
+      optional_callbacks: [line: 28]
     ]},
-    {AnotherModule, [moduledoc: [line: 30]]}
+    {AnotherModule, [moduledoc: [line: 32]]}
   ]
   """
   @spec analyze(Macro.t()) :: [{module, [{module_part, location}]}]
@@ -90,7 +96,7 @@ defmodule VbtCredo.ModulePartExtractor do
   end
 
   defp analyze(state, {:@, meta, [{attribute, _, _}]})
-       when attribute in ~w/moduledoc behaviour type callback macrocallback optional_callbacks/a,
+       when attribute in ~w/moduledoc behaviour type typep opaque callback macrocallback optional_callbacks/a,
        do: add_module_element(state, attribute, meta)
 
   defp analyze(state, {:@, _meta, [{ignore_attribute, _, _}]})

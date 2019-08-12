@@ -12,10 +12,12 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
      6. require
      7. custom module attributes
      8. defstruct
-     9. types
-    10. @callback
-    11. @macrocallback
-    12. @optional_callbacks
+     9. @opaque
+    10. @type
+    11. @typep
+    12. @callback
+    13. @macrocallback
+    14. @optional_callbacks
 
   This order has been taken from https://github.com/christopheradams/elixir_style_guide#module-attribute-ordering.
   """
@@ -38,7 +40,9 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
     require
     module_attribute
     defstruct
+    opaque
     type
+    typep
     callback
     macrocallback
     optional_callbacks
