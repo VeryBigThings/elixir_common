@@ -1,7 +1,19 @@
 defmodule VbtCredo.ModulePartExtractor do
   @moduledoc "Extraction of module parts from an ast"
 
-  @type module_part :: :moduledoc | :behaviour
+  @type module_part ::
+          :moduledoc
+          | :behaviour
+          | :use
+          | :import
+          | :alias
+          | :require
+          | :module_attribute
+          | :defstruct
+          | :type
+          | :callback
+          | :macrocallback
+          | :optional_callbacks
   @type location :: [line: pos_integer, column: pos_integer]
 
   @doc """
