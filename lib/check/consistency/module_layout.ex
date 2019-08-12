@@ -21,6 +21,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
     use
     import
     alias
+    require
   /a))
 
   @doc false
