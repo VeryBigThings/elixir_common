@@ -59,23 +59,11 @@ defmodule VbtCredo.ModulePartExtractor do
     start_module(state, Module.concat(name_parts), meta)
   end
 
-  defp analyze(state, {:@, meta, [{:moduledoc, _, _}]}),
-    do: add_module_element(state, :moduledoc, meta)
+  defp analyze(state, {:@, meta, [{attribute, _, _}]}) when attribute in ~w/moduledoc behaviour/a,
+    do: add_module_element(state, attribute, meta)
 
-  defp analyze(state, {:@, meta, [{:behaviour, _, _}]}),
-    do: add_module_element(state, :behaviour, meta)
-
-  defp analyze(state, {:use, meta, _}),
-    do: add_module_element(state, :use, meta)
-
-  defp analyze(state, {:import, meta, _}),
-    do: add_module_element(state, :import, meta)
-
-  defp analyze(state, {:alias, meta, _}),
-    do: add_module_element(state, :alias, meta)
-
-  defp analyze(state, {:require, meta, _}),
-    do: add_module_element(state, :require, meta)
+  defp analyze(state, {clause, meta, _}) when clause in ~w/use import alias require/a,
+    do: add_module_element(state, clause, meta)
 
   defp analyze(state, _ast), do: state
 
