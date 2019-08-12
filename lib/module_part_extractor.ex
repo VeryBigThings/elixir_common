@@ -29,6 +29,10 @@ defmodule VbtCredo.ModulePartExtractor do
   ...>     @type x :: pos_integer
   ...>
   ...>     @callback callback() :: any
+  ...>
+  ...>     @macrocallback macrocallback() :: any
+  ...>
+  ...>     @optional_callbacks [callback: 0]
   ...>   end
   ...>
   ...>   defmodule AnotherModule do
@@ -48,9 +52,11 @@ defmodule VbtCredo.ModulePartExtractor do
       module_attribute: [line: 16],
       defstruct: [line: 18],
       type: [line: 20],
-      callback: [line: 22]
+      callback: [line: 22],
+      macrocallback: [line: 24],
+      optional_callbacks: [line: 26]
     ]},
-    {AnotherModule, [moduledoc: [line: 26]]}
+    {AnotherModule, [moduledoc: [line: 30]]}
   ]
   """
   @spec analyze(Macro.t()) :: [{module, [{module_part, location}]}]
@@ -72,7 +78,7 @@ defmodule VbtCredo.ModulePartExtractor do
   end
 
   defp analyze(state, {:@, meta, [{attribute, _, _}]})
-       when attribute in ~w/moduledoc behaviour type callback/a,
+       when attribute in ~w/moduledoc behaviour type callback macrocallback optional_callbacks/a,
        do: add_module_element(state, attribute, meta)
 
   defp analyze(state, {:@, meta, _}),

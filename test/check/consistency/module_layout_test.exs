@@ -27,6 +27,10 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       @type x :: pos_integer
 
       @callback callback() :: any
+
+      @macrocallback macrocallback() :: any
+
+      @optional_callbacks [callback: 0]
     end
     """
     |> to_source_file
@@ -157,5 +161,33 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> assert_issue(@described_check)
 
     assert issue.message == "Invalid placement of type."
+  end
+
+  test "callback must appear before macrocallback" do
+    [issue] =
+      """
+      defmodule Test do
+        @macrocallback macrocallback() :: any
+        @callback callback() :: any
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "Invalid placement of callback."
+  end
+
+  test "macrocallback must appear before optional_callbacks" do
+    [issue] =
+      """
+      defmodule Test do
+        @optional_callbacks :: [callback: 0]
+        @macrocallback macrocallback() :: any
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "Invalid placement of macrocallback."
   end
 end

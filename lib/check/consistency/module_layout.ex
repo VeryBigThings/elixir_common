@@ -26,6 +26,8 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
     defstruct
     type
     callback
+    macrocallback
+    optional_callbacks
   /a))
 
   @doc false
