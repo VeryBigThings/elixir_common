@@ -19,6 +19,8 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       alias Mod1.{Mod2, Mod3}
 
       require GenServer
+
+      @x 1
     end
     """
     |> to_source_file
@@ -93,5 +95,19 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> assert_issue(@described_check)
 
     assert issue.message == "Invalid placement of alias."
+  end
+
+  test "require must appear before module attribute" do
+    [issue] =
+      """
+      defmodule Test do
+        @x 1
+        require GenServer
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "Invalid placement of require."
   end
 end
