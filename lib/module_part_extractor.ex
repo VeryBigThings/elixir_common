@@ -12,6 +12,7 @@ defmodule VbtCredo.ModulePartExtractor do
   ...>     @moduledoc "Some module doc"
   ...>     @behaviour GenServer
   ...>     use GenServer
+  ...>     import GenServer
   ...>   end
   ...>
   ...>   defmodule AnotherModule do
@@ -23,9 +24,10 @@ defmodule VbtCredo.ModulePartExtractor do
     {SomeModule, [
       moduledoc: [line: 3],
       behaviour: [line: 4],
-      use: [line: 5]
+      use: [line: 5],
+      import: [line: 6]
     ]},
-    {AnotherModule, [moduledoc: [line: 9]]}
+    {AnotherModule, [moduledoc: [line: 10]]}
   ]
   """
   @spec analyze(Macro.t()) :: [{module, [{module_part, location}]}]
@@ -54,6 +56,9 @@ defmodule VbtCredo.ModulePartExtractor do
 
   defp analyze(state, {:use, meta, _}),
     do: add_module_element(state, :use, meta)
+
+  defp analyze(state, {:import, meta, _}),
+    do: add_module_element(state, :import, meta)
 
   defp analyze(state, _ast), do: state
 

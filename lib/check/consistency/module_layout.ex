@@ -19,6 +19,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
     moduledoc
     behaviour
     use
+    import
   /a))
 
   @doc false

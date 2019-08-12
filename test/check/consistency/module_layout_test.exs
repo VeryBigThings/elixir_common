@@ -12,6 +12,8 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       @behaviour Supervisor
 
       use GenServer
+
+      import GenServer
     end
     """
     |> to_source_file
@@ -44,5 +46,19 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> assert_issue(@described_check)
 
     assert issue.message == "Invalid placement of behaviour."
+  end
+
+  test "use must appear before import" do
+    [issue] =
+      """
+      defmodule Test do
+        import GenServer
+        use GenServer
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "Invalid placement of use."
   end
 end
