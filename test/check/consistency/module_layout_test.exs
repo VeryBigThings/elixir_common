@@ -23,6 +23,8 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       @x 1
 
       defstruct x: 1, y: 2
+
+      @type x :: pos_integer
     end
     """
     |> to_source_file
@@ -125,5 +127,19 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> assert_issue(@described_check)
 
     assert issue.message == "Invalid placement of module attribute."
+  end
+
+  test "defstruct must appear before type" do
+    [issue] =
+      """
+      defmodule Test do
+        @type x :: pos_integer
+        defstruct x: 1, y: 2
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "Invalid placement of defstruct."
   end
 end

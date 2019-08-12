@@ -24,6 +24,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
     require
     module_attribute
     defstruct
+    type
   /a))
 
   @doc false

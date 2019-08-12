@@ -25,6 +25,8 @@ defmodule VbtCredo.ModulePartExtractor do
   ...>     @x 1
   ...>
   ...>     defstruct a: 1, b: 2
+  ...>
+  ...>     @type x :: pos_integer
   ...>   end
   ...>
   ...>   defmodule AnotherModule do
@@ -42,9 +44,10 @@ defmodule VbtCredo.ModulePartExtractor do
       alias: [line: 12],
       require: [line: 14],
       module_attribute: [line: 16],
-      defstruct: [line: 18]
+      defstruct: [line: 18],
+      type: [line: 20]
     ]},
-    {AnotherModule, [moduledoc: [line: 22]]}
+    {AnotherModule, [moduledoc: [line: 24]]}
   ]
   """
   @spec analyze(Macro.t()) :: [{module, [{module_part, location}]}]
@@ -65,8 +68,9 @@ defmodule VbtCredo.ModulePartExtractor do
     start_module(state, Module.concat(name_parts), meta)
   end
 
-  defp analyze(state, {:@, meta, [{attribute, _, _}]}) when attribute in ~w/moduledoc behaviour/a,
-    do: add_module_element(state, attribute, meta)
+  defp analyze(state, {:@, meta, [{attribute, _, _}]})
+       when attribute in ~w/moduledoc behaviour type/a,
+       do: add_module_element(state, attribute, meta)
 
   defp analyze(state, {:@, meta, _}),
     do: add_module_element(state, :module_attribute, meta)
