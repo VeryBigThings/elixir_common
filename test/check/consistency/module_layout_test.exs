@@ -21,6 +21,8 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       require GenServer
 
       @x 1
+
+      defstruct x: 1, y: 2
     end
     """
     |> to_source_file
@@ -109,5 +111,19 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> assert_issue(@described_check)
 
     assert issue.message == "Invalid placement of require."
+  end
+
+  test "module attribute must appear before defstruct" do
+    [issue] =
+      """
+      defmodule Test do
+        defstruct x: 1, y: 2
+        @x 1
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "Invalid placement of module_attribute."
   end
 end

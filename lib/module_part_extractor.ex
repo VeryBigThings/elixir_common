@@ -23,6 +23,8 @@ defmodule VbtCredo.ModulePartExtractor do
   ...>     require GenServer
   ...>
   ...>     @x 1
+  ...>
+  ...>     defstruct a: 1, b: 2
   ...>   end
   ...>
   ...>   defmodule AnotherModule do
@@ -39,9 +41,10 @@ defmodule VbtCredo.ModulePartExtractor do
       alias: [line: 11],
       alias: [line: 12],
       require: [line: 14],
-      module_attribute: [line: 16]
+      module_attribute: [line: 16],
+      defstruct: [line: 18]
     ]},
-    {AnotherModule, [moduledoc: [line: 20]]}
+    {AnotherModule, [moduledoc: [line: 22]]}
   ]
   """
   @spec analyze(Macro.t()) :: [{module, [{module_part, location}]}]
@@ -68,7 +71,7 @@ defmodule VbtCredo.ModulePartExtractor do
   defp analyze(state, {:@, meta, _}),
     do: add_module_element(state, :module_attribute, meta)
 
-  defp analyze(state, {clause, meta, _}) when clause in ~w/use import alias require/a,
+  defp analyze(state, {clause, meta, _}) when clause in ~w/use import alias require defstruct/a,
     do: add_module_element(state, clause, meta)
 
   defp analyze(state, _ast), do: state

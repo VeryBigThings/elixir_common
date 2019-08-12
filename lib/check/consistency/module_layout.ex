@@ -23,6 +23,7 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
     alias
     require
     module_attribute
+    defstruct
   /a))
 
   @doc false
