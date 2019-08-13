@@ -1,3 +1,5 @@
+# credo:disable-for-this-file
+
 Code.require_file("support/test_application.exs", __DIR__)
 
 Credo.Test.Application.start([], [])

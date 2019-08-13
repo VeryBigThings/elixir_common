@@ -1,4 +1,6 @@
 defmodule Credo.Test.FilenameGenerator do
+  # credo:disable-for-this-file
+
   use GenServer
 
   def start_link(opts \\ []) do
