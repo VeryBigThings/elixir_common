@@ -39,6 +39,18 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
     |> refute_issues(@described_check)
   end
 
+  test "only first-level parts are analyzed" do
+    """
+    defmodule Test do
+      @x 1
+
+      def some_fun(), do: @x
+    end
+    """
+    |> to_source_file
+    |> refute_issues(@described_check)
+  end
+
   test "moduledoc must appear before behaviour" do
     [issue] =
       """

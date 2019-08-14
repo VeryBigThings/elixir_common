@@ -71,30 +71,38 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
   defp module_errors(module, parts, issue_meta) do
     Enum.reduce(
       parts,
-      %{module: module, section: nil, errors: []},
+      %{module: module, current_part: nil, errors: []},
       &check_part_location(&2, &1, issue_meta)
     ).errors
   end
 
   defp check_part_location(state, {part, file_pos}, issue_meta) do
-    state =
-      if is_nil(state.section) or section(part) >= section(state.section),
-        do: state,
-        else:
-          update_in(
-            state.errors,
-            &[error(issue_meta, part, state.section, state.module, file_pos) | &1]
-          )
-
-    %{state | section: part}
+    state
+    |> validate_order(part, file_pos, issue_meta)
+    |> Map.put(:current_part, part)
   end
 
-  defp section(part), do: Map.fetch!(@expected_order, part)
+  defp validate_order(state, part, file_pos, issue_meta) do
+    current_part = state.current_part
 
-  defp error(issue_meta, part, current_section, module, file_pos) do
+    if is_nil(current_part) || is_nil(order(part)) || order(state.current_part) <= order(part),
+      do: state,
+      else: add_error(state, part, file_pos, issue_meta)
+  end
+
+  defp order(part), do: Map.get(@expected_order, part)
+
+  defp add_error(state, part, file_pos, issue_meta) do
+    update_in(
+      state.errors,
+      &[error(issue_meta, part, state.current_part, state.module, file_pos) | &1]
+    )
+  end
+
+  defp error(issue_meta, part, current_part, module, file_pos) do
     format_issue(
       issue_meta,
-      message: "#{part_to_string(part)} must appear before #{part_to_string(current_section)}",
+      message: "#{part_to_string(part)} must appear before #{part_to_string(current_part)}",
       trigger: inspect(module),
       line_no: Keyword.get(file_pos, :line),
       column: Keyword.get(file_pos, :column)
