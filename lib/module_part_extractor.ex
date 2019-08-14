@@ -79,21 +79,31 @@ defmodule VbtCredo.ModulePartExtractor do
   """
   @spec analyze(Macro.t()) :: [{module, [{module_part, location}]}]
   def analyze(ast) do
-    {_ast, state} = Macro.prewalk(ast, initial_state(), &traverse/2)
+    {_ast, state} = Macro.prewalk(ast, initial_state(), &traverse_file/2)
     module_parts(state)
   end
 
-  defp traverse(ast, state) do
-    state = analyze(state, ast)
-    {ast, state}
+  defp traverse_file({:defmodule, meta, args}, state) do
+    [{:__aliases__, _, name_parts} | _] = args
+    state = start_module(state, Module.concat(name_parts), meta)
+    {_ast, state} = Macro.prewalk(args, state, &traverse_module/2)
+    {[], state}
   end
+
+  defp traverse_file(ast, state),
+    do: {ast, state}
+
+  defp traverse_module(ast, state) do
+    case analyze(state, ast) do
+      nil -> traverse_deeper(ast, state)
+      state -> traverse_sibling(state)
+    end
+  end
+
+  defp traverse_deeper(ast, state), do: {ast, state}
+  defp traverse_sibling(state), do: {[], state}
 
   # Part extractors
-
-  defp analyze(state, {:defmodule, meta, args}) do
-    [{:__aliases__, _, name_parts} | _] = args
-    start_module(state, Module.concat(name_parts), meta)
-  end
 
   defp analyze(state, {:@, meta, [{attribute, _, _}]})
        when attribute in ~w/moduledoc behaviour type typep opaque callback macrocallback optional_callbacks/a,
@@ -107,10 +117,11 @@ defmodule VbtCredo.ModulePartExtractor do
   defp analyze(state, {:@, meta, _}),
     do: add_module_element(state, :module_attribute, meta)
 
-  defp analyze(state, {clause, meta, _}) when clause in ~w/use import alias require defstruct/a,
-    do: add_module_element(state, clause, meta)
+  defp analyze(state, {clause, meta, _})
+       when clause in ~w/use import alias require defstruct def defp defmacro defmacrop defguard/a,
+       do: add_module_element(state, clause, meta)
 
-  defp analyze(state, _ast), do: state
+  defp analyze(_state, _ast), do: nil
 
   # Internal state
 
