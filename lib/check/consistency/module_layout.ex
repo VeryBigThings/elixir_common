@@ -28,9 +28,6 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
   # credo:disable-for-next-line VbtCredo.Check.Consistency.ModuleLayout
   use Credo.Check, base_priority: :high
 
-  # Caused by the wrong typespec in Credo (see https://github.com/rrrene/credo/pull/690)
-  @dialyzer {:nowarn_function, format_issue: 2}
-
   alias Credo.Code
   alias VbtCredo.ModulePartExtractor
 
