@@ -18,8 +18,13 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
     12. @callback
     13. @macrocallback
     14. @optional_callbacks
+    15. public guards
+    16. public macros
+    17. public functions
+    18. behaviour callbacks
+    19. private functions
 
-  This order has been taken from https://github.com/christopheradams/elixir_style_guide#module-attribute-ordering.
+  This order has been adapted from https://github.com/christopheradams/elixir_style_guide#module-attribute-ordering.
   """
   @explanation [check: @checkdoc]
 
@@ -46,6 +51,11 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
     callback
     macrocallback
     optional_callbacks
+    public_guard
+    public_macro
+    public_fun
+    impl
+    private_fun
   /a))
 
   @doc false
@@ -107,5 +117,10 @@ defmodule VbtCredo.Check.Consistency.ModuleLayout do
   end
 
   defp part_to_string(:module_attribute), do: "module attribute"
+  defp part_to_string(:public_guard), do: "public guard"
+  defp part_to_string(:public_macro), do: "public macro"
+  defp part_to_string(:public_fun), do: "public function"
+  defp part_to_string(:private_fun), do: "private function"
+  defp part_to_string(:impl), do: "callback implementation"
   defp part_to_string(part), do: "#{part}"
 end

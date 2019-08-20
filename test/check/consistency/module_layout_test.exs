@@ -33,6 +33,23 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       @macrocallback macrocallback() :: any
 
       @optional_callbacks [callback: 0]
+
+      defguard some_guard(), do: :ok
+
+      defmacro some_macro(), do: :ok
+
+      def public_fun(), do: :ok
+
+      @impl GenServer
+      def callback_fun(), do: :ok
+
+      @impl GenServer
+      defmacro callback_macro(), do: :ok
+
+      defp private_fun(), do: :ok
+
+      @doc false
+      defp another_private_fun(), do: :ok
     end
     """
     |> to_source_file
@@ -231,5 +248,96 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
       |> assert_issue(@described_check)
 
     assert issue.message == "macrocallback must appear before optional_callbacks"
+  end
+
+  test "optional_callbacks must appear before public guard" do
+    [issue] =
+      """
+      defmodule Test do
+        defguard some_guard(), do: :ok
+        @optional_callbacks :: [callback: 0]
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "optional_callbacks must appear before public guard"
+  end
+
+  test "public guard must appear before public macro" do
+    [issue] =
+      """
+      defmodule Test do
+        defmacro some_macro(), do: :ok
+        defguard some_guard(), do: :ok
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "public guard must appear before public macro"
+  end
+
+  test "public macro must appear before public function" do
+    [issue] =
+      """
+      defmodule Test do
+        def public_fun(), do: :ok
+        defmacro some_macro(), do: :ok
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "public macro must appear before public function"
+  end
+
+  test "public function must appear before callback implementation" do
+    [issue] =
+      """
+      defmodule Test do
+        @impl true
+        def callback_implementation(), do: :ok
+
+        def public_fun(), do: :ok
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "public function must appear before callback implementation"
+  end
+
+  test "callback implementation must appear before private function" do
+    [issue] =
+      """
+      defmodule Test do
+        defp private_fun(), do: :ok
+
+        @impl true
+        def callback_implementation(), do: :ok
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "callback implementation must appear before private function"
+  end
+
+  test "function marked with @doc false is treated as private" do
+    [issue] =
+      """
+      defmodule Test do
+        @doc false
+        def private_fun(), do: :ok
+
+        @impl true
+        def callback_implementation(), do: :ok
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "callback implementation must appear before private function"
   end
 end
