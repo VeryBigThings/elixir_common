@@ -18,6 +18,9 @@ defmodule VbtCredo.MixProject do
   end
 
   defp deps do
-    []
+    [
+      {:credo, "~> 1.1"},
+      {:dialyxir, "~> 0.5", runtime: false, only: [:dev, :test]}
+    ]
   end
 end
