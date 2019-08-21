@@ -136,9 +136,9 @@ defmodule VbtCredo.ModulePartExtractor do
   end
 
   defp traverse_file({:defmodule, meta, args}, state) do
-    [{:__aliases__, _, name_parts} | _] = args
+    [{:__aliases__, _, name_parts}, [do: module_def]] = args
     state = start_module(state, Module.concat(name_parts), meta)
-    {_ast, state} = Macro.prewalk(args, state, &traverse_module/2)
+    {_ast, state} = Macro.prewalk(module_def, state, &traverse_module/2)
     {[], state}
   end
 
@@ -184,6 +184,12 @@ defmodule VbtCredo.ModulePartExtractor do
     state
     |> add_module_element(code_type(clause, state.next_fun_modifier), meta)
     |> clear_next_fun_modifier()
+  end
+
+  defp analyze(state, {:do, _code}) do
+    # Not entering a do block, since this is possibly a custom macro invocation we can't
+    # understand.
+    state
   end
 
   defp analyze(_state, _ast), do: nil
