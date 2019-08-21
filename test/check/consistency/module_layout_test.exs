@@ -68,6 +68,21 @@ defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
     |> refute_issues(@described_check)
   end
 
+  test "custom macro invocations are ignored" do
+    """
+    defmodule Test do
+      import Foo
+
+      setup do
+        alias Bar
+        use Foo
+      end
+    end
+    """
+    |> to_source_file
+    |> refute_issues(@described_check)
+  end
+
   test "moduledoc must appear before behaviour" do
     [issue] =
       """
