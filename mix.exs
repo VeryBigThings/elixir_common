@@ -7,7 +7,8 @@ defmodule VbtCredo.MixProject do
       version: "0.1.0",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      aliases: aliases()
     ]
   end
 
@@ -21,6 +22,12 @@ defmodule VbtCredo.MixProject do
     [
       {:credo, "~> 1.1"},
       {:dialyxir, "~> 0.5", runtime: false, only: [:dev, :test]}
+    ]
+  end
+
+  defp aliases do
+    [
+      credo: ~w/compile credo/
     ]
   end
 end
