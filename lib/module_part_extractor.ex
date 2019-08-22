@@ -208,7 +208,7 @@ defmodule VbtCredo.ModulePartExtractor do
 
   # Internal state
 
-  defp initial_state(), do: %{modules: %{}, current_module: nil, next_fun_modifier: nil}
+  defp initial_state, do: %{modules: %{}, current_module: nil, next_fun_modifier: nil}
 
   defp set_next_fun_modifier(state, value), do: %{state | next_fun_modifier: value}
 

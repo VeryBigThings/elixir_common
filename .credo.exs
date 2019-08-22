@@ -13,8 +13,7 @@
         {VbtCredo.Check.Consistency.ModuleLayout, []},
         {VbtCredo.Check.Readability.WithPlaceholderTest, []},
         {Credo.Check.Design.TagTODO, false},
-        {Credo.Check.Readability.ModuleDoc, false},
-        {Credo.Check.Readability.ParenthesesOnZeroArityDefs, [parens: true]}
+        {Credo.Check.Readability.ModuleDoc, false}
       ]
     }
   ]
