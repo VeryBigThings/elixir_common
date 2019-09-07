@@ -15,6 +15,20 @@ defmodule VbtURI do
   # API
   # ------------------------------------------------------------------------
 
+  @doc """
+  Returns the string representation of the given URI, encoded in VBT format.
+
+      iex> uri = %URI{
+      ...>   scheme: "http",
+      ...>   host: "foo.bar",
+      ...>   port: 4000,
+      ...>   path: "some/path",
+      ...>   query: "foo=1&bar=2",
+      ...>   fragment: "some_fragment"
+      ...> }
+      iex> VbtURI.to_string(uri)
+      "http://foo.bar:4000/#!some/path?foo=1&bar=2#some_fragment"
+  """
   @spec to_string(URI.t()) :: String.t()
   def to_string(uri) do
     if not is_nil(uri.path) and String.starts_with?(uri.path, "/"),
@@ -23,6 +37,23 @@ defmodule VbtURI do
     URI.to_string(%URI{uri | path: "/", query: nil, fragment: encode_fragment(uri)})
   end
 
+  @doc """
+  Parses a well-formed VBT URI string into its components.
+
+      iex> VbtURI.parse("http://foo.bar:4000/#!some/path?foo=1&bar=2#some_fragment")
+      %URI{
+        scheme: "http",
+        host: "foo.bar",
+        port: 4000,
+        path: "some/path",
+        query: "foo=1&bar=2",
+        fragment: "some_fragment",
+        userinfo: nil,
+        authority: nil,
+      }
+
+  If the input is not a valid VBT URI, this function will raise an argument error.
+  """
   @spec parse(String.t()) :: URI.t()
   def parse(uri_string) do
     uri = URI.parse(uri_string)
