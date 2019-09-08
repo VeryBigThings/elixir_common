@@ -56,22 +56,22 @@ defmodule VbtURI do
   """
   @spec parse(String.t()) :: URI.t()
   def parse(uri_string) do
-    uri = URI.parse(uri_string)
+    standard_uri = URI.parse(uri_string)
 
-    if uri.path != "/" or uri.query != nil or not String.starts_with?(uri.fragment || "", "!"),
-      do: raise(ArgumentError, message: "invalid uri")
+    if standard_uri.path != "/" or standard_uri.query != nil or
+         not String.starts_with?(standard_uri.fragment || "", "!"),
+       do: raise(ArgumentError, message: "invalid uri")
 
-    %URI{scheme: scheme, host: host, port: port, fragment: fragment, authority: authority} = uri
-    %URI{path: path, query: query, fragment: fragment} = decode_fragment(fragment)
+    vbt_uri = decode_fragment(standard_uri.fragment)
 
     %URI{
-      scheme: scheme,
-      host: host,
-      port: port,
-      authority: authority,
-      path: path,
-      query: query,
-      fragment: fragment
+      scheme: standard_uri.scheme,
+      host: standard_uri.host,
+      port: standard_uri.port,
+      authority: standard_uri.authority,
+      path: vbt_uri.path,
+      query: vbt_uri.query,
+      fragment: vbt_uri.fragment
     }
   end
 
