@@ -49,7 +49,7 @@ defmodule VbtURI do
         query: "foo=1&bar=2",
         fragment: "some_fragment",
         userinfo: nil,
-        authority: nil,
+        authority: "foo.bar:4000",
       }
 
   If the input is not a valid VBT URI, this function will raise an argument error.
@@ -61,9 +61,18 @@ defmodule VbtURI do
     if uri.path != "/" or uri.query != nil or not String.starts_with?(uri.fragment || "", "!"),
       do: raise(ArgumentError, message: "invalid uri")
 
-    %URI{scheme: scheme, host: host, port: port, fragment: fragment} = uri
+    %URI{scheme: scheme, host: host, port: port, fragment: fragment, authority: authority} = uri
     %URI{path: path, query: query, fragment: fragment} = decode_fragment(fragment)
-    %URI{scheme: scheme, host: host, port: port, path: path, query: query, fragment: fragment}
+
+    %URI{
+      scheme: scheme,
+      host: host,
+      port: port,
+      authority: authority,
+      path: path,
+      query: query,
+      fragment: fragment
+    }
   end
 
   # ------------------------------------------------------------------------

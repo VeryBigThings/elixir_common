@@ -4,13 +4,14 @@ defmodule VbtURITest do
   doctest VbtURI
 
   describe "to_string/1" do
-    property "preserves scheme, host, and port" do
+    property "preserves scheme, host, port, and authority" do
       check all uri <- uri() do
         vbt_uri = uri |> VbtURI.to_string() |> URI.parse()
 
         assert vbt_uri.scheme == uri.scheme
         assert vbt_uri.host == uri.host
         assert vbt_uri.port == uri.port
+        assert vbt_uri.authority == uri.authority
       end
     end
 
@@ -24,7 +25,10 @@ defmodule VbtURITest do
     property "encodes path, query, and fragment into fragment which starts with !" do
       check all uri <- uri() do
         encoded_fragment = (uri |> VbtURI.to_string() |> URI.parse()).fragment
-        expected_fragment = "!" <> URI.to_string(%URI{uri | scheme: nil, host: nil, port: nil})
+
+        expected_fragment =
+          "!" <> URI.to_string(%URI{uri | scheme: nil, host: nil, port: nil, authority: nil})
+
         assert encoded_fragment == expected_fragment
       end
     end
@@ -58,23 +62,26 @@ defmodule VbtURITest do
 
   defp uri do
     gen all scheme <- constant_of(~w/http https/),
-            port <- one_of([default_port(scheme), non_default_port(scheme)]),
             uri <-
               fixed_map(%{
                 scheme: constant(scheme),
                 host: host(),
-                port: constant(port),
+                port: one_of([default_port(scheme), non_default_port(scheme)]),
                 path: one_of([constant(nil), multipart_string("/")]),
                 query: one_of([constant(nil), query()]),
                 fragment: one_of([constant(nil), alphanumeric_string()])
               }),
-            do: struct!(URI, uri)
+            do: set_authority(struct!(URI, uri))
   end
 
   defp default_port("http"), do: constant(80)
   defp default_port("https"), do: constant(443)
 
   defp non_default_port(scheme), do: filter(integer(1..65_535), &(&1 != default_port(scheme)))
+
+  defp set_authority(%URI{scheme: "http", port: 80} = uri), do: %URI{uri | authority: uri.host}
+  defp set_authority(%URI{scheme: "https", port: 443} = uri), do: %URI{uri | authority: uri.host}
+  defp set_authority(uri), do: %URI{uri | authority: "#{uri.host}:#{uri.port}"}
 
   defp host, do: one_of([constant("localhost"), multipart_string("."), ip_address()])
 
