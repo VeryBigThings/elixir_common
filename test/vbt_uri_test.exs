@@ -4,11 +4,12 @@ defmodule VbtURITest do
   doctest VbtURI
 
   describe "to_string/1" do
-    property "preserves scheme, host, port, and authority" do
+    property "preserves scheme, userinfo, host, port, and authority" do
       check all uri <- uri() do
         vbt_uri = uri |> VbtURI.to_string() |> URI.parse()
 
         assert vbt_uri.scheme == uri.scheme
+        assert vbt_uri.userinfo == uri.userinfo
         assert vbt_uri.host == uri.host
         assert vbt_uri.port == uri.port
         assert vbt_uri.authority == uri.authority
@@ -65,6 +66,7 @@ defmodule VbtURITest do
             uri <-
               fixed_map(%{
                 scheme: constant(scheme),
+                userinfo: one_of([constant(nil), userinfo()]),
                 host: host(),
                 port: one_of([default_port(scheme), non_default_port(scheme)]),
                 path: one_of([constant(nil), multipart_string("/")]),
@@ -74,14 +76,22 @@ defmodule VbtURITest do
             do: set_authority(struct!(URI, uri))
   end
 
+  defp userinfo, do: map(nonempty(list_of(alphanumeric_string())), &Enum.join(&1, ":"))
+
   defp default_port("http"), do: constant(80)
   defp default_port("https"), do: constant(443)
 
   defp non_default_port(scheme), do: filter(integer(1..65_535), &(&1 != default_port(scheme)))
 
-  defp set_authority(%URI{scheme: "http", port: 80} = uri), do: %URI{uri | authority: uri.host}
-  defp set_authority(%URI{scheme: "https", port: 443} = uri), do: %URI{uri | authority: uri.host}
-  defp set_authority(uri), do: %URI{uri | authority: "#{uri.host}:#{uri.port}"}
+  defp set_authority(%URI{userinfo: nil} = uri),
+    do: %URI{uri | authority: normalized_host_address(uri)}
+
+  defp set_authority(uri),
+    do: %URI{uri | authority: "#{uri.userinfo}@#{normalized_host_address(uri)}"}
+
+  defp normalized_host_address(%URI{scheme: "http", port: 80} = uri), do: uri.host
+  defp normalized_host_address(%URI{scheme: "https", port: 443} = uri), do: uri.host
+  defp normalized_host_address(uri), do: "#{uri.host}:#{uri.port}"
 
   defp host, do: one_of([constant("localhost"), multipart_string("."), ip_address()])
 

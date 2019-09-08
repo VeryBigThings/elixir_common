@@ -66,6 +66,7 @@ defmodule VbtURI do
 
     %URI{
       scheme: standard_uri.scheme,
+      userinfo: standard_uri.userinfo,
       host: standard_uri.host,
       port: standard_uri.port,
       authority: standard_uri.authority,
