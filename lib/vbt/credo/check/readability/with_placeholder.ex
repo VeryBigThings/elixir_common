@@ -1,4 +1,4 @@
-defmodule VbtCredo.Check.Readability.WithPlaceholder do
+defmodule VBT.Credo.Check.Readability.WithPlaceholder do
   @moduledoc false
 
   @checkdoc """
@@ -38,7 +38,7 @@ defmodule VbtCredo.Check.Readability.WithPlaceholder do
 
   # `use Credo.Check` required that module attributes are already defined, so we need to place these attributes
   # before use/alias expressions.
-  # credo:disable-for-next-line VbtCredo.Check.Consistency.ModuleLayout
+  # credo:disable-for-next-line VBT.Credo.Check.Consistency.ModuleLayout
   use Credo.Check, base_priority: :high
 
   alias Credo.Code

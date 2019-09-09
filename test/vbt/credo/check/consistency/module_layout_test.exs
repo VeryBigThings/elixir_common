@@ -1,7 +1,7 @@
-defmodule VbtCredo.Check.Consistency.ModuleLayoutTest do
+defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
   use Credo.TestHelper
 
-  @described_check VbtCredo.Check.Consistency.ModuleLayout
+  @described_check VBT.Credo.Check.Consistency.ModuleLayout
 
   test "no errors are reported on a successful layout" do
     """

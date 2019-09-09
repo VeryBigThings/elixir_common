@@ -10,8 +10,8 @@
       strict: true,
       color: true,
       checks: [
-        {VbtCredo.Check.Consistency.ModuleLayout, []},
-        {VbtCredo.Check.Readability.WithPlaceholderTest, []},
+        {VBT.Credo.Check.Consistency.ModuleLayout, []},
+        {VBT.Credo.Check.Readability.WithPlaceholderTest, []},
         {Credo.Check.Design.TagTODO, false},
         {Credo.Check.Readability.ModuleDoc, false}
       ]

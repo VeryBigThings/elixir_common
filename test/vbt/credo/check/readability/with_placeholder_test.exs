@@ -1,7 +1,7 @@
-defmodule VbtCredo.Check.Readability.WithPlaceholderTest do
+defmodule VBT.Credo.Check.Readability.WithPlaceholderTest do
   use Credo.TestHelper
 
-  @described_check VbtCredo.Check.Readability.WithPlaceholder
+  @described_check VBT.Credo.Check.Readability.WithPlaceholder
 
   test "no errors are reported when there are no violations" do
     """

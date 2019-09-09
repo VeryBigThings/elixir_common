@@ -1,12 +1,12 @@
-defmodule VbtURITest do
+defmodule VBT.URITest do
   use ExUnit.Case, async: true
   use ExUnitProperties
-  doctest VbtURI
+  doctest VBT.URI
 
   describe "to_string/1" do
     property "preserves scheme, userinfo, host, port, and authority" do
       check all uri <- uri() do
-        vbt_uri = uri |> VbtURI.to_string() |> URI.parse()
+        vbt_uri = uri |> VBT.URI.to_string() |> URI.parse()
 
         assert vbt_uri.scheme == uri.scheme
         assert vbt_uri.userinfo == uri.userinfo
@@ -18,14 +18,14 @@ defmodule VbtURITest do
 
     property "sets path to /" do
       check all uri <- uri() do
-        vbt_uri = uri |> VbtURI.to_string() |> URI.parse()
+        vbt_uri = uri |> VBT.URI.to_string() |> URI.parse()
         assert vbt_uri.path == "/"
       end
     end
 
     property "encodes path, query, and fragment into fragment which starts with !" do
       check all uri <- uri() do
-        assert "!" <> encoded_fragment = (uri |> VbtURI.to_string() |> URI.parse()).fragment
+        assert "!" <> encoded_fragment = (uri |> VBT.URI.to_string() |> URI.parse()).fragment
 
         expected_fragment =
           URI.to_string(%URI{uri | scheme: nil, host: nil, port: nil, authority: nil})
@@ -39,27 +39,27 @@ defmodule VbtURITest do
     test "raises if path doesn't start with /" do
       uri = %URI{Enum.at(uri(), 1) | path: "invalid_path"}
       expected_message = "the input path must start with /"
-      assert_raise ArgumentError, expected_message, fn -> VbtURI.to_string(uri) end
+      assert_raise ArgumentError, expected_message, fn -> VBT.URI.to_string(uri) end
     end
   end
 
   describe "parse/1" do
     property "returns the original input passed to to_string/1" do
       check all uri <- uri() do
-        assert uri |> VbtURI.to_string() |> VbtURI.parse() == uri
+        assert uri |> VBT.URI.to_string() |> VBT.URI.parse() == uri
       end
     end
 
     test "raises if path is not empty" do
-      assert_raise ArgumentError, fn -> VbtURI.parse("http://some_server/foo/bar#!a=1") end
+      assert_raise ArgumentError, fn -> VBT.URI.parse("http://some_server/foo/bar#!a=1") end
     end
 
     test "raises if query is not empty" do
-      assert_raise ArgumentError, fn -> VbtURI.parse("http://some_server/?foo=1#!a=1") end
+      assert_raise ArgumentError, fn -> VBT.URI.parse("http://some_server/?foo=1#!a=1") end
     end
 
     test "raises if fragment doesn't start with !" do
-      assert_raise ArgumentError, fn -> VbtURI.parse("http://some_server/#a=1") end
+      assert_raise ArgumentError, fn -> VBT.URI.parse("http://some_server/#a=1") end
     end
   end
 
