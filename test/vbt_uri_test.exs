@@ -25,18 +25,20 @@ defmodule VbtURITest do
 
     property "encodes path, query, and fragment into fragment which starts with !" do
       check all uri <- uri() do
-        encoded_fragment = (uri |> VbtURI.to_string() |> URI.parse()).fragment
+        assert "!" <> encoded_fragment = (uri |> VbtURI.to_string() |> URI.parse()).fragment
 
         expected_fragment =
-          "!" <> URI.to_string(%URI{uri | scheme: nil, host: nil, port: nil, authority: nil})
+          URI.to_string(%URI{uri | scheme: nil, host: nil, port: nil, authority: nil})
 
-        assert encoded_fragment == expected_fragment
+        if uri.path == nil,
+          do: assert(encoded_fragment == expected_fragment),
+          else: assert("/#{encoded_fragment}" == expected_fragment)
       end
     end
 
-    test "raises if path starts with /" do
-      uri = %URI{Enum.at(uri(), 1) | path: "/"}
-      expected_message = "the input path must not start with /"
+    test "raises if path doesn't start with /" do
+      uri = %URI{Enum.at(uri(), 1) | path: "invalid_path"}
+      expected_message = "the input path must start with /"
       assert_raise ArgumentError, expected_message, fn -> VbtURI.to_string(uri) end
     end
   end
@@ -69,7 +71,7 @@ defmodule VbtURITest do
                 userinfo: one_of([constant(nil), userinfo()]),
                 host: host(),
                 port: one_of([default_port(scheme), non_default_port(scheme)]),
-                path: one_of([constant(nil), multipart_string("/")]),
+                path: one_of([constant(nil), map(multipart_string("/"), &"/#{&1}")]),
                 query: one_of([constant(nil), query()]),
                 fragment: one_of([constant(nil), alphanumeric_string()])
               }),

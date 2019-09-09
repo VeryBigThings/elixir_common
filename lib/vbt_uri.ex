@@ -22,7 +22,7 @@ defmodule VbtURI do
       ...>   scheme: "http",
       ...>   host: "foo.bar",
       ...>   port: 4000,
-      ...>   path: "some/path",
+      ...>   path: "/some/path",
       ...>   query: "foo=1&bar=2",
       ...>   fragment: "some_fragment"
       ...> }
@@ -31,8 +31,8 @@ defmodule VbtURI do
   """
   @spec to_string(URI.t()) :: String.t()
   def to_string(uri) do
-    if not is_nil(uri.path) and String.starts_with?(uri.path, "/"),
-      do: raise(ArgumentError, message: "the input path must not start with /")
+    if not is_nil(uri.path) and not String.starts_with?(uri.path, "/"),
+      do: raise(ArgumentError, message: "the input path must start with /")
 
     URI.to_string(%URI{uri | path: "/", query: nil, fragment: encode_fragment(uri)})
   end
@@ -45,7 +45,7 @@ defmodule VbtURI do
         scheme: "http",
         host: "foo.bar",
         port: 4000,
-        path: "some/path",
+        path: "/some/path",
         query: "foo=1&bar=2",
         fragment: "some_fragment",
         userinfo: nil,
@@ -80,11 +80,19 @@ defmodule VbtURI do
   # Private
   # ------------------------------------------------------------------------
 
-  defp encode_fragment(uri),
-    do: "!" <> URI.to_string(%URI{path: uri.path, query: uri.query, fragment: uri.fragment})
+  defp encode_fragment(uri) do
+    path = encode_path(uri.path)
+    "!" <> URI.to_string(%URI{path: path, query: uri.query, fragment: uri.fragment})
+  end
+
+  defp encode_path(nil), do: nil
+  defp encode_path("/" <> path), do: path
 
   defp decode_fragment("!" <> fragment) do
     %URI{path: path, query: query, fragment: fragment} = URI.parse(fragment)
-    %URI{path: path, query: query, fragment: fragment}
+    %URI{path: decode_path(path), query: query, fragment: fragment}
   end
+
+  defp decode_path(nil), do: nil
+  defp decode_path(path), do: "/#{path}"
 end
