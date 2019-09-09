@@ -7,7 +7,7 @@
         excluded: [~r"/_build/", ~r"/deps/", ~r"/node_modules/"]
       },
       requires: [],
-      strict: false,
+      strict: true,
       color: true,
       checks: [
         {VbtCredo.Check.Consistency.ModuleLayout, []},
