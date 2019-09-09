@@ -8,7 +8,8 @@ defmodule VbtCredo.MixProject do
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      aliases: aliases()
+      aliases: aliases(),
+      preferred_cli_env: preferred_cli_env()
     ]
   end
 
@@ -29,5 +30,9 @@ defmodule VbtCredo.MixProject do
     [
       credo: ~w/compile credo/
     ]
+  end
+
+  defp preferred_cli_env do
+    [credo: :test, dialyzer: :test]
   end
 end
