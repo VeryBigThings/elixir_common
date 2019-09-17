@@ -12,6 +12,7 @@
       checks: [
         {VBT.Credo.Check.Consistency.ModuleLayout, []},
         {VBT.Credo.Check.Readability.WithPlaceholderTest, []},
+        {VBT.Credo.Check.Consistency.FileLocation, []},
         {Credo.Check.Design.TagTODO, false},
         {Credo.Check.Readability.ModuleDoc, false}
       ]
