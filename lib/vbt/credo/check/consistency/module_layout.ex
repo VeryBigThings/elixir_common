@@ -31,7 +31,7 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayout do
   # `use Credo.Check` required that module attributes are already defined, so we need to place these attributes
   # before use/alias expressions.
   # credo:disable-for-next-line VBT.Credo.Check.Consistency.ModuleLayout
-  use Credo.Check, base_priority: :high
+  use Credo.Check, category: :warning, base_priority: :high
 
   alias Credo.Code
   alias VBT.Credo.ModulePartExtractor
