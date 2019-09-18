@@ -11,7 +11,7 @@
       color: true,
       checks: [
         {VBT.Credo.Check.Consistency.ModuleLayout, []},
-        {VBT.Credo.Check.Readability.WithPlaceholderTest, []},
+        {VBT.Credo.Check.Readability.WithPlaceholder, []},
         {VBT.Credo.Check.Consistency.FileLocation, []},
         {Credo.Check.Design.TagTODO, false},
         {Credo.Check.Readability.ModuleDoc, false}
