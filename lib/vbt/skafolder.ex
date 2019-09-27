@@ -1,7 +1,5 @@
 defmodule VBT.Skafolder do
-  @moduledoc """
-  Documentation for VBT.Skafolder.
-  """
+  @moduledoc false
 
   def generate_file(content, file) do
     Mix.Generator.create_file(file, content)
