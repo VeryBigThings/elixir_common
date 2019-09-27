@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   @shortdoc "Boostrap project (generate everything!!!)"
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise("mix phx.gen.json can only be run inside an application directory")
+      Mix.raise("mix vbt.bootstrap can only be run inside an application directory")
     end
 
     Mix.Task.run("vbt.gen.makefile", args)

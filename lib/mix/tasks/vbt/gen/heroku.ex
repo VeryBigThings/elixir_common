@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Vbt.Gen.Heroku do
     app = Mix.Project.config()[:app]
 
     if Mix.Project.umbrella?() do
-      Mix.raise("mix phx.gen.json can only be run inside an application directory")
+      Mix.raise("mix vbt.gen.heroku can only be run inside an application directory")
     end
 
     {opts, _parsed, _invalid} = OptionParser.parse(args, switches: @switches)

@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Vbt.Gen.Makefile do
   @shortdoc "Generate Makefile"
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise("mix phx.gen.json can only be run inside an application directory")
+      Mix.raise("mix vbt.gen.makefile can only be run inside an application directory")
     end
 
     {opts, _parsed, _invalid} = OptionParser.parse(args, switches: @switches)
