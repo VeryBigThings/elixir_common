@@ -16,7 +16,7 @@ defmodule VBT.Skafolder do
   end
 
   def template_paths do
-    base_path = :code.priv_dir(:skafolder)
+    base_path = :code.priv_dir(:vbt)
     [Path.join([base_path, "templates"])]
   end
 
