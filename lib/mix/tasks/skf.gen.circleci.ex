@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Skf.Gen.Circleci do
     bindings = Keyword.merge([app: app], [])
 
     @template
-    |> Skafolder.eval_from_templates(bindings)
-    |> Skafolder.generate_file(Path.join([File.cwd!(), ".circleci", "config.yml"]))
+    |> VBT.Skafolder.eval_from_templates(bindings)
+    |> VBT.Skafolder.generate_file(Path.join([File.cwd!(), ".circleci", "config.yml"]))
   end
 end

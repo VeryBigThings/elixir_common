@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Skf.Gen.Makefile do
     bindings = Keyword.merge([app: app], Enum.into(opts, @defaults))
 
     @template
-    |> Skafolder.eval_from_templates(bindings)
-    |> Skafolder.generate_file(Path.join([File.cwd!(), "Makefile"]))
+    |> VBT.Skafolder.eval_from_templates(bindings)
+    |> VBT.Skafolder.generate_file(Path.join([File.cwd!(), "Makefile"]))
   end
 end

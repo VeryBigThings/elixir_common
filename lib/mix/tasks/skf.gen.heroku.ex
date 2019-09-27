@@ -19,8 +19,8 @@ defmodule Mix.Tasks.Skf.Gen.Heroku do
 
     Enum.each(files_for_docker_deployments(@template_root), fn {source, destination} ->
       source
-      |> Skafolder.eval_from_templates(bindings)
-      |> Skafolder.generate_file(destination)
+      |> VBT.Skafolder.eval_from_templates(bindings)
+      |> VBT.Skafolder.generate_file(destination)
     end)
   end
 

@@ -1,6 +1,6 @@
-defmodule Skafolder do
+defmodule VBT.Skafolder do
   @moduledoc """
-  Documentation for Skafolder.
+  Documentation for VBT.Skafolder.
   """
 
   def generate_file(content, file) do

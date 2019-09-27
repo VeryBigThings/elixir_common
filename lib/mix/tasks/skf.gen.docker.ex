@@ -22,8 +22,8 @@ defmodule Mix.Tasks.Skf.Gen.Docker do
 
     Enum.each(@templates, fn tpl ->
       tpl
-      |> Skafolder.eval_from_templates(bindings)
-      |> Skafolder.generate_file(Path.join([File.cwd!(), Path.basename(tpl)]))
+      |> VBT.Skafolder.eval_from_templates(bindings)
+      |> VBT.Skafolder.generate_file(Path.join([File.cwd!(), Path.basename(tpl)]))
     end)
   end
 end
