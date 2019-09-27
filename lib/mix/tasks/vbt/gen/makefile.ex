@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Vbt.Gen.Makefile do
 
     app = Mix.Project.config()[:app]
 
-    bindings = Keyword.merge([app: app], Enum.into(opts, @defaults))
+    bindings = Keyword.merge([app: app], Keyword.merge(opts, @defaults))
 
     @template
     |> VBT.Skafolder.eval_from_templates(bindings)
