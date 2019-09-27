@@ -1,4 +1,12 @@
 defmodule Mix.Tasks.Vbt.Gen.Makefile do
+  @moduledoc """
+  Generates a Makefile.
+
+  Options:
+
+    - `--cloud` - specifies the target cloud. Possible values are `heroku` (default), and `aws`.
+  """
+
   use Mix.Task
 
   @template Path.join(["skf.gen.makefile", "Makefile"])
