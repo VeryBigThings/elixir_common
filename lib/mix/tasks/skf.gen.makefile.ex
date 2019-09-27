@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Skf.Gen.Makefile do
       Mix.raise("mix phx.gen.json can only be run inside an application directory")
     end
 
-    {opts, parsed, invalid} = OptionParser.parse(args, switches: @switches)
+    {opts, _parsed, _invalid} = OptionParser.parse(args, switches: @switches)
 
     app = Mix.Project.config()[:app]
 

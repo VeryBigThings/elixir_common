@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Skf.Gen.Circleci do
   @template Path.join(["skf.gen.circleci", "config.yml"])
 
   @shortdoc "Generate CircleCI config files"
-  def run(args) do
+  def run(_args) do
     if Mix.Project.umbrella?() do
       Mix.raise("mix phx.gen.json can only be run inside an application directory")
     end

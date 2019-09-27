@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Skf.Gen.Heroku do
       Mix.raise("mix phx.gen.json can only be run inside an application directory")
     end
 
-    {opts, parsed, invalid} = OptionParser.parse(args, switches: @switches)
+    {opts, _parsed, _invalid} = OptionParser.parse(args, switches: @switches)
     bindings = Keyword.merge([app: app], Enum.into(opts, @defaults))
 
     Enum.each(files_for_docker_deployments(@template_root), fn {source, destination} ->

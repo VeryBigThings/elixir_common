@@ -9,10 +9,9 @@ defmodule Mix.Tasks.Skf.Gen.Docker do
     Path.join(["skf.gen.docker", "docker-compose.yml"])
   ]
 
-  @switches []
-
   @shortdoc "Generate docker files"
-  def run(args) do
+
+  def run(_args) do
     if Mix.Project.umbrella?() do
       Mix.raise("mix phx.gen.json can only be run inside an application directory")
     end
