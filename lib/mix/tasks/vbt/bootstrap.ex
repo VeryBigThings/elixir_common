@@ -7,9 +7,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       Mix.raise("mix phx.gen.json can only be run inside an application directory")
     end
 
-    Mix.Tasks.Vbt.Gen.Makefile.run(args)
-    Mix.Tasks.Vbt.Gen.Docker.run(args)
-    Mix.Tasks.Vbt.Gen.Circleci.run(args)
-    Mix.Tasks.Vbt.Gen.Heroku.run(args)
+    Mix.Task.run("vbt.gen.makefile", args)
+    Mix.Task.run("vbt.gen.docker", args)
+    Mix.Task.run("vbt.gen.circleci", args)
+    Mix.Task.run("vbt.gen.heroku", args)
   end
 end
