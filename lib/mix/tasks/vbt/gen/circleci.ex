@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Skf.Gen.Circleci do
+defmodule Mix.Tasks.Vbt.Gen.Circleci do
   use Mix.Task
 
   @template Path.join(["skf.gen.circleci", "config.yml"])

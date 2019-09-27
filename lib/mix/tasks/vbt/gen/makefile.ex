@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Skf.Gen.Makefile do
+defmodule Mix.Tasks.Vbt.Gen.Makefile do
   use Mix.Task
 
   @template Path.join(["skf.gen.makefile", "Makefile"])

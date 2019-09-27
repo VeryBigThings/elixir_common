@@ -29,13 +29,13 @@ end
 Generate a Makefile, without the Docker related tasks purposed for Heroku deployment
 
 ```bash
-mix skf.gen.makefile --no-docker --cloud heroku
+mix vbt.gen.makefile --no-docker --cloud heroku
 ```
 
 Generate a Makefile, with Docker tasks included and purposed for AWS deployment
 
 ```bash
-mix skf.gen.makefile --cloud aws
+mix vbt.gen.makefile --cloud aws
 ```
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)

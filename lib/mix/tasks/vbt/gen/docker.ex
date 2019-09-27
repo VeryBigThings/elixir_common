@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Skf.Gen.Docker do
+defmodule Mix.Tasks.Vbt.Gen.Docker do
   use Mix.Task
 
   @templates [

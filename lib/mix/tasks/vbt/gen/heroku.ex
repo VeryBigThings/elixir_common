@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Skf.Gen.Heroku do
+defmodule Mix.Tasks.Vbt.Gen.Heroku do
   use Mix.Task
 
   @template_root "skf.gen.heroku"
