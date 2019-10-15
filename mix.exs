@@ -9,7 +9,8 @@ defmodule VBT.Credo.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
-      preferred_cli_env: preferred_cli_env()
+      preferred_cli_env: preferred_cli_env(),
+      dialyzer: dialyzer()
     ]
   end
 
@@ -35,5 +36,11 @@ defmodule VBT.Credo.MixProject do
 
   defp preferred_cli_env do
     [credo: :test, dialyzer: :test]
+  end
+
+  defp dialyzer() do
+    [
+      plt_add_apps: [:mix, :eex]
+    ]
   end
 end
