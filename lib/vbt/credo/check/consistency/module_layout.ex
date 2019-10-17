@@ -86,13 +86,17 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayout do
   defp check_part_location(state, {part, file_pos}, issue_meta) do
     state
     |> validate_order(part, file_pos, issue_meta)
-    |> Map.put(:current_part, part)
+    |> store_current_part(part)
+  end
+
+  defp store_current_part(state, part) do
+    if is_nil(order(part)), do: state, else: Map.put(state, :current_part, part)
   end
 
   defp validate_order(state, part, file_pos, issue_meta) do
     current_part = state.current_part
 
-    if is_nil(current_part) || is_nil(order(part)) || order(state.current_part) <= order(part),
+    if is_nil(current_part) or is_nil(order(part)) or order(state.current_part) <= order(part),
       do: state,
       else: add_error(state, part, file_pos, issue_meta)
   end

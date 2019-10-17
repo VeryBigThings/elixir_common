@@ -355,4 +355,18 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
 
     assert issue.message == "callback implementation must appear before private function"
   end
+
+  test "private macro is ignored" do
+    """
+    defmodule Test do
+      defmacrop some_macro do
+        nil
+      end
+
+      def public_fun(), do: :ok
+    end
+    """
+    |> to_source_file
+    |> refute_issues(@described_check)
+  end
 end
