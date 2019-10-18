@@ -1,7 +1,7 @@
 build:
   config:
     MIX_ENV: prod
-    APP_NAME: dmf_backend
+    APP_NAME: <%= app %>
     SKIP_ASSETS: true
   docker:
     web:

@@ -23,4 +23,4 @@ if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
 fi
 
 args="$@"
-/opt/app/bin/local_drive_backend eval "DMFBackend.ReleaseTasks.migrate(~w($args))"
+/opt/app/bin/<%= app %>_backend eval "<%= base_module %>.ReleaseTasks.migrate(~w($args))"
