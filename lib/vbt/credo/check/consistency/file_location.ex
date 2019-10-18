@@ -36,19 +36,25 @@ defmodule VBT.Credo.Check.Consistency.FileLocation do
 
   @doc false
   def verify(relative_path, ast, params) do
-    if verify_path?(relative_path),
+    if verify_path?(relative_path, params),
       do: ast |> main_module() |> verify_module(relative_path, params),
       else: :ok
   end
 
-  defp verify_path?(relative_path) do
+  defp verify_path?(relative_path, params) do
     case Path.split(relative_path) do
-      ["lib" | _] -> true
+      ["lib" | _] -> not exclude?(relative_path, params)
       ["test", "support" | _] -> false
       ["test", "test_helper.exs"] -> false
-      ["test" | _] -> true
+      ["test" | _] -> not exclude?(relative_path, params)
       _ -> false
     end
+  end
+
+  defp exclude?(relative_path, params) do
+    params
+    |> Keyword.get(:exclude, [])
+    |> Enum.any?(&String.starts_with?(relative_path, &1))
   end
 
   defp main_module(ast) do
