@@ -11,5 +11,6 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     Mix.Task.run("vbt.gen.docker", args)
     Mix.Task.run("vbt.gen.circleci", args)
     Mix.Task.run("vbt.gen.heroku", args)
+    Mix.Task.run("vbt.gen.credo", args)
   end
 end

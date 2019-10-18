@@ -21,7 +21,7 @@ defmodule VBT.Integration.SkafolderTest do
     assert new_files == expected_files()
   end
 
-  defp all_project_files() do
+  defp all_project_files do
     Path.join(project_path(), "**")
     |> Path.wildcard(match_dot: true)
     |> Stream.reject(&File.dir?/1)
@@ -42,6 +42,7 @@ defmodule VBT.Integration.SkafolderTest do
         rel/bin/migrate.sh
         rel/bin/rollback.sh
         rel/bin/seed.sh
+        .credo.exs
       ],
       MapSet.new(),
       &Path.join(project_path(), &1)
