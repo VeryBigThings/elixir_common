@@ -22,3 +22,10 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 skafolder_tester-*.tar
 
+/.dockerignore
+/.env.development
+/Dockerfile
+/Makefile
+/docker-compose.yml
+/entrypoint.sh
+/heroku.yml
