@@ -3,21 +3,16 @@ defmodule Mix.Tasks.Vbt.Gen.Heroku do
 
   @template_root "skf.gen.heroku"
 
-  @switches []
-  @defaults []
-
   @shortdoc "Generate Heroku config"
-  def run(args) do
-    app = Mix.Project.config()[:app]
-
+  def run(_args) do
     if Mix.Project.umbrella?() do
       Mix.raise("mix vbt.gen.heroku can only be run inside an application directory")
     end
 
-    {opts, _parsed, _invalid} = OptionParser.parse(args, switches: @switches)
-    bindings = Keyword.merge([app: app], Enum.into(opts, @defaults))
+    bindings = Mix.Vbt.bindings()
 
-    Enum.each(files_for_docker_deployments(@template_root), fn {source, destination} ->
+    files_for_docker_deployments(@template_root)
+    |> Enum.each(fn {source, destination} ->
       source
       |> VBT.Skafolder.eval_from_templates(bindings)
       |> VBT.Skafolder.generate_file(destination)

@@ -18,4 +18,4 @@ if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
   exit 0;
 fi
 args="$@"
-/opt/app/bin/local_drive_backend eval "DMFBackend.ReleaseTasks.seed(~w($args))"
+/opt/app/bin/<%= app %>_backend eval "<%= base_module %>.ReleaseTasks.seed(~w($args))"

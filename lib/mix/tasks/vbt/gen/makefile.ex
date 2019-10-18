@@ -21,9 +21,7 @@ defmodule Mix.Tasks.Vbt.Gen.Makefile do
 
     {opts, _parsed, _invalid} = OptionParser.parse(args, switches: @switches)
 
-    app = Mix.Project.config()[:app]
-
-    bindings = Keyword.merge([app: app], Keyword.merge(opts, @defaults))
+    bindings = Mix.Vbt.bindings(opts, @defaults)
 
     @template
     |> VBT.Skafolder.eval_from_templates(bindings)
