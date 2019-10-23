@@ -43,6 +43,7 @@ defmodule VBT.Integration.SkafolderTest do
         rel/bin/rollback.sh
         rel/bin/seed.sh
         .credo.exs
+        .github/pull_request_template.md
       ],
       MapSet.new(),
       &Path.join(project_path(), &1)

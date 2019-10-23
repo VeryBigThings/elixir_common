@@ -30,3 +30,4 @@ skafolder_tester-*.tar
 /entrypoint.sh
 /heroku.yml
 /.credo.exs
+/.github
