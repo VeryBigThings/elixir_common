@@ -27,6 +27,17 @@ defmodule VBT.Credo.Check.Consistency.FileLocationTest do
            ) == :ok
   end
 
+  test "ignores excluded folders" do
+    assert verify(
+             %{
+               name: "lib/app_web/views/my_view.ex",
+               expected_module: AppWeb.MyView,
+               modules: [AppWeb.MyView]
+             },
+             exclude: ["lib/app_web"]
+           ) == :ok
+  end
+
   defp verify(file, params \\ []), do: FileLocation.verify(file.name, ast(file), params)
 
   defp ast(file) do
