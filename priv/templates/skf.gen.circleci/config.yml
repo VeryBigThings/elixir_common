@@ -36,8 +36,39 @@ jobs:
           paths:
             - deps
             - _build
+      - run:
+          name: "Run credo checks"
+          command: mix credo list
+      - run:
+          name: "Check code format"
+          command: mix format --check-formatted
+      - restore_cache:
+          keys:
+            - '{{ .Environment.CACHE_VERSION}}-dialyzer-cache-{{ .Branch }}-{{ checksum "mix.lock" }}'
+            - '{{ .Environment.CACHE_VERSION}}-dialyzer-cache-{{ .Branch }}-'
+            - '{{ .Environment.CACHE_VERSION}}-dialyzer-cache-'
+      - run:
+          name: "Restore cached dialyzer files"
+          command: "mkdir -p plts && ls plts | xargs -I % cp plts/% _build/$MIX_ENV/"
+      - run:
+          name: "Build dialyzer plt"
+          command: mix dialyzer --plt
+      - run:
+          name: "Prepare dialyzer files to cache"
+          command: "mkdir -p plts && ls _build/$MIX_ENV | grep dialyxir | xargs -I % cp _build/$MIX_ENV/% -t plts"
+      - save_cache:
+          paths:
+            - plts
+            - ~/.mix
+          key: '{{ .Environment.CACHE_VERSION}}-dialyzer-cache-{{ .Branch }}-{{ checksum "mix.lock" }}'
+      - run:
+          name: "Run Dialyzer checks"
+          command: mix dialyzer --halt-exit-status
       - run: mix do ecto.create, ecto.migrate
       - run: mix test
+      - run:
+          name: "Check migrations reversibility"
+          command: mix ecto.rollback --all
   deploy:
     docker:
       - image: buildpack-deps:trusty
