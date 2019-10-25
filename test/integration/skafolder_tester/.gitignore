@@ -31,3 +31,4 @@ skafolder_tester-*.tar
 /heroku.yml
 /.credo.exs
 /.github
+/dialyzer.ignore-warnings

@@ -13,5 +13,6 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     Mix.Task.run("vbt.gen.heroku", args)
     Mix.Task.run("vbt.gen.github_pr_template", args)
     Mix.Task.run("vbt.gen.credo", args)
+    Mix.Task.run("vbt.gen.dialyzer", args)
   end
 end
