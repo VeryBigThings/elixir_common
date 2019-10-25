@@ -7,12 +7,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       Mix.raise("mix vbt.bootstrap can only be run inside an application directory")
     end
 
-    Mix.Task.run("vbt.gen.makefile", args)
-    Mix.Task.run("vbt.gen.docker", args)
-    Mix.Task.run("vbt.gen.circleci", args)
-    Mix.Task.run("vbt.gen.heroku", args)
-    Mix.Task.run("vbt.gen.github_pr_template", args)
-    Mix.Task.run("vbt.gen.credo", args)
-    Mix.Task.run("vbt.gen.dialyzer", args)
+    Enum.each(
+      ~w/makefile docker circleci heroku github_pr_template credo dialyzer/,
+      &Mix.Task.run("vbt.gen.#{&1}", args)
+    )
   end
 end
