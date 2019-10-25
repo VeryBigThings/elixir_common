@@ -64,8 +64,15 @@ jobs:
       - run:
           name: "Run Dialyzer checks"
           command: mix dialyzer --halt-exit-status
-      - run: mix do ecto.create, ecto.migrate
-      - run: mix test
+      - run:
+          name: "Create database"
+          command: mix ecto.migrate
+      - run:
+          name: "Run DB migrations"
+          command: mix ecto.migrate
+      - run:
+          name: "Run tests"
+          command: mix test
       - run:
           name: "Check migrations reversibility"
           command: mix ecto.rollback --all
