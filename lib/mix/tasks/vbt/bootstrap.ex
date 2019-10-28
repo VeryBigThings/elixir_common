@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
         defp dialyzer() do
           [
-            plt_add_apps: [:ex_unit],
+            plt_add_apps: [:ex_unit, :mix],
             ignore_warnings: "dialyzer.ignore-warnings"
           ]
         end
