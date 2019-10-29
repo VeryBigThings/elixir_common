@@ -44,6 +44,7 @@ defmodule VBT.Integration.SkafolderTest do
         rel/bin/seed.sh
         .credo.exs
         .github/pull_request_template.md
+        dialyzer.ignore-warnings
       ],
       MapSet.new(),
       &Path.join(project_path(), &1)
