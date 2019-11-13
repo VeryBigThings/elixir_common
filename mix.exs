@@ -22,8 +22,8 @@ defmodule VBT.Credo.MixProject do
 
   defp deps do
     [
-      {:credo, "~> 1.1"},
-      {:dialyxir, "~> 0.5", runtime: false, only: [:dev, :test]},
+      {:credo, "~> 1.1", runtime: false},
+      {:dialyxir, "~> 0.5", runtime: false},
       {:stream_data, "~> 0.4", only: [:test, :dev]},
       {:ecto, "~> 3.0", optional: true},
       {:absinthe, "~> 1.4", optional: true}
@@ -42,7 +42,7 @@ defmodule VBT.Credo.MixProject do
 
   defp dialyzer() do
     [
-      plt_add_apps: [:mix, :eex, :ecto, :absinthe]
+      plt_add_apps: [:mix, :eex, :ecto, :absinthe, :credo]
     ]
   end
 end
