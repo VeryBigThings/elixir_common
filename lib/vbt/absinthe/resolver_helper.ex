@@ -39,8 +39,12 @@ defmodule VBT.Absinthe.ResolverHelper do
     |> LanguageConventions.to_external_name(:field)
   end
 
-  defp handle_error(field, {msg, values}, opts) do
+  defp handle_error(field, {msg, values}, opts) when is_binary(msg) do
     %{message: error_message(msg, values, opts), extensions: %{field: field}}
+  end
+
+  defp handle_error(_field, {field_name, nested}, opts) do
+    Enum.map(nested, &handle_error(field_name, &1, opts))
   end
 
   defp handle_error(_field, errors, opts) do
