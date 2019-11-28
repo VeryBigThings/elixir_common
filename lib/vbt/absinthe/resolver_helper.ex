@@ -54,7 +54,9 @@ defmodule VBT.Absinthe.ResolverHelper do
   defp error_message("is invalid" = template, _values, _opts), do: template
 
   defp error_message(template, values, opts) do
-    Enum.reduce(values, template, fn {key, value}, acc ->
+    values
+    |> Stream.filter(fn {key, _value} -> String.contains?(template, "%{#{key}}") end)
+    |> Enum.reduce(template, fn {key, value}, acc ->
       String.replace(acc, "%{#{key}}", value_formatter(opts).(key, value))
     end)
   end

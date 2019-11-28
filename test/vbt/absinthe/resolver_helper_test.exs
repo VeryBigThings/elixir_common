@@ -101,5 +101,15 @@ defmodule VBT.Absinthe.ResolverHelperTest do
 
       assert errors == [%{extensions: %{field: "name"}, message: "formatted key1 error1"}]
     end
+
+    test "correctly handles unsafe_validate_unique error" do
+      errors =
+        %User{}
+        |> Ecto.Changeset.change()
+        |> Ecto.Changeset.add_error(:name, "error", validation: :unsafe_unique, fields: [:name])
+        |> ResolverHelper.changeset_errors()
+
+      assert errors == [%{extensions: %{field: "name"}, message: "error"}]
+    end
   end
 end
