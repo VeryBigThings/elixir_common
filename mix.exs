@@ -10,7 +10,8 @@ defmodule VBT.Credo.MixProject do
       deps: deps(),
       aliases: aliases(),
       preferred_cli_env: preferred_cli_env(),
-      dialyzer: dialyzer()
+      dialyzer: dialyzer(),
+      elixirc_paths: elixirc_paths(Mix.env())
     ]
   end
 
@@ -26,7 +27,8 @@ defmodule VBT.Credo.MixProject do
       {:dialyxir, "~> 0.5", runtime: false},
       {:stream_data, "~> 0.4", only: [:test, :dev]},
       {:ecto, "~> 3.0", optional: true},
-      {:absinthe, "~> 1.4", optional: true}
+      {:absinthe, "~> 1.4", optional: true},
+      {:bamboo, "~> 1.0", optional: true}
     ]
   end
 
@@ -42,7 +44,10 @@ defmodule VBT.Credo.MixProject do
 
   defp dialyzer() do
     [
-      plt_add_apps: [:mix, :eex, :ecto, :absinthe, :credo]
+      plt_add_apps: [:mix, :eex, :ecto, :absinthe, :credo, :bamboo]
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 end
