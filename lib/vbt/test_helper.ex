@@ -6,6 +6,49 @@ defmodule VBT.TestHelper do
   # ------------------------------------------------------------------------
 
   @doc """
+  Asserts that an e-mail has been delivered via Bamboo.
+
+  This macro behaves similar to [Bamboo.Test.assert_delivered_email]
+  (https://hexdocs.pm/bamboo/Bamboo.Test.html#assert_delivered_email/1), but it matches any mail
+  which satisfies the given pattern.
+
+  In contrast, the Bamboo assertion macro always takes the first email, and compares it to the
+  given pattern.
+
+  Consider the following test scenario:
+
+  ```
+  test "something" do
+    arrange(...)
+    function_under_test(...)
+    Bamboo.Test.assert_delivered_email(subject: "expected subject")
+  end
+  ```
+
+  Suppose that the arrange code sends a couple of e-mails, and then `function_under_test` sends
+  the desired e-mail. In this case, Bamboo assertion will fail, because it always compares the
+  first sent message.
+
+  In contrast, this macro will succeed as long as there is at least one e-mail which matches
+  the given pattern.
+
+  Finally, this macro uses pattern matching, which means that you can do something like:
+
+  ```
+  assert_delivered_email(subject: subject)
+  assert subject ~= some_content
+  ```
+  """
+  defmacro assert_delivered_email(mail_params, opts \\ []) do
+    quote do
+      assert_receive(
+        {:delivered_email, %Bamboo.Email{unquote_splicing(mail_params)}},
+        Keyword.get(unquote(opts), :timeout, 100)
+      )
+    end
+  end
+
+  @doc """
   Returns a unique positive integer.
 
   The function is globally monotonically strictly increasing. A returned value is guaranteed to
