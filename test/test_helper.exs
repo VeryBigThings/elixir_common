@@ -1,4 +1,6 @@
 # credo:disable-for-this-file
+VBT.GraphqlServer.start_link()
+
 Application.ensure_all_started(:credo)
 
 Code.require_file("support/test_application.exs", __DIR__)
