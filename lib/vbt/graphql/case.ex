@@ -141,7 +141,15 @@ defmodule VBT.Graphql.Case do
       import VBT.Graphql.Case, except: [set_config: 1]
 
       setup do
-        unquote(module).set_config(unquote(opts))
+        opts = unquote(opts)
+        unquote(module).set_config(opts)
+
+        with {:ok, repo} <- Keyword.fetch(opts, :repo) do
+          Sandbox.checkout(repo)
+          unless opts[:async], do: Sandbox.mode(repo, {:shared, self()})
+        end
+
+        :ok
       end
     end
   end
