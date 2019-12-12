@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Vbt.Gen.Docker do
+  @shortdoc "Generate docker files"
   @moduledoc "Generate docker files"
 
   # credo:disable-for-this-file Credo.Check.Readability.Specs
@@ -11,8 +12,6 @@ defmodule Mix.Tasks.Vbt.Gen.Docker do
     Path.join(["skf.gen.docker", "entrypoint.sh"]),
     Path.join(["skf.gen.docker", "docker-compose.yml"])
   ]
-
-  @shortdoc "Generate docker files"
 
   def run(_args) do
     if Mix.Project.umbrella?() do

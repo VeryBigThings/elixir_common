@@ -1,10 +1,10 @@
 defmodule Mix.Tasks.Vbt.Bootstrap do
+  @shortdoc "Boostrap project (generate everything!!!)"
   @moduledoc "Boostrap project (generate everything!!!)"
 
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 
-  @shortdoc "Boostrap project (generate everything!!!)"
   def run(args) do
     if Mix.Project.umbrella?() do
       Mix.raise("mix vbt.bootstrap can only be run inside an application directory")

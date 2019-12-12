@@ -5,25 +5,26 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayout do
   @checkdoc """
   Module parts should appear in the following order:
 
-     1. @moduledoc
-     2. @behaviour
-     3. use
-     4. import
-     5. alias
-     6. require
-     7. custom module attributes
-     8. defstruct
-     9. @opaque
-    10. @type
-    11. @typep
-    12. @callback
-    13. @macrocallback
-    14. @optional_callbacks
-    15. public guards
-    16. public macros
-    17. public functions
-    18. behaviour callbacks
-    19. private functions
+     1. @shortdoc
+     2. @moduledoc
+     3. @behaviour
+     4. use
+     5. import
+     6. alias
+     7. require
+     8. custom module attributes
+     9. defstruct
+    10. @opaque
+    11. @type
+    12. @typep
+    13. @callback
+    14. @macrocallback
+    15. @optional_callbacks
+    16. public guards
+    17. public macros
+    18. public functions
+    19. behaviour callbacks
+    20. private functions
 
   This order has been adapted from https://github.com/christopheradams/elixir_style_guide#module-attribute-ordering.
   """
@@ -38,6 +39,7 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayout do
   alias VBT.Credo.ModulePartExtractor
 
   @expected_order Map.new(Enum.with_index(~w/
+    shortdoc
     moduledoc
     behaviour
     use

@@ -6,6 +6,7 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
   test "no errors are reported on a successful layout" do
     """
     defmodule Test do
+      @shortdoc "shortdoc"
       @moduledoc "some doc"
 
       @behaviour GenServer
@@ -81,6 +82,20 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
     """
     |> to_source_file
     |> refute_issues(@described_check)
+  end
+
+  test "shortdoc must appear before moduledoc" do
+    [issue] =
+      """
+      defmodule Test do
+        @moduledoc "some doc"
+        @shortdoc "shortdoc"
+      end
+      """
+      |> to_source_file
+      |> assert_issue(@described_check)
+
+    assert issue.message == "shortdoc must appear before moduledoc"
   end
 
   test "moduledoc must appear before behaviour" do

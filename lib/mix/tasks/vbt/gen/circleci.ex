@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Vbt.Gen.Circleci do
+  @shortdoc "Generate CircleCI config files"
   @moduledoc "Generate CircleCI config files"
 
   # credo:disable-for-this-file Credo.Check.Readability.Specs
@@ -6,7 +7,6 @@ defmodule Mix.Tasks.Vbt.Gen.Circleci do
 
   @template Path.join(["skf.gen.circleci", "config.yml"])
 
-  @shortdoc "Generate CircleCI config files"
   def run(_args) do
     if Mix.Project.umbrella?() do
       Mix.raise("mix vbt.gen.circleci can only be run inside an application directory")
