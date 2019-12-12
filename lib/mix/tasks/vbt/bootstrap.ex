@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.Vbt.Bootstrap do
+  @moduledoc "Boostrap project (generate everything!!!)"
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 

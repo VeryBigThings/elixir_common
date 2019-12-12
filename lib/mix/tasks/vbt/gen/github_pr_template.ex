@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Vbt.Gen.GithubPrTemplate do
+  @moduledoc "Generate Github pull request template"
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 

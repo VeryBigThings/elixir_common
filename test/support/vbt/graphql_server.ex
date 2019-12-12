@@ -1,4 +1,5 @@
 defmodule VBT.GraphqlServer do
+  @moduledoc false
   use Phoenix.Endpoint, otp_app: :vbt
   import Phoenix.Controller, only: [accepts: 2]
   import VBT.Absinthe.ResolverHelper
@@ -25,6 +26,7 @@ defmodule VBT.GraphqlServer do
   end
 
   defmodule Schema do
+    @moduledoc false
     use Absinthe.Schema
 
     query do

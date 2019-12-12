@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Vbt.Gen.Dialyzer do
+  @moduledoc "Generate dialyzer files"
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 

@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.Vbt.Gen.Docker do
+  @moduledoc "Generate docker files"
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 

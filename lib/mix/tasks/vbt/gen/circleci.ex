@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.Vbt.Gen.Circleci do
+  @moduledoc "Generate CircleCI config files"
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 

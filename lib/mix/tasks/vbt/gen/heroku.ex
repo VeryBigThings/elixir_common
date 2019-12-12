@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Vbt.Gen.Heroku do
+  @moduledoc "Generate Heroku config"
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 

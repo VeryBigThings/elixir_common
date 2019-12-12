@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Vbt.Gen.Credo do
+  @moduledoc "Generate credo config files"
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 
