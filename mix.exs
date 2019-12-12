@@ -46,7 +46,7 @@ defmodule VBT.Credo.MixProject do
 
   defp dialyzer() do
     [
-      plt_add_apps: [:mix, :eex, :ecto, :absinthe, :credo, :bamboo]
+      plt_add_apps: ~w/mix eex ecto absinthe credo bamboo phoenix ex_unit phoenix_pubsub/a
     ]
   end
 
