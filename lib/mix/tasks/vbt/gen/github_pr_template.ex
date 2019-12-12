@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Vbt.Gen.GithubPrTemplate do
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 
   @template Path.join(["skf.gen.github_pr_template", "pull_request_template.md"])

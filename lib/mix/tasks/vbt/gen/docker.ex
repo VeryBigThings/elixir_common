@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Vbt.Gen.Docker do
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 
   @templates [

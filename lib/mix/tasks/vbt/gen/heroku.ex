@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Vbt.Gen.Heroku do
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 
   @template_root "skf.gen.heroku"

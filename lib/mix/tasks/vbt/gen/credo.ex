@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Vbt.Gen.Credo do
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 
   @template Path.join(["skf.gen.credo", ".credo.exs"])

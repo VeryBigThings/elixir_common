@@ -98,6 +98,7 @@ defmodule VBT.Graphql.Case do
   end
 
   @doc false
+  # credo:disable-for-next-line Credo.Check.Readability.Specs
   def set_config(opts) do
     Process.put(__MODULE__, opts)
     :ok

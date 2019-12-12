@@ -1,5 +1,6 @@
 defmodule VBT.Credo.Check.Consistency.ModuleLayout do
   @moduledoc false
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   @checkdoc """
   Module parts should appear in the following order:
