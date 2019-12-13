@@ -3,6 +3,7 @@ defmodule VBT.Credo.ModulePartExtractor do
 
   @type module_part ::
           :moduledoc
+          | :shortdoc
           | :behaviour
           | :use
           | :import
@@ -164,7 +165,7 @@ defmodule VBT.Credo.ModulePartExtractor do
     do: set_next_fun_modifier(state, if(value == false, do: nil, else: :impl))
 
   defp analyze(state, {:@, meta, [{attribute, _, _}]})
-       when attribute in ~w/moduledoc behaviour type typep opaque callback macrocallback optional_callbacks/a,
+       when attribute in ~w/moduledoc shortdoc behaviour type typep opaque callback macrocallback optional_callbacks/a,
        do: add_module_element(state, attribute, meta)
 
   defp analyze(state, {:@, _meta, [{ignore_attribute, _, _}]})

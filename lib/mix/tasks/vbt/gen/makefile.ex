@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Vbt.Gen.Makefile do
+  @shortdoc "Generate Makefile"
   @moduledoc """
   Generates a Makefile.
 
@@ -6,6 +7,7 @@ defmodule Mix.Tasks.Vbt.Gen.Makefile do
 
     - `--cloud` - specifies the target cloud. Possible values are `heroku` (default), and `aws`.
   """
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   use Mix.Task
 
@@ -13,7 +15,6 @@ defmodule Mix.Tasks.Vbt.Gen.Makefile do
   @switches [cloud: :string, docker: :boolean]
   @defaults [cloud: "heroku", docker: true]
 
-  @shortdoc "Generate Makefile"
   def run(args) do
     if Mix.Project.umbrella?() do
       Mix.raise("mix vbt.gen.makefile can only be run inside an application directory")

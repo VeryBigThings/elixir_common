@@ -1,9 +1,11 @@
 defmodule Mix.Tasks.Vbt.Gen.Heroku do
+  @shortdoc "Generate Heroku config"
+  @moduledoc "Generate Heroku config"
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
 
   @template_root "skf.gen.heroku"
 
-  @shortdoc "Generate Heroku config"
   def run(_args) do
     if Mix.Project.umbrella?() do
       Mix.raise("mix vbt.gen.heroku can only be run inside an application directory")

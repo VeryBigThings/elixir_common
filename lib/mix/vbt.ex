@@ -1,4 +1,7 @@
 defmodule Mix.Vbt do
+  @moduledoc false
+
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
   def bindings(opts \\ [], defaults \\ []) do
     app = otp_app()
     additional_bindings = Keyword.merge(defaults, opts)
