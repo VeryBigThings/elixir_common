@@ -8,5 +8,6 @@ if Mix.env() == :test do
 
   config :vbt, VBT.GraphqlServer,
     server: false,
-    secret_key_base: String.duplicate("0", 64)
+    secret_key_base: String.duplicate("0", 64),
+    pubsub: [name: VBT.PubSub, adapter: Phoenix.PubSub.PG2]
 end

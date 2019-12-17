@@ -4,6 +4,10 @@ defmodule VBT.GraphqlServer do
   import Phoenix.Controller, only: [accepts: 2]
   import VBT.Absinthe.ResolverHelper
 
+  socket "/socket", __MODULE__.Socket,
+    websocket: true,
+    longpoll: false
+
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json, Absinthe.Plug.Parser],
     pass: ["*/*"],
@@ -68,5 +72,18 @@ defmodule VBT.GraphqlServer do
     end
 
     defp order_item(id), do: %{product_name: "product #{id}", quantity: id}
+  end
+
+  defmodule Socket do
+    use Phoenix.Socket
+
+    def connect(args, socket) do
+      case VBT.Auth.verify(socket, "some_salt", Map.get(args, "max_age", 100), args) do
+        {:ok, login} -> {:ok, assign(socket, %{login: login})}
+        {:error, _reason} -> :error
+      end
+    end
+
+    def id(socket), do: "user:#{socket.assigns.login}"
   end
 end
