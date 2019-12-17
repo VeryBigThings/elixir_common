@@ -10,20 +10,8 @@ defmodule VBT.GraphqlServer do
     json_decoder: Jason
 
   plug :accepts, ["json"]
-  plug :read_auth_token
+  plug VBT.Auth
   plug Absinthe.Plug, schema: __MODULE__.Schema
-
-  defp read_auth_token(conn, _params) do
-    auth_token =
-      Plug.Conn.get_req_header(conn, "authorization")
-      |> Enum.find(&String.starts_with?(&1, "Bearer "))
-      |> case do
-        "Bearer " <> token -> token
-        nil -> nil
-      end
-
-    Absinthe.Plug.put_options(conn, context: %{auth_token: auth_token})
-  end
 
   defmodule Schema do
     @moduledoc false
@@ -39,8 +27,17 @@ defmodule VBT.GraphqlServer do
         end
       end
 
-      field :login, :string do
-        resolve fn _, resolution -> {:ok, resolution.context.auth_token} end
+      field :auth_token, :string do
+        arg :login, non_null(:string)
+        resolve fn arg, _ -> {:ok, VBT.Auth.sign(VBT.GraphqlServer, "some_salt", arg.login)} end
+      end
+
+      field :current_user, :string do
+        arg :max_age, :integer
+
+        resolve fn arg, resolution ->
+          VBT.Auth.verify(resolution, "some_salt", arg.max_age || 100)
+        end
       end
     end
 

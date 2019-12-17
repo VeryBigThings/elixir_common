@@ -21,11 +21,6 @@ defmodule VBT.Graphql.CaseTest do
       assert error1 == "invalid login data"
       assert error2 == "can't be blank"
     end
-
-    test "propagates authentication header" do
-      auth_token = Base.encode64(:crypto.strong_rand_bytes(16), padding: false)
-      assert call("query {login}", auth: auth_token) == {:ok, %{login: auth_token}}
-    end
   end
 
   describe "call!" do
