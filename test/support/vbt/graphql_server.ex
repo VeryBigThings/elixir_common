@@ -1,5 +1,7 @@
 defmodule VBT.GraphqlServer do
   @moduledoc false
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
+
   use Phoenix.Endpoint, otp_app: :vbt
   import Phoenix.Controller, only: [accepts: 2]
   import VBT.Absinthe.ResolverHelper
@@ -75,6 +77,7 @@ defmodule VBT.GraphqlServer do
   end
 
   defmodule Socket do
+    @moduledoc false
     use Phoenix.Socket
 
     def connect(args, socket) do
