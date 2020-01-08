@@ -8,6 +8,20 @@ defmodule VBT.TestHelper do
   @doc """
   Asserts that an e-mail has been delivered via Bamboo.
 
+  ## Examples
+
+      # pattern matching desired mail parameters
+      assert_delivered_email(to: "user@x.y.z" subject: "some_subject")
+
+      # result of assertion is %Bamboo.Email{} struct
+      mail = assert_delivered_email(to: "user@x.y.z" subject: "some_subject")
+      assert mail.text_body == "expected body"
+
+      # matching any mail
+      mail = assert_delivered_email()
+
+  ## Details
+
   This macro behaves similar to [Bamboo.Test.assert_delivered_email]
   (https://hexdocs.pm/bamboo/Bamboo.Test.html#assert_delivered_email/1), but it matches any mail
   which satisfies the given pattern.
@@ -39,12 +53,15 @@ defmodule VBT.TestHelper do
   assert subject ~= some_content
   ```
   """
-  defmacro assert_delivered_email(mail_params, opts \\ []) do
+  defmacro assert_delivered_email(mail_params \\ [], opts \\ []) do
     quote do
-      assert_receive(
-        {:delivered_email, %Bamboo.Email{unquote_splicing(mail_params)}},
-        Keyword.get(unquote(opts), :timeout, 100)
-      )
+      {:delivered_email, mail} =
+        assert_receive(
+          {:delivered_email, %Bamboo.Email{unquote_splicing(mail_params)}},
+          Keyword.get(unquote(opts), :timeout, 100)
+        )
+
+      mail
     end
   end
 
