@@ -84,7 +84,7 @@ defmodule VBT.TestHelperTest do
       ]
       |> Keyword.merge(mail_data)
       |> Bamboo.Email.new_email()
-      |> VBT.Mailer.deliver_now()
+      |> VBT.TestMailer.deliver_now()
     end
   end
 end
