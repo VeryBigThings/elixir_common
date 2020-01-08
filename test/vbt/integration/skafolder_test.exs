@@ -58,5 +58,5 @@ defmodule VBT.Integration.SkafolderTest do
 
   defp mix(args), do: System.cmd("mix", args, stderr_to_stdout: true, cd: project_path())
 
-  defp project_path, do: Path.join(~w/test integration skafolder_tester/)
+  defp project_path, do: Path.join(~w/test_projects skafolder_tester/)
 end
