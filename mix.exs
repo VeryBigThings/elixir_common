@@ -11,7 +11,8 @@ defmodule VBT.Credo.MixProject do
       aliases: aliases(),
       preferred_cli_env: preferred_cli_env(),
       dialyzer: dialyzer(),
-      elixirc_paths: elixirc_paths(Mix.env())
+      elixirc_paths: elixirc_paths(Mix.env()),
+      compilers: [:phoenix] ++ Mix.compilers()
     ]
   end
 
@@ -30,6 +31,7 @@ defmodule VBT.Credo.MixProject do
       {:absinthe, "~> 1.4"},
       {:absinthe_plug, "~> 1.4"},
       {:phoenix, "~> 1.4"},
+      {:phoenix_html, "~> 2.0"},
       {:bamboo, "~> 1.0", optional: true}
     ]
   end
