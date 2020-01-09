@@ -11,10 +11,26 @@ defmodule VBT.TestHelper do
   ## Examples
 
       # pattern matching desired mail parameters
-      assert_delivered_email(to: "user@x.y.z" subject: "some_subject")
+      assert_delivered_email(subject: "some subject")
+
+      # if you want to match the content of an existing variable you need to use `^`
+      subject = "some subject"
+      assert_delivered_email(subject: ^subject)
+
+      # if you omit the `^` operator, the match will always succeed, and the variable will be
+      # bound, and can be used in subsequent expressions
+      assert_delivered_email(subject: subject)
+      assert subject == "some subject"
+
+      # keep in mind that Bamboo manages sender and recipient addresses as pairs in the shape of
+      # `{name::String.t() | nil, address::String.t()}`
+      assert_delivered_email(from: {_, "sender@x.y.z"})
+
+      # in addition, the `to`, `cc`, and `bcc` fields are a list of such pairs
+      assert_delivered_email(to: [{_, "recipient@x.y.z"}])
 
       # result of assertion is %Bamboo.Email{} struct
-      mail = assert_delivered_email(to: "user@x.y.z" subject: "some_subject")
+      mail = assert_delivered_email(subject: "some_subject")
       assert mail.text_body == "expected body"
 
       # matching any mail
@@ -41,17 +57,8 @@ defmodule VBT.TestHelper do
 
   Suppose that the arrange code sends a couple of e-mails, and then `function_under_test` sends
   the desired e-mail. In this case, Bamboo assertion will fail, because it always compares the
-  first sent message.
-
-  In contrast, this macro will succeed as long as there is at least one e-mail which matches
+  first sent message. In contrast, this macro will succeed as long as there is at least one e-mail which matches
   the given pattern.
-
-  Finally, this macro uses pattern matching, which means that you can do something like:
-
-  ```
-  assert_delivered_email(subject: subject)
-  assert subject ~= some_content
-  ```
   """
   defmacro assert_delivered_email(mail_params \\ [], opts \\ []) do
     quote do
