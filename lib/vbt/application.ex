@@ -3,6 +3,7 @@ defmodule VBT.Application do
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   use Application
+  alias VBT.Telemetry
 
   children =
     if Mix.env() == :test do
@@ -14,6 +15,8 @@ defmodule VBT.Application do
     end
 
   def start(_type, _args) do
+    Telemetry.Oban.install_handler()
+
     Supervisor.start_link(
       unquote(children || []),
       strategy: :one_for_one,
