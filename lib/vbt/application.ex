@@ -4,11 +4,19 @@ defmodule VBT.Application do
 
   use Application
 
-  @children if Mix.env() == :test,
-              do: [VBT.TestRepo],
-              else: []
+  children =
+    if Mix.env() == :test do
+      [
+        VBT.TestRepo,
+        {Oban, repo: VBT.TestRepo, crontab: false, queues: false, prune: :disabled}
+      ]
+    end
 
   def start(_type, _args) do
-    Supervisor.start_link(@children, strategy: :one_for_one, name: VBT.Supervisor)
+    Supervisor.start_link(
+      unquote(children || []),
+      strategy: :one_for_one,
+      name: VBT.Supervisor
+    )
   end
 end
