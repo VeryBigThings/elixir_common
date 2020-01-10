@@ -50,41 +50,41 @@ defmodule VBT.TestHelperTest do
 
   describe "assert_delivered_email" do
     test "succeeds on a matched mail" do
-      deliver_mail(subject: "some message")
-      TestHelper.assert_delivered_email(subject: "some message")
+      deliver_mail("some subject")
+      TestHelper.assert_delivered_email(subject: "some subject")
     end
 
     test "can match mails in an order different from the send order" do
-      deliver_mail(subject: "some message")
-      deliver_mail(subject: "another message")
+      deliver_mail("some subject")
+      deliver_mail("another subject")
 
-      TestHelper.assert_delivered_email(subject: "another message")
-      TestHelper.assert_delivered_email(subject: "some message")
+      TestHelper.assert_delivered_email(subject: "another subject")
+      TestHelper.assert_delivered_email(subject: "some subject")
     end
 
     test "uses pattern matching" do
-      deliver_mail(subject: "some message")
+      deliver_mail("some subject")
       TestHelper.assert_delivered_email(subject: subject)
-      assert subject == "some message"
+      assert subject == "some subject"
     end
 
     test "fails if the mail is not matched" do
-      deliver_mail(subject: "some message")
+      deliver_mail("some subject")
 
       assert_raise(
         ExUnit.AssertionError,
-        fn -> TestHelper.assert_delivered_email(subject: "another message") end
+        fn -> TestHelper.assert_delivered_email(subject: "another subject") end
       )
     end
 
-    defp deliver_mail(mail_data) do
-      [
-        from: "some_sender@some_host.some.domain",
-        to: "some_user@some_host.some_domain"
-      ]
-      |> Keyword.merge(mail_data)
-      |> Bamboo.Email.new_email()
-      |> VBT.Mailer.deliver_now()
+    defp deliver_mail(subject) do
+      VBT.Mailer.send!(
+        VBT.TestMailer,
+        "some_sender@some_host.some.domain",
+        "some_recipient@some_host.some_domain",
+        subject,
+        "mail body"
+      )
     end
   end
 end

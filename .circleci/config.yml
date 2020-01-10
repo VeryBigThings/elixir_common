@@ -28,6 +28,8 @@ jobs:
           paths:
             - deps
             - _build
+            - test_projects/skafolder_tester/deps
+            - test_projects/skafolder_tester/_build
       - jq/install
       - docker/install-dockerize
       - run:

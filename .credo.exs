@@ -12,8 +12,7 @@
       checks: [
         {VBT.Credo.Check.Consistency.ModuleLayout, []},
         {VBT.Credo.Check.Readability.WithPlaceholder, []},
-        {VBT.Credo.Check.Consistency.FileLocation,
-         exclude: [Path.join(~w/test integration skafolder_tester/)]},
+        {VBT.Credo.Check.Consistency.FileLocation, []},
         {Credo.Check.Readability.Specs, []},
         {Credo.Check.Design.TagTODO, false}
       ]
