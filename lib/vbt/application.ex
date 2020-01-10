@@ -8,7 +8,8 @@ defmodule VBT.Application do
     if Mix.env() == :test do
       [
         VBT.TestRepo,
-        {Oban, repo: VBT.TestRepo, crontab: false, queues: false, prune: :disabled}
+        {Oban, repo: VBT.TestRepo, crontab: false, queues: false, prune: :disabled},
+        VBT.GraphqlServer
       ]
     end
 
