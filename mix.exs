@@ -17,8 +17,10 @@ defmodule VBT.Credo.MixProject do
   end
 
   def application do
+    additional_apps = if Mix.env() == :test, do: [:postgrex, :ecto], else: []
+
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger | additional_apps],
       mod: {VBT.Application, []}
     ]
   end
@@ -39,12 +41,21 @@ defmodule VBT.Credo.MixProject do
 
   defp aliases do
     [
-      credo: ~w/compile credo/
+      credo: ~w/compile credo/,
+      "ecto.reset": ~w/ecto.drop ecto.create/,
+      test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
 
   defp preferred_cli_env do
-    [credo: :test, dialyzer: :test]
+    [
+      credo: :test,
+      dialyzer: :test,
+      "ecto.reset": :test,
+      "ecto.migrate": :test,
+      "ecto.rollback": :test,
+      "ecto.gen.migration": :test
+    ]
   end
 
   defp dialyzer() do

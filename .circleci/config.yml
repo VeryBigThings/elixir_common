@@ -9,6 +9,11 @@ jobs:
       - image: verybigthings/elixir:1.9
         environment:
           MIX_ENV: "test"
+      - image: circleci/postgres:10.1-alpine
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vbt_test
     working_directory: ~/app
     steps:
       - checkout
