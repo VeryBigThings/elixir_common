@@ -20,8 +20,9 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - restore_cache:
-          keys:
-            - '{{ .Environment.CACHE_VERSION}}-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}'
+          key: '{{ .Environment.CACHE_VERSION}}-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}'
+      - restore_cache:
+          key: '{{ .Environment.CACHE_VERSION}}-skafolder-tester-cache-{{ .Branch }}-{{ checksum "test_projects/skafolder_tester/mix.lock" }}'
       - run:
           name: "Get deps"
           command: mix deps.get
@@ -33,8 +34,6 @@ jobs:
           paths:
             - deps
             - _build
-            - test_projects/skafolder_tester/deps
-            - test_projects/skafolder_tester/_build
       - jq/install
       - docker/install-dockerize
       - run:
@@ -68,6 +67,11 @@ jobs:
       - run:
           name: "Run tests"
           command: mix test
+      - save_cache:
+          key: '{{ .Environment.CACHE_VERSION}}-skafolder-tester-cache-{{ .Branch }}-{{ checksum "test_projects/skafolder_tester/mix.lock" }}'
+          paths:
+            - test_projects/skafolder_tester/deps
+            - test_projects/skafolder_tester/_build
 workflows:
   version: 2
   build_feature:
