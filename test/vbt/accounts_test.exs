@@ -112,6 +112,55 @@ defmodule VBT.AccountsTest do
       do: Accounts.change_password(account, current_password, new_password, config())
   end
 
+  describe "password reset" do
+    test "succeeds with valid input" do
+      {:ok, account} = create_account(password: "some password")
+      assert {:ok, changed_account} = reset_password(account.email, "new password")
+      assert changed_account.id == account.id
+      assert {:ok, _} = Accounts.authenticate(account.email, "new password", config())
+      assert {:error, :invalid} = Accounts.authenticate(account.email, "some password", config())
+    end
+
+    test "fails for unknown user" do
+      assert reset_password("invalid email", "new password") == {:error, :invalid}
+    end
+
+    test "fails if token is generated for another user" do
+      {:ok, account} = create_account(password: "some password")
+      {:ok, account2} = create_account()
+      token = Accounts.start_password_reset(account2.email, 100, config())
+      assert reset_password(account.email, "new password", token: token) == {:error, :invalid}
+      assert Accounts.authenticate(account.email, "some password", config()) == {:ok, account}
+    end
+
+    test "fails if token is generated for a different purpose" do
+      {:ok, account} = create_account(password: "some password")
+      token = Accounts.Token.create!(account, nil, 100, config())
+      assert reset_password(account.email, "new password", token: token) == {:error, :invalid}
+      assert Accounts.authenticate(account.email, "some password", config()) == {:ok, account}
+    end
+
+    test "fails if token expired" do
+      {:ok, account} = create_account(password: "some password")
+      assert reset_password(account.email, "new password", max_age: -1) == {:error, :invalid}
+      assert Accounts.authenticate(account.email, "some password", config()) == {:ok, account}
+    end
+
+    defp reset_password(email, new_password, opts \\ []) do
+      token =
+        Keyword.get_lazy(
+          opts,
+          :token,
+          fn ->
+            max_age = Keyword.get(opts, :max_age, 100)
+            Accounts.start_password_reset(email, max_age, config())
+          end
+        )
+
+      Accounts.reset_password(email, token, new_password, config())
+    end
+  end
+
   defp create_account(data \\ []) do
     defaults = %{
       name: "name_#{unique_positive_integer()}",
