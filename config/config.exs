@@ -10,4 +10,6 @@ if Mix.env() == :test do
     server: false,
     secret_key_base: String.duplicate("0", 64),
     pubsub: [name: VBT.PubSub, adapter: Phoenix.PubSub.PG2]
+
+  config :vbt, ecto_repos: [VBT.TestRepo]
 end

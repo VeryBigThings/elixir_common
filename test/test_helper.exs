@@ -1,5 +1,5 @@
 # credo:disable-for-this-file
-VBT.GraphqlServer.start_link()
+Ecto.Adapters.SQL.Sandbox.mode(VBT.TestRepo, :manual)
 
 Application.ensure_all_started(:credo)
 
