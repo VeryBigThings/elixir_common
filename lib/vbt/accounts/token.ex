@@ -6,6 +6,7 @@ defmodule VBT.Accounts.Token do
   @type raw :: %{id: binary, data: data}
   @type max_age :: pos_integer | :infinity
   @type data :: any
+  @type operation_result :: {:ok, any} | {:error, any}
 
   @spec create!(Ecto.Schema.t() | nil, data, max_age, VBT.Accounts.config()) :: encoded
   def create!(account, data, max_age, config) do
@@ -28,7 +29,7 @@ defmodule VBT.Accounts.Token do
 
   @spec use(raw, Ecto.Schema.t(), (() -> result), VBT.Accounts.config()) ::
           result | {:error, :invalid}
-        when result: var
+        when result: operation_result
   def use(token, account, operation, config) do
     Multi.new()
     |> Multi.run(:mark_used, fn repo, _context -> mark_used(repo, token, account, config) end)
