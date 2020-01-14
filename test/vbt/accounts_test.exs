@@ -62,6 +62,23 @@ defmodule VBT.AccountsTest do
     end
   end
 
+  describe "authenticate" do
+    test "succeeds with valid credentials" do
+      {:ok, account} = create_account(email: "email@x.y.z", password: "some password")
+      assert {:ok, ^account} = Accounts.authenticate("email@x.y.z", "some password", config())
+    end
+
+    test "fails with invalid email" do
+      {:ok, _account} = create_account(email: "email@x.y.z", password: "some password")
+      assert Accounts.authenticate("invalid", "some password", config()) == {:error, :invalid}
+    end
+
+    test "fails with invalid password" do
+      {:ok, _account} = create_account(email: "email@x.y.z", password: "some password")
+      assert Accounts.authenticate("email@x.y.z", "wrong pass", config()) == {:error, :invalid}
+    end
+  end
+
   defp create_account(data \\ []) do
     defaults = %{
       name: "name_#{unique_positive_integer()}",
