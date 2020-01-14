@@ -1,7 +1,8 @@
 defmodule VBT.Accounts.Migration do
   import Ecto.Migration
 
-  @type config :: %{tokens_table: String.t(), accounts_table: String.t()}
+  @type config :: %{tokens_table: String.t(), accounts_table: String.t(), type: type}
+  @type type :: :serial | :bigserial | :uuid
 
   @spec change(config) :: any
   def change(config) do
@@ -9,7 +10,7 @@ defmodule VBT.Accounts.Migration do
       add :id, :uuid, primary_key: true
       add :used_at, :utc_datetime
       add :expires_at, :utc_datetime, null: false
-      add :account_id, references(config.accounts_table), null: false
+      add :account_id, references(config.accounts_table, type: config.type), null: false
 
       timestamps()
     end
