@@ -171,6 +171,17 @@ defmodule VBT.AccountsTest do
 
         assert Accounts.authenticate(account.email, "some password", @config) == {:ok, account}
       end
+
+      test "fails if token is already used" do
+        {:ok, account} = create_account(@config, password: "some password")
+        token = Accounts.start_password_reset(account.email, 100, @config)
+
+        {:ok, _changed_account} =
+          reset_password(@config, account.email, "some password", token: token)
+
+        assert reset_password(@config, account.email, "new password", token: token) ==
+                 {:error, :invalid}
+      end
     end
   end
 
