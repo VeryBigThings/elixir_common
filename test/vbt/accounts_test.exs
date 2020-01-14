@@ -79,6 +79,39 @@ defmodule VBT.AccountsTest do
     end
   end
 
+  describe "change_password" do
+    test "succeeds with valid input" do
+      {:ok, account} = create_account(email: "email@x.y.z", password: "some password")
+      assert {:ok, changed_account} = change_password(account, "new password")
+      assert changed_account.id == account.id
+      assert {:ok, _} = Accounts.authenticate("email@x.y.z", "new password", config())
+      assert {:error, :invalid} = Accounts.authenticate("email@x.y.z", "some password", config())
+    end
+
+    test "fails if invalid current password is provided" do
+      {:ok, account} = create_account(password: "some password")
+      assert change_password(account, "invalid password", "new password") == {:error, :invalid}
+      assert Accounts.authenticate(account.email, "some password", config()) == {:ok, account}
+    end
+
+    test "fails if password is empty" do
+      {:ok, account} = create_account(password: "some password")
+      assert {:error, changeset} = change_password(account, "")
+      assert "can't be blank" in errors_on(changeset).password
+      assert Accounts.authenticate(account.email, "some password", config()) == {:ok, account}
+    end
+
+    test "fails if password is too short" do
+      {:ok, account} = create_account(password: "some password")
+      assert {:error, changeset} = change_password(account, "A")
+      assert "should be at least 6 character(s)" in errors_on(changeset).password
+      assert Accounts.authenticate(account.email, "some password", config()) == {:ok, account}
+    end
+
+    defp change_password(account, current_password \\ "some password", new_password),
+      do: Accounts.change_password(account, current_password, new_password, config())
+  end
+
   defp create_account(data \\ []) do
     defaults = %{
       name: "name_#{unique_positive_integer()}",
