@@ -11,11 +11,12 @@ defmodule VBT.TestRepo.Migrations.CreateAccounts do
 
     create unique_index(:accounts_serial_id, [:email])
 
-    VBT.Accounts.Migration.change(%{
-      tokens_table: "tokens_serial_id",
-      accounts_table: "accounts_serial_id",
-      type: :serial
-    })
+    create table(:tokens_serial_id, primary_key: false) do
+      add :id, :uuid, primary_key: true
+      add :used_at, :utc_datetime
+      add :expires_at, :utc_datetime, null: false
+      add :account_id, references(:accounts_serial_id, type: :serial), null: false
+    end
 
     create table(:accounts_uuid, primary_key: false) do
       add :id, :uuid, primary_key: true
@@ -26,10 +27,11 @@ defmodule VBT.TestRepo.Migrations.CreateAccounts do
 
     create unique_index(:accounts_uuid, [:email])
 
-    VBT.Accounts.Migration.change(%{
-      tokens_table: "tokens_uuid",
-      accounts_table: "accounts_uuid",
-      type: :uuid
-    })
+    create table(:tokens_uuid, primary_key: false) do
+      add :id, :uuid, primary_key: true
+      add :used_at, :utc_datetime
+      add :expires_at, :utc_datetime, null: false
+      add :account_id, references(:accounts_uuid, type: :uuid), null: false
+    end
   end
 end
