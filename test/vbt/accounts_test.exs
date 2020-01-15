@@ -139,6 +139,20 @@ defmodule VBT.AccountsTest do
         assert {:error, :invalid} = Accounts.authenticate(account.email, "some password", @config)
       end
 
+      test "fails if password is empty" do
+        {:ok, account} = create_account(@config, password: "some password")
+        assert {:error, changeset} = reset_password(@config, account.email, "")
+        assert "can't be blank" in errors_on(changeset).password
+        assert Accounts.authenticate(account.email, "some password", @config) == {:ok, account}
+      end
+
+      test "fails if password is too short" do
+        {:ok, account} = create_account(@config, password: "some password")
+        assert {:error, changeset} = reset_password(@config, account.email, "A")
+        assert "should be at least 6 character(s)" in errors_on(changeset).password
+        assert Accounts.authenticate(account.email, "some password", @config) == {:ok, account}
+      end
+
       test "fails for unknown user" do
         assert reset_password(@config, "invalid email", "new password") == {:error, :invalid}
       end
