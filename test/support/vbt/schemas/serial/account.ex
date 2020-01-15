@@ -1,4 +1,5 @@
 defmodule VBT.Schemas.Serial.Account do
+  @moduledoc false
   use Ecto.Schema
 
   @primary_key {:id, :id, autogenerate: true}
