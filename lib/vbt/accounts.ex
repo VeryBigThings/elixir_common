@@ -5,15 +5,18 @@ defmodule VBT.Accounts do
 
   @type config :: %{
           repo: module,
-          schema: module,
+          schemas: %{account: module, token: module},
           login_field: atom,
           password_hash_field: atom,
           min_password_length: pos_integer,
-          secret_key_base: String.t(),
-          tokens_table: String.t()
+          secret_key_base: String.t()
         }
 
   @type data :: Ecto.Schema.t() | Ecto.Changeset.t()
+
+  # ------------------------------------------------------------------------
+  # API
+  # ------------------------------------------------------------------------
 
   @spec create(data, String.t(), String.t(), config) ::
           {:ok, Ecto.Schema.t()} | {:error, Ecto.Changeset.t()}
@@ -63,6 +66,10 @@ defmodule VBT.Accounts do
     end
   end
 
+  # ------------------------------------------------------------------------
+  # Private
+  # ------------------------------------------------------------------------
+
   defp get(login, config) do
     case fetch(login, config) do
       {:ok, account} -> account
@@ -71,7 +78,7 @@ defmodule VBT.Accounts do
   end
 
   defp fetch(login, config) do
-    from(config.schema, where: ^[{config.login_field, login}])
+    from(config.schemas.account, where: ^[{config.login_field, login}])
     |> config.repo.one()
     |> case do
       nil -> {:error, :invalid}

@@ -6,27 +6,28 @@ defmodule VBT.AccountsTest do
 
   alias Ecto.Adapters.SQL.Sandbox
   alias VBT.Accounts
-  alias VBT.Schemas.{AccountSerialId, AccountUuid}
+  alias VBT.Schemas.{Serial, Uuid}
 
   setup do
     Sandbox.checkout(VBT.TestRepo)
   end
 
-  for {kind, schema, tokens_table} <- [
-        {:serial_id, AccountSerialId, "tokens_serial_id"},
-        {:uuid, AccountUuid, "tokens_uuid"}
-      ] do
+  for namespace <- [Serial, Uuid] do
+    id_type = namespace |> to_string() |> String.split(".") |> List.last() |> String.downcase()
+
     @config %{
       repo: VBT.TestRepo,
-      schema: schema,
+      schemas: %{
+        account: Module.concat(namespace, Account),
+        token: Module.concat(namespace, Token)
+      },
       login_field: :email,
       password_hash_field: :password_hash,
       min_password_length: 6,
-      secret_key_base: String.duplicate("A", 64),
-      tokens_table: tokens_table
+      secret_key_base: String.duplicate("A", 64)
     }
 
-    describe "create for table with #{kind} id" do
+    describe "create for table with #{id_type} id" do
       test "creates the account" do
         assert {:ok, account} = create_account(@config, name: "some_name", email: "email@x.y.z")
         assert account.name == "some_name"
@@ -67,7 +68,7 @@ defmodule VBT.AccountsTest do
 
       test "includes client errors in result" do
         assert {:error, changeset} =
-                 @config.schema
+                 @config.schemas.account
                  |> struct()
                  |> change()
                  |> validate_required(:name)
@@ -77,7 +78,7 @@ defmodule VBT.AccountsTest do
       end
     end
 
-    describe "authenticate for table with #{kind} id" do
+    describe "authenticate for table with #{id_type} id" do
       test "succeeds with valid credentials" do
         {:ok, account} = create_account(@config, email: "email@x.y.z", password: "some password")
         assert {:ok, ^account} = Accounts.authenticate("email@x.y.z", "some password", @config)
@@ -94,7 +95,7 @@ defmodule VBT.AccountsTest do
       end
     end
 
-    describe "change_password for table with #{kind} id" do
+    describe "change_password for table with #{id_type} id" do
       test "succeeds with valid input" do
         {:ok, account} = create_account(@config, email: "email@x.y.z", password: "some password")
         assert {:ok, changed_account} = change_password(@config, account, "new password")
@@ -128,7 +129,7 @@ defmodule VBT.AccountsTest do
       end
     end
 
-    describe "password reset for table with #{kind} id" do
+    describe "password reset for table with #{id_type} id" do
       test "succeeds with valid input" do
         {:ok, account} = create_account(@config, password: "some password")
         assert {:ok, changed_account} = reset_password(@config, account.email, "new password")
@@ -194,7 +195,7 @@ defmodule VBT.AccountsTest do
 
     data = Map.merge(defaults, Map.new(data))
 
-    config.schema
+    config.schemas.account
     |> struct()
     |> change(Map.take(data, [:name]))
     |> Accounts.create(data.email, data.password, config)

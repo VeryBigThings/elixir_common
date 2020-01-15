@@ -10,7 +10,7 @@ defmodule VBT.Accounts.Token do
 
   @spec create!(Ecto.Schema.t() | nil, data, max_age, VBT.Accounts.config()) :: encoded
   def create!(account, data, max_age, config) do
-    token = %{id: Ecto.UUID.bingenerate(), data: data}
+    token = %{id: Ecto.UUID.generate(), data: data}
     store!(token.id, account, max_age, config)
     Phoenix.Token.sign(config.secret_key_base, salt(account), token)
   end
@@ -44,33 +44,17 @@ defmodule VBT.Accounts.Token do
   defp store!(_id, nil, _max_age, _config), do: :ok
 
   defp store!(id, account, max_age, config) do
-    now = DateTime.utc_now()
-    expires_at = DateTime.add(now, max_age, :second)
+    expires_at =
+      DateTime.utc_now()
+      |> DateTime.add(max_age, :second)
+      |> DateTime.truncate(:second)
 
-    {1, [%{id: ^id}]} =
-      config.repo.insert_all(
-        config.tokens_table,
-        [
-          %{
-            id: id,
-            account_id: dump!(account.id),
-            expires_at: expires_at,
-            inserted_at: now,
-            updated_at: now
-          }
-        ],
-        returning: [:id]
-      )
+    account
+    |> Ecto.build_assoc(:tokens, id: id, expires_at: expires_at)
+    |> config.repo.insert!()
 
     :ok
   end
-
-  defp dump!(uuid) when is_binary(uuid) do
-    {:ok, dumped} = Ecto.UUID.dump(uuid)
-    dumped
-  end
-
-  defp dump!(id) when is_integer(id), do: id
 
   defp salt(nil),
     do: Base.url_encode64(:crypto.hash(:sha256, ""), padding: false)
@@ -83,9 +67,9 @@ defmodule VBT.Accounts.Token do
 
     case repo.update_all(
            from(
-             token in config.tokens_table,
+             token in config.schemas.token,
              where: token.id == ^token.id,
-             where: token.account_id == ^dump!(account.id),
+             where: token.account_id == ^account.id,
              where: is_nil(token.used_at),
              where: token.expires_at >= ^now
            ),

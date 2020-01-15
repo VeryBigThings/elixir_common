@@ -8,7 +8,7 @@ defmodule VBT.Accounts.TokenTest do
   alias Ecto.Adapters.SQL.Sandbox
   alias VBT.Accounts
   alias VBT.Accounts.Token
-  alias VBT.Schemas.AccountSerialId
+  alias VBT.Schemas.Serial
 
   setup do
     Sandbox.checkout(VBT.TestRepo)
@@ -21,12 +21,11 @@ defmodule VBT.Accounts.TokenTest do
 
   @config %{
     repo: VBT.TestRepo,
-    schema: AccountSerialId,
+    schemas: %{account: Serial.Account, token: Serial.Token},
     login_field: :email,
     password_hash_field: :password_hash,
     min_password_length: 6,
-    secret_key_base: String.duplicate("A", 64),
-    tokens_table: "tokens_serial_id"
+    secret_key_base: String.duplicate("A", 64)
   }
 
   test "token data is succeffully decoded" do
@@ -45,7 +44,7 @@ defmodule VBT.Accounts.TokenTest do
              {:error, :some_error}
 
     assert VBT.TestRepo.exists?(
-             from token in "tokens_serial_id",
+             from token in @config.schemas.token,
                where: token.id == ^token.id and is_nil(token.used_at)
            )
   end
@@ -59,7 +58,7 @@ defmodule VBT.Accounts.TokenTest do
 
     data = Map.merge(defaults, Map.new(data))
 
-    config.schema
+    config.schemas.account
     |> struct()
     |> change(Map.take(data, [:name]))
     |> Accounts.create(data.email, data.password, config)
