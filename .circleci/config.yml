@@ -108,5 +108,5 @@ workflows:
       - update_docs:
           filters:
             branches:
-              ignore:
-                - /^WIP\/.*/
+              only:
+                - master
