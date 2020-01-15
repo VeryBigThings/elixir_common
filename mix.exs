@@ -36,7 +36,8 @@ defmodule VBT.Credo.MixProject do
       {:phoenix, "~> 1.4"},
       {:phoenix_html, "~> 2.0"},
       {:bamboo, "~> 1.0", optional: true},
-      {:oban, "~> 0.12"}
+      {:oban, "~> 0.12"},
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false}
     ]
   end
 
