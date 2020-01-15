@@ -11,8 +11,6 @@ defmodule VBT.Accounts.Migration do
       add :used_at, :utc_datetime
       add :expires_at, :utc_datetime, null: false
       add :account_id, references(config.accounts_table, type: config.type), null: false
-
-      timestamps()
     end
 
     create index(config.tokens_table, [:account_id])

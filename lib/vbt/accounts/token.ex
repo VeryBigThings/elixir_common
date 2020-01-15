@@ -73,7 +73,7 @@ defmodule VBT.Accounts.Token do
              where: is_nil(token.used_at),
              where: token.expires_at >= ^now
            ),
-           set: [used_at: now, updated_at: now]
+           set: [used_at: now]
          ) do
       {1, _} -> {:ok, nil}
       _ -> {:error, :invalid}

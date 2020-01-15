@@ -7,6 +7,5 @@ defmodule VBT.Schemas.Uuid.Token do
     field :used_at, :utc_datetime
     field :expires_at, :utc_datetime
     belongs_to :account, VBT.Schemas.Uuid.Account, type: :binary_id
-    timestamps()
   end
 end
