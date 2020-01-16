@@ -113,7 +113,7 @@ defmodule VBT.Accounts do
 
   If all validations succeed, the account data will be inserted into the database.
 
-  This function validates the uniqueness of the login. To do that, the function expectes that a
+  This function validates the uniqueness of the login. To do that, the function expects that a
   corresponding unique constraint is defined in the database.
   """
   @spec create(data, String.t(), String.t(), config) ::

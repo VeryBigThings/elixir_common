@@ -29,7 +29,7 @@ defmodule VBT.Accounts.TokenTest do
     secret_key_base: String.duplicate("A", 64)
   }
 
-  test "token data is succeffully decoded" do
+  test "token data is successfully decoded" do
     {:ok, account} = create_account(@config)
     encoded_token = Token.create!(account, %{foo: :bar}, 100, @config)
     assert {:ok, token} = Token.decode(encoded_token, account, @config)
