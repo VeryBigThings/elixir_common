@@ -78,6 +78,11 @@ defmodule VBT.Accounts do
       end
 
   See documentation of individual functions, as well as `VBT.Accounts.Token` for details.
+
+  ## Tokens cleanup
+
+  By default, token entries are not removed from the database. To periodically remove them,
+  you need to start the cleanup process. See `VBT.Accounts.Token.Cleanup` for details.
   """
   import Ecto.Changeset
   import Ecto.Query

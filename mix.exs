@@ -38,7 +38,8 @@ defmodule VBT.Credo.MixProject do
       {:bamboo, "~> 1.0", optional: true},
       {:oban, "~> 0.12"},
       {:bcrypt_elixir, "~> 2.0"},
-      {:ex_doc, "~> 0.21", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
+      {:parent, "~> 0.6"}
     ]
   end
 
