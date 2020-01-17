@@ -78,6 +78,11 @@ defmodule VBT.Accounts do
       end
 
   See documentation of individual functions, as well as `VBT.Accounts.Token` for details.
+
+  ## Tokens cleanup
+
+  By default, token entries are not removed from the database. To periodically remove them,
+  you need to start the cleanup process. See `VBT.Accounts.Token.Cleanup` for details.
   """
   import Ecto.Changeset
   import Ecto.Query
@@ -108,7 +113,7 @@ defmodule VBT.Accounts do
 
   If all validations succeed, the account data will be inserted into the database.
 
-  This function validates the uniqueness of the login. To do that, the function expectes that a
+  This function validates the uniqueness of the login. To do that, the function expects that a
   corresponding unique constraint is defined in the database.
   """
   @spec create(data, String.t(), String.t(), config) ::

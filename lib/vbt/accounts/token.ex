@@ -133,4 +133,61 @@ defmodule VBT.Accounts.Token do
       _ -> {:error, :invalid}
     end
   end
+
+  # ------------------------------------------------------------------------
+  # Periodic cleanup
+  # ------------------------------------------------------------------------
+
+  defmodule Cleanup do
+    @moduledoc """
+    Periodical database cleanup of expired and used tokens.
+
+    To run this process, include `{VBT.Accounts.Token.Cleanup, opts}` as a child in your
+    supervision tree.
+
+    Options:
+
+      - `:config` - Accounts configuration (`VBT.Accounts.config()`). This parameter is mandatory.
+      - `:id` - Supervisor child id of the process. Defaults to `VBT.Accounts.Token.Cleanup`.
+      - `:every` - Cleanup interval. Defaults to 10 minutes.
+      - `:timeout` - Maximum allowed duration of a single cleanup. Defaults to 1 minute.
+      - `:retention` - The period during which expired and used tokens are not deleted.
+                       Defaults to 7 days.
+
+    All of the time options should be provided in milliseconds.
+    """
+
+    @type opts :: [
+            id: any,
+            every: pos_integer,
+            timeout: pos_integer,
+            retention: pos_integer,
+            config: VBT.Accounts.config()
+          ]
+
+    @spec child_spec(opts) :: Supervisor.child_spec()
+    def child_spec(opts) do
+      config = Keyword.fetch!(opts, :config)
+      retention = Keyword.get(opts, :retention, 7 * :timer.hours(24))
+
+      Periodic.child_spec(
+        id: Keyword.get(opts, :id, __MODULE__),
+        run: fn -> cleanup(config, retention) end,
+        every: Keyword.get(opts, :every, :timer.minutes(10)),
+        timeout: Keyword.get(opts, :timeout, :timer.minutes(1)),
+        on_overlap: :ignore
+      )
+    end
+
+    defp cleanup(config, retention) do
+      date = DateTime.add(DateTime.utc_now(), -retention, :millisecond)
+
+      config.repo.delete_all(
+        from(token in config.schemas.token,
+          where: token.used_at < ^date or token.expires_at < ^date
+        ),
+        timeout: :infinity
+      )
+    end
+  end
 end
