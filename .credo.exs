@@ -13,6 +13,7 @@
         {VBT.Credo.Check.Consistency.ModuleLayout, []},
         {VBT.Credo.Check.Readability.WithPlaceholder, []},
         {VBT.Credo.Check.Consistency.FileLocation, []},
+        {VBT.Credo.Check.Readability.MultilineSimpleDo, []},
         {Credo.Check.Readability.Specs, []},
         {Credo.Check.Design.TagTODO, false}
       ]
