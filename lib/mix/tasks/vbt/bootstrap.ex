@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
+  alias Mix.Vbt.MixFile
 
   def run(args) do
     if Mix.Project.umbrella?() do
@@ -15,46 +16,48 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 
-    Mix.shell().info(manual_instructions())
+    adapt_code!()
   end
 
-  defp manual_instructions do
-    """
-    You also need to make the following changes in your mix.exs file:
+  defp adapt_code! do
+    MixFile.load!()
+    |> add_standard_deps()
+    |> configure_preferred_cli_env()
+    |> configure_dialyzer()
+    |> MixFile.store!()
+  end
 
-        def project do
-          [
-            # ...
-            preferred_cli_env: preferred_cli_env(),
-            dialyzer: dialyzer()
-          ]
-        end
+  defp add_standard_deps(mix_file) do
+    MixFile.add_deps(
+      mix_file,
+      """
+        {:absinthe, "~> 1.4"},
+        {:absinthe_phoenix, "~> 1.4"},
+        {:absinthe_plug, "~> 1.4"},
+        {:absinthe_relay, "~> 1.4"},
+        {:ecto_enum, "~> 1.3"},
+        {:dialyxir, "~> 0.5", runtime: false}
+      """
+    )
+  end
 
-        def deps do
-          [
-            # ...
-            {:dialyxir, "~> 0.5", runtime: false}
-          ]
-        end
+  defp configure_preferred_cli_env(mix_file) do
+    mix_file
+    |> MixFile.append_config(:project, "preferred_cli_env: preferred_cli_env()")
+    |> MixFile.add_function("defp preferred_cli_env, do: [credo: :test, dialyzer: :test]")
+  end
 
-        defp aliases do
-          [
-            # ...
-            test: ["ecto.create --quiet", "ecto.migrate", "test"],
-            credo: ~w/compile credo/
-          ]
-        end
-
-        defp preferred_cli_env() do
-          [credo: :test, dialyzer: :test]
-        end
-
-        defp dialyzer() do
+  defp configure_dialyzer(mix_file) do
+    mix_file
+    |> MixFile.append_config(:aliases, ~s/credo: ["compile", "credo"]/)
+    |> MixFile.append_config(:project, "dialyzer: dialyzer()")
+    |> MixFile.add_function("""
+        defp dialyzer do
           [
             plt_add_apps: [:ex_unit, :mix],
             ignore_warnings: "dialyzer.ignore-warnings"
           ]
         end
-    """
+    """)
   end
 end
