@@ -2,9 +2,6 @@ defmodule Mix.Vbt.MixFile do
   @moduledoc false
   alias Mix.Vbt.SourceFile
 
-  @spec add_deps(SourceFile.t(), String.t()) :: SourceFile.t()
-  def add_deps(file, deps), do: append_config(file, :deps, deps)
-
   @spec append_config(SourceFile.t(), String.t() | atom, String.t()) :: SourceFile.t()
   def append_config(file, name, element) do
     content =

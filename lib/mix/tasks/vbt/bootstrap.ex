@@ -21,57 +21,27 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
   defp adapt_code! do
     source_files()
-    |> add_standard_deps()
-    |> configure_preferred_cli_env()
-    |> configure_dialyzer()
+    |> adapt_mix()
     |> configure_endpoint()
     |> store_source_files!()
   end
 
-  defp add_standard_deps(source_files) do
-    update_in(
-      source_files.mix,
-      fn mix_file ->
-        MixFile.add_deps(
-          mix_file,
-          """
-            {:absinthe, "~> 1.4"},
-            {:absinthe_phoenix, "~> 1.4"},
-            {:absinthe_plug, "~> 1.4"},
-            {:absinthe_relay, "~> 1.4"},
-            {:ecto_enum, "~> 1.3"},
-            {:dialyxir, "~> 0.5", runtime: false}
-          """
-        )
-      end
-    )
-  end
-
-  defp configure_preferred_cli_env(source_files) do
-    update_in(
-      source_files.mix,
-      fn mix_file ->
-        mix_file
-        |> MixFile.append_config(:project, "preferred_cli_env: preferred_cli_env()")
-        |> SourceFile.add_to_module("defp preferred_cli_env, do: [credo: :test, dialyzer: :test]")
-      end
-    )
-  end
-
-  defp configure_dialyzer(mix_file) do
+  def adapt_mix(source_files) do
     update_in(
       source_files.mix,
       fn mix_file ->
         mix_file
         |> MixFile.append_config(:aliases, ~s/credo: ["compile", "credo"]/)
+        |> MixFile.append_config(:project, "preferred_cli_env: preferred_cli_env()")
+        |> SourceFile.add_to_module("defp preferred_cli_env, do: [credo: :test, dialyzer: :test]")
         |> MixFile.append_config(:project, "dialyzer: dialyzer()")
         |> SourceFile.add_to_module("""
-        defp dialyzer do
-          [
-            plt_add_apps: [:ex_unit, :mix],
-            ignore_warnings: "dialyzer.ignore-warnings"
-          ]
-        end
+            defp dialyzer do
+              [
+                plt_add_apps: [:ex_unit, :mix],
+                ignore_warnings: "dialyzer.ignore-warnings"
+              ]
+            end
         """)
       end
     )
