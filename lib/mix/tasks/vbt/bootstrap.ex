@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     Enum.each(
-      ~w/makefile docker circleci heroku github_pr_template credo dialyzer/,
+      ~w/makefile docker circleci heroku github_pr_template credo dialyzer formatter_config/,
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 

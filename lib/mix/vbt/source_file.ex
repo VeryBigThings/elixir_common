@@ -7,11 +7,7 @@ defmodule Mix.Vbt.SourceFile do
   def load!(name), do: %{name: name, content: File.read!(name)}
 
   @spec store!(t) :: :ok
-  def store!(file) do
-    code = to_string(Code.format_string!(file.content))
-    code = if String.ends_with?(code, "\n"), do: code, else: code <> "\n"
-    File.write!(file.name, code)
-  end
+  def store!(file), do: File.write!(file.name, format(file.content))
 
   @spec add_to_module(SourceFile.t(), String.t()) :: SourceFile.t()
   def add_to_module(file, code) do
@@ -27,5 +23,10 @@ defmodule Mix.Vbt.SourceFile do
       )
 
     %{file | content: content}
+  end
+
+  defp format(code) do
+    code = to_string(Code.format_string!(code, locals_without_parens: [plug: :*, socket: :*]))
+    if String.ends_with?(code, "\n"), do: code, else: code <> "\n"
   end
 end
