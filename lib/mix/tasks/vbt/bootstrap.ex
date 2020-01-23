@@ -19,14 +19,19 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     adapt_code!()
   end
 
+  # ------------------------------------------------------------------------
+  # Code adaptation
+  # ------------------------------------------------------------------------
+
   defp adapt_code! do
     source_files()
     |> adapt_mix()
     |> configure_endpoint()
+    |> configure_repo()
     |> store_source_files!()
   end
 
-  def adapt_mix(source_files) do
+  defp adapt_mix(source_files) do
     update_in(
       source_files.mix,
       fn mix_file ->
@@ -47,11 +52,18 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     )
   end
 
+  # ------------------------------------------------------------------------
+  # Endpoint configuration
+  # ------------------------------------------------------------------------
+
   defp configure_endpoint(source_files) do
     source_files
-    |> remove_endpoint_configs()
+    |> update_files(~w/config dev_config test_config prod_config/a, &remove_endpoint_settings/1)
     |> update_in([:endpoint], &setup_runtime_endpoint_config/1)
   end
+
+  defp remove_endpoint_settings(file),
+    do: ConfigFile.update_endpoint_config(file, &Keyword.drop(&1, ~w/url http secret_key_base/a))
 
   defp setup_runtime_endpoint_config(endpoint_file) do
     SourceFile.add_to_module(
@@ -75,21 +87,64 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     )
   end
 
-  defp remove_endpoint_configs(source_files) do
-    Enum.reduce(
-      ~w/config dev_config test_config prod_config/a,
-      source_files,
-      fn config, source_files ->
-        update_in(
-          source_files[config],
-          &ConfigFile.update_endpoint_config(
-            &1,
-            fn opts -> Keyword.drop(opts, ~w/url http secret_key_base/a) end
-          )
-        )
-      end
+  # ------------------------------------------------------------------------
+  # Repo configuration
+  # ------------------------------------------------------------------------
+
+  defp configure_repo(source_files) do
+    source_files
+    |> update_in([:config], &add_global_repo_config/1)
+    |> update_files([:dev_config, :test_config], &remove_repo_settings/1)
+    |> update_in([:repo], &setup_runtime_repo_config/1)
+  end
+
+  defp add_global_repo_config(config) do
+    config
+    |> ConfigFile.update_config(&Keyword.merge(&1, generators: [binary_id: true]))
+    |> ConfigFile.add_new_config("""
+        config #{inspect(ConfigFile.app())}, #{inspect(ConfigFile.repo_module())},
+          adapter: Ecto.Adapters.Postgres,
+          migration_primary_key: [type: :binary_id],
+          migration_timestamps: [type: :utc_datetime_usec],
+          otp_app: #{inspect(ConfigFile.app())}
+    """)
+  end
+
+  defp remove_repo_settings(file) do
+    ConfigFile.update_repo_config(
+      file,
+      &Keyword.drop(&1, ~w/username password database hostname pool_size/a)
     )
   end
+
+  defp setup_runtime_repo_config(repo_file) do
+    SourceFile.add_to_module(
+      repo_file,
+      """
+
+      @db_url_env if Mix.env() == :test,
+                do: "TEST_DATABASE_URL",
+                else: "DATABASE_URL"
+
+      @impl Ecto.Repo
+      def init(_type, config) do
+        config =
+          Keyword.merge(
+            config,
+            url: System.fetch_env!(@db_url_env),
+            pool_size: String.to_integer(System.fetch_env!("DATABASE_POOL_SIZE")),
+            ssl: System.fetch_env!("DATABASE_SSL") == "true"
+          )
+
+        {:ok, config}
+      end
+      """
+    )
+  end
+
+  # ------------------------------------------------------------------------
+  # Common functions
+  # ------------------------------------------------------------------------
 
   defp source_files do
     %{
@@ -98,14 +153,19 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       dev_config: SourceFile.load!("config/dev.exs"),
       test_config: SourceFile.load!("config/test.exs"),
       prod_config: SourceFile.load!("config/prod.exs"),
-      endpoint: load_web_file("endpoint.ex")
+      endpoint: load_web_file("endpoint.ex"),
+      repo: load_context_file("repo.ex")
     }
   end
 
-  defp load_web_file(location) do
-    app = Keyword.fetch!(Mix.Project.config(), :app)
-    SourceFile.load!(Path.join(["lib", "#{app}_web", location]))
-  end
+  defp update_files(source_files, files, updater),
+    do: Enum.reduce(files, source_files, &update_in(&2[&1], updater))
+
+  defp load_web_file(location),
+    do: SourceFile.load!(Path.join(["lib", "#{ConfigFile.app()}_web", location]))
+
+  defp load_context_file(location),
+    do: SourceFile.load!(Path.join(["lib", "#{ConfigFile.app()}", location]))
 
   defp store_source_files!(source_files),
     do: source_files |> Map.values() |> Enum.each(&SourceFile.store!/1)

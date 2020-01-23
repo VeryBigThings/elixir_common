@@ -9,7 +9,7 @@ defmodule Mix.Vbt.SourceFile do
   @spec store!(t) :: :ok
   def store!(file), do: File.write!(file.name, format(file.content))
 
-  @spec add_to_module(SourceFile.t(), String.t()) :: SourceFile.t()
+  @spec add_to_module(t(), String.t()) :: t()
   def add_to_module(file, code) do
     content =
       String.replace(
