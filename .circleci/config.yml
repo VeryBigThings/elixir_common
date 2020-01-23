@@ -70,8 +70,8 @@ jobs:
       - save_cache:
           key: '{{ .Environment.CACHE_VERSION}}-skafolder-tester-cache-{{ .Branch }}-{{ checksum "test_projects/skafolder_tester/mix.lock" }}'
           paths:
-            - test_projects/skafolder_tester/deps
-            - test_projects/skafolder_tester/_build
+            - tmp/skafolder_tester/deps
+            - tmp/skafolder_tester/_build
   update_docs:
     docker:
       - image: verybigthings/elixir:1.9
