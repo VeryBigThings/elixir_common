@@ -13,12 +13,14 @@ defmodule Mix.Tasks.Vbt.Gen.Heroku do
 
     bindings = Mix.Vbt.bindings()
 
-    files_for_docker_deployments(@template_root)
-    |> Enum.each(fn {source, destination} ->
-      source
-      |> VBT.Skafolder.eval_from_templates(bindings)
-      |> VBT.Skafolder.generate_file(destination, args)
-    end)
+    Enum.each(
+      files_for_docker_deployments(@template_root),
+      fn {source, destination} ->
+        source
+        |> VBT.Skafolder.eval_from_templates(bindings)
+        |> VBT.Skafolder.generate_file(destination, args)
+      end
+    )
   end
 
   def files_for_docker_deployments(template_root) do
