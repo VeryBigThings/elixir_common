@@ -27,22 +27,22 @@ defmodule VBT.Credo.MixProject do
 
   defp deps do
     [
+      {:absinthe_phoenix, "~> 1.4"},
+      {:absinthe_plug, "~> 1.4"},
+      {:absinthe_relay, "~> 1.4"},
+      {:absinthe, "~> 1.4"},
+      {:bamboo, "~> 1.0"},
+      {:bcrypt_elixir, "~> 2.0"},
       {:credo, "~> 1.1", runtime: false},
       {:dialyxir, "~> 0.5", runtime: false},
-      {:stream_data, "~> 0.4", only: [:test, :dev]},
-      {:ecto, "~> 3.0"},
       {:ecto_enum, "~> 1.3"},
-      {:absinthe, "~> 1.4"},
-      {:absinthe_plug, "~> 1.4"},
-      {:absinthe_phoenix, "~> 1.4"},
-      {:absinthe_relay, "~> 1.4"},
-      {:phoenix, "~> 1.4"},
-      {:phoenix_html, "~> 2.0"},
-      {:bamboo, "~> 1.0"},
-      {:oban, "~> 0.12"},
-      {:bcrypt_elixir, "~> 2.0"},
+      {:ecto, "~> 3.0"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
-      {:parent, "~> 0.6"}
+      {:oban, "~> 0.12"},
+      {:parent, "~> 0.6"},
+      {:phoenix_html, "~> 2.0"},
+      {:phoenix, "~> 1.4"},
+      {:stream_data, "~> 0.4", only: [:test, :dev]}
     ]
   end
 
