@@ -34,23 +34,55 @@ defmodule Mix.Vbt.ConfigFile do
   end
 
   defp update_kw_config(file, key, updater) do
+    # match `config :my_app, SomeKey,` (i.e. the part up until and including the comma character
+    # and the remaining whitespaces)
+    config_start_regex = ~r/(\n\s*config\s+#{inspect(Vbt.otp_app())},\s+#{inspect(key)},\s*?)/
+
+    # config opts are all characters up until (but excluding) two newline characters
+    config_opts_regex = ~r/(?<opts>[^\s].*?)(?=\n\n)/
+
     do_update_config(
       file,
       updater,
-      ~r/(\n\s*config\s+#{inspect(Vbt.otp_app())},\s+#{inspect(key)},\s*?)(?<opts>[^\s].*?)(?=\n\n)/s
+      ~r/#{Regex.source(config_start_regex)}#{Regex.source(config_opts_regex)}/s
     )
   end
 
-  defp do_update_config(file, updater, regex) do
-    %{"opts" => opts} = Regex.named_captures(regex, file.content)
-    {opts, _} = Code.eval_string("[#{opts}]")
+  defp do_update_config(file, updater, regex),
+    do: update_in(file.content, &replace(&1, updater, regex))
 
-    opts =
-      updater.(opts)
-      |> inspect(limit: :infinity)
-      |> String.replace(~r/^\[/, "")
-      |> String.replace(~r/\]$/, "")
+  defp replace(content, updater, regex) do
+    # Recursive replacing of the content according to the regex.
+    # Normally we could use String.replace for this, but this won't work in the cases where
+    # there are multiple config entries for the same key. This code performs iterative
+    # replaces of all matched occurences in the given content.
+    case Regex.named_captures(regex, content, return: :index) do
+      nil ->
+        content
 
-    %{file | content: String.replace(file.content, regex, "\\1 #{opts}")}
+      %{"opts" => {from, len}} ->
+        {prefix, suffix} = String.split_at(content, from + len)
+        {prefix, opts} = String.split_at(prefix, from)
+
+        {opts, _} = Code.eval_string("[#{opts}]")
+
+        updated_opts = updater.(opts)
+        updated_suffix = replace(suffix, updater, regex)
+
+        if opts == updated_opts and suffix == updated_suffix do
+          # Small optimization to avoid changing the content if nothing has changed.
+          # Without this, we might end up making some minor changes which are semantically
+          # equivalent, but visually different (e.g. replacing ~w// with [...]).
+          content
+        else
+          updated_opts =
+            updated_opts
+            |> inspect(limit: :infinity)
+            |> String.replace(~r/^\[/, "")
+            |> String.replace(~r/\]$/, "")
+
+          prefix <> updated_opts <> updated_suffix
+        end
+    end
   end
 end
