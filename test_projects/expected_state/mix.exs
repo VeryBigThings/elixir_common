@@ -10,7 +10,9 @@ defmodule SkafolderTester.MixProject do
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      preferred_cli_env: preferred_cli_env(),
+      dialyzer: dialyzer()
     ]
   end
 
@@ -55,7 +57,17 @@ defmodule SkafolderTester.MixProject do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate", "test"]
+      test: ["ecto.create --quiet", "ecto.migrate", "test"],
+      credo: ["compile", "credo"]
+    ]
+  end
+
+  defp preferred_cli_env, do: [credo: :test, dialyzer: :test]
+
+  defp dialyzer do
+    [
+      plt_add_apps: [:ex_unit, :mix],
+      ignore_warnings: "dialyzer.ignore-warnings"
     ]
   end
 end

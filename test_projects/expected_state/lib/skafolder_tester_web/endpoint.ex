@@ -41,4 +41,18 @@ defmodule SkafolderTesterWeb.Endpoint do
     signing_salt: "bwDVzZo/"
 
   plug SkafolderTesterWeb.Router
+
+  @impl Phoenix.Endpoint
+  def init(_type, config) do
+    config =
+      config
+      |> Keyword.put(:secret_key_base, System.fetch_env!("SECRET_KEY_BASE"))
+      |> Keyword.update(:url, url_config(), &Keyword.merge(&1, url_config()))
+      |> Keyword.update(:http, http_config(), &(http_config() ++ (&1 || [])))
+
+    {:ok, config}
+  end
+
+  defp url_config, do: [host: System.fetch_env!("HOST")]
+  defp http_config, do: [:inet6, port: System.fetch_env!("PORT")]
 end

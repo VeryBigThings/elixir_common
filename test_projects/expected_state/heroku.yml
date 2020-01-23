@@ -1,0 +1,13 @@
+build:
+  config:
+    MIX_ENV: prod
+    APP_NAME: skafolder_tester
+    SKIP_ASSETS: true
+  docker:
+    web:
+       dockerfile: Dockerfile
+       target: release
+release:
+  image: web
+  command:
+  - trap 'exit' INT; /opt/app/bin/migrate.sh

@@ -7,15 +7,18 @@
 # General application configuration
 use Mix.Config
 
-config :skafolder_tester,
-  ecto_repos: [SkafolderTester.Repo]
+config :skafolder_tester, ecto_repos: [SkafolderTester.Repo], generators: [binary_id: true]
 
 # Configures the endpoint
 config :skafolder_tester, SkafolderTesterWeb.Endpoint,
-  url: [host: "localhost"],
-  secret_key_base: "LOl5Fgk+Xqyp/BpmwGVMaZdi2gHQlo/oLobPkcKkzbyVU64NkC2avSybGWqWfbDV",
-  render_errors: [view: SkafolderTesterWeb.ErrorView, accepts: ~w(json)],
+  render_errors: [view: SkafolderTesterWeb.ErrorView, accepts: ["json"]],
   pubsub: [name: SkafolderTester.PubSub, adapter: Phoenix.PubSub.PG2]
+
+config :skafolder_tester, SkafolderTester.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  migration_primary_key: [type: :binary_id],
+  migration_timestamps: [type: :utc_datetime_usec],
+  otp_app: :skafolder_tester
 
 # Configures Elixir's Logger
 config :logger, :console,
