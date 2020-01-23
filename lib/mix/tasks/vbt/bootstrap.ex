@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
+  alias Mix.Vbt
   alias Mix.Vbt.{ConfigFile, MixFile, SourceFile}
 
   def run(args) do
@@ -102,11 +103,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     config
     |> ConfigFile.update_config(&Keyword.merge(&1, generators: [binary_id: true]))
     |> ConfigFile.add_new_config("""
-        config #{inspect(ConfigFile.app())}, #{inspect(ConfigFile.repo_module())},
+        config #{inspect(Vbt.otp_app())}, #{inspect(Vbt.repo_module())},
           adapter: Ecto.Adapters.Postgres,
           migration_primary_key: [type: :binary_id],
           migration_timestamps: [type: :utc_datetime_usec],
-          otp_app: #{inspect(ConfigFile.app())}
+          otp_app: #{inspect(Vbt.otp_app())}
     """)
   end
 
@@ -162,10 +163,10 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     do: Enum.reduce(files, source_files, &update_in(&2[&1], updater))
 
   defp load_web_file(location),
-    do: SourceFile.load!(Path.join(["lib", "#{ConfigFile.app()}_web", location]))
+    do: SourceFile.load!(Path.join(["lib", "#{Vbt.otp_app()}_web", location]))
 
   defp load_context_file(location),
-    do: SourceFile.load!(Path.join(["lib", "#{ConfigFile.app()}", location]))
+    do: SourceFile.load!(Path.join(["lib", "#{Vbt.otp_app()}", location]))
 
   defp store_source_files!(source_files),
     do: source_files |> Map.values() |> Enum.each(&SourceFile.store!/1)

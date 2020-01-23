@@ -1,14 +1,9 @@
 defmodule Mix.Vbt.ConfigFile do
   @moduledoc false
+  alias Mix.Vbt
   alias Mix.Vbt.SourceFile
 
   @type updater_fun :: (Keyword.t() -> Keyword.t())
-
-  @spec endpoint_module :: module
-  def endpoint_module, do: Module.concat(Macro.camelize("#{app()}_web"), Endpoint)
-
-  @spec repo_module :: module
-  def repo_module, do: Module.concat(Macro.camelize("#{app()}"), Repo)
 
   @spec app :: atom
   def app, do: Keyword.fetch!(Mix.Project.config(), :app)
@@ -23,13 +18,14 @@ defmodule Mix.Vbt.ConfigFile do
 
   @spec update_endpoint_config(SourceFile.t(), updater_fun) :: SourceFile.t()
   def update_endpoint_config(file, updater),
-    do: update_kw_config(file, endpoint_module(), updater)
+    do: update_kw_config(file, Vbt.endpoint_module(), updater)
 
   @spec update_repo_config(SourceFile.t(), updater_fun) :: SourceFile.t()
-  def update_repo_config(file, updater), do: update_kw_config(file, repo_module(), updater)
+  def update_repo_config(file, updater),
+    do: update_kw_config(file, Vbt.repo_module(), updater)
 
   @spec update_config(SourceFile.t(), atom, updater_fun) :: SourceFile.t()
-  def update_config(file, app \\ app(), updater) do
+  def update_config(file, app \\ Vbt.otp_app(), updater) do
     do_update_config(
       file,
       updater,
@@ -41,7 +37,7 @@ defmodule Mix.Vbt.ConfigFile do
     do_update_config(
       file,
       updater,
-      ~r/(\n\s*config\s+#{inspect(app())},\s+#{inspect(key)},\s*?)(?<opts>[^\s].*?)(?=\n\n)/s
+      ~r/(\n\s*config\s+#{inspect(Vbt.otp_app())},\s+#{inspect(key)},\s*?)(?<opts>[^\s].*?)(?=\n\n)/s
     )
   end
 
