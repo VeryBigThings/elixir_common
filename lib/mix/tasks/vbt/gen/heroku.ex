@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Vbt.Gen.Heroku do
 
   @template_root "skf.gen.heroku"
 
-  def run(_args) do
+  def run(args) do
     if Mix.Project.umbrella?() do
       Mix.raise("mix vbt.gen.heroku can only be run inside an application directory")
     end
@@ -17,7 +17,7 @@ defmodule Mix.Tasks.Vbt.Gen.Heroku do
     |> Enum.each(fn {source, destination} ->
       source
       |> VBT.Skafolder.eval_from_templates(bindings)
-      |> VBT.Skafolder.generate_file(destination)
+      |> VBT.Skafolder.generate_file(destination, args)
     end)
   end
 
