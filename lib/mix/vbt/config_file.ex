@@ -12,7 +12,7 @@ defmodule Mix.Vbt.ConfigFile do
   def add_new_config(file, code) do
     update_in(
       file.content,
-      &String.replace(&1, ~r/\n(?=# Configures Elixir's Logger)/s, "\n#{code}\n")
+      &String.replace(&1, ~r/(?<=use Mix.Config\n)\n/s, "\n#{code}\n")
     )
   end
 
