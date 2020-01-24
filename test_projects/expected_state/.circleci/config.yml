@@ -3,7 +3,7 @@ jobs:
   build:
     parallelism: 1
     docker:
-      - image: circleci/elixir:1.8.1
+      - image: circleci/elixir:1.9
         environment:
           MIX_ENV: "test"
           TEST_REDIS_URL: "redis://localhost:6379/0"
