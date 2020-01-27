@@ -3,13 +3,19 @@ jobs:
   build:
     parallelism: 1
     docker:
-      - image: circleci/elixir:1.8.1
+      - image: circleci/elixir:1.9
         environment:
           MIX_ENV: "test"
-          TEST_DATABASE_URL: "postgres://postgres:@localhost/<%= app %>_test"
           TEST_REDIS_URL: "redis://localhost:6379/0"
-          GUARDIAN_SECRET_KEY: "verylongsecret"
+          # endpoint
+          HOST: "localhost"
+          PORT: "4000"
           SECRET_KEY_BASE: "EvenMuchLongerSecretThatMustBeAtleast64BytesBecauseCookieStoreExpectsIt"
+          # database
+          DATABASE_URL: "postgres://postgres:@localhost/<%= app %>_test"
+          TEST_DATABASE_URL: "postgres://postgres:@localhost/<%= app %>_test"
+          DATABASE_POOL_SIZE: "10"
+          DATABASE_SSL: "false"
       - image: circleci/postgres:10-alpine-postgis
         environment:
           POSTGRES_USER: "postgres"
@@ -30,7 +36,11 @@ jobs:
       - restore_cache:
           keys:
             -  {{ .Environment.CACHE_VERSION }}.-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
-      - run: mix do deps.get, compile
+      - run:
+          name: "Compile project"
+          command: |
+            mix deps.get
+            mix compile --warnings-as-errors
       - save_cache:
           key: {{ .Environment.CACHE_VERSION }}-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths:

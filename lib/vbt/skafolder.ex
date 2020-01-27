@@ -2,8 +2,9 @@ defmodule VBT.Skafolder do
   @moduledoc false
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
-  def generate_file(content, file) do
-    Mix.Generator.create_file(file, content)
+  def generate_file(content, file, args) do
+    {opts, _args} = OptionParser.parse!(args, switches: [force: :boolean])
+    Mix.Generator.create_file(file, content, opts)
   end
 
   def eval_from_templates(source, bindings) do

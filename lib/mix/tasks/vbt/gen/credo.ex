@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Vbt.Gen.Credo do
 
   @template Path.join(["skf.gen.credo", ".credo.exs"])
 
-  def run(_args) do
+  def run(args) do
     if Mix.Project.umbrella?() do
       Mix.raise("mix vbt.gen.credo can only be run inside an application directory")
     end
@@ -15,6 +15,6 @@ defmodule Mix.Tasks.Vbt.Gen.Credo do
 
     @template
     |> VBT.Skafolder.eval_from_templates(bindings)
-    |> VBT.Skafolder.generate_file(Path.join(File.cwd!(), ".credo.exs"))
+    |> VBT.Skafolder.generate_file(Path.join(File.cwd!(), ".credo.exs"), args)
   end
 end

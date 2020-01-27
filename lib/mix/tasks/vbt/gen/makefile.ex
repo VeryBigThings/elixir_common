@@ -26,6 +26,6 @@ defmodule Mix.Tasks.Vbt.Gen.Makefile do
 
     @template
     |> VBT.Skafolder.eval_from_templates(bindings)
-    |> VBT.Skafolder.generate_file(Path.join([File.cwd!(), "Makefile"]))
+    |> VBT.Skafolder.generate_file(Path.join([File.cwd!(), "Makefile"]), args)
   end
 end
