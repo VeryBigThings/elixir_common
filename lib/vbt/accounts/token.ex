@@ -152,17 +152,22 @@ defmodule VBT.Accounts.Token do
       - `:every` - Cleanup interval. Defaults to 10 minutes.
       - `:timeout` - Maximum allowed duration of a single cleanup. Defaults to 1 minute.
       - `:retention` - The period during which expired and used tokens are not deleted.
-                       Defaults to 7 days.
+        Defaults to 7 days.
+      - `:name`, `:telemetry_id`, `:mode` - Periodic-specific options. See [Periodic docs]
+        (https://hexdocs.pm/parent/Periodic.html#module-options) for details.
 
     All of the time options should be provided in milliseconds.
     """
 
     @type opts :: [
             id: any,
+            name: GenServer.name(),
             every: pos_integer,
             timeout: pos_integer,
             retention: pos_integer,
-            config: VBT.Accounts.config()
+            config: VBT.Accounts.config(),
+            telemetry_id: any,
+            mode: :auto | :manual
           ]
 
     @spec child_spec(opts) :: Supervisor.child_spec()
@@ -170,13 +175,10 @@ defmodule VBT.Accounts.Token do
       config = Keyword.fetch!(opts, :config)
       retention = Keyword.get(opts, :retention, 7 * :timer.hours(24))
 
-      Periodic.child_spec(
-        id: Keyword.get(opts, :id, __MODULE__),
-        run: fn -> cleanup(config, retention) end,
-        every: Keyword.get(opts, :every, :timer.minutes(10)),
-        timeout: Keyword.get(opts, :timeout, :timer.minutes(1)),
-        on_overlap: :ignore
-      )
+      [id: __MODULE__, every: :timer.minutes(10), timeout: :timer.minutes(1)]
+      |> Keyword.merge(Keyword.take(opts, ~w/id name every timeout telemetry_id mode/a))
+      |> Keyword.merge(on_overlap: :ignore, run: fn -> cleanup(config, retention) end)
+      |> Periodic.child_spec()
     end
 
     defp cleanup(config, retention) do
