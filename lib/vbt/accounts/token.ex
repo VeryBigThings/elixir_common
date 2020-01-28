@@ -174,15 +174,16 @@ defmodule VBT.Accounts.Token do
     def child_spec(opts) do
       config = Keyword.fetch!(opts, :config)
       retention = Keyword.get(opts, :retention, 7 * :timer.hours(24))
+      now_fun = Keyword.get(opts, :now_fun, &DateTime.utc_now/0)
 
       [id: __MODULE__, every: :timer.minutes(10), timeout: :timer.minutes(1)]
       |> Keyword.merge(Keyword.take(opts, ~w/id name every timeout telemetry_id mode/a))
-      |> Keyword.merge(on_overlap: :ignore, run: fn -> cleanup(config, retention) end)
+      |> Keyword.merge(on_overlap: :ignore, run: fn -> cleanup(config, now_fun, retention) end)
       |> Periodic.child_spec()
     end
 
-    defp cleanup(config, retention) do
-      date = DateTime.add(DateTime.utc_now(), -retention, :millisecond)
+    defp cleanup(config, now_fun, retention) do
+      date = DateTime.add(now_fun.(), -retention, :millisecond)
 
       config.repo.delete_all(
         from(token in config.schemas.token,

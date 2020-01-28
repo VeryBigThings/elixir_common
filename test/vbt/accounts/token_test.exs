@@ -10,6 +10,8 @@ defmodule VBT.Accounts.TokenTest do
   alias VBT.Accounts.Token
   alias VBT.Schemas.Serial
 
+  require Periodic.Test
+
   setup do
     Sandbox.checkout(VBT.TestRepo)
     :ok
@@ -51,67 +53,90 @@ defmodule VBT.Accounts.TokenTest do
   end
 
   describe "VBT.Accounts.Token.Cleanup" do
+    setup do
+      Periodic.Test.observe(__MODULE__)
+    end
+
     test "removes expired token" do
-      start_cleanup_process()
+      cleaner_pid = start_cleanup_process!(now_fun: fn -> future_time(5, :second) end)
 
       {:ok, account} = create_account(@config)
       encoded_token = Token.create!(account, nil, 1, @config)
       {:ok, token} = Token.decode(encoded_token, account, @config)
 
-      eventually(fn -> refute exists?(token) end, attempts: 100, delay: 100)
+      sync_tick(cleaner_pid)
+      refute exists?(token)
     end
 
     test "removes used token" do
-      start_cleanup_process()
+      cleaner_pid = start_cleanup_process!(now_fun: fn -> future_time(1, :second) end)
 
       {:ok, account} = create_account(@config)
       encoded_token = Token.create!(account, nil, 100, @config)
       {:ok, token} = Token.decode(encoded_token, account, @config)
       Token.use(token, account, fn -> {:ok, nil} end, @config)
 
-      eventually(fn -> refute exists?(token) end, attempts: 100, delay: 100)
+      sync_tick(cleaner_pid)
+      refute exists?(token)
     end
 
     test "preserves valid token" do
-      start_cleanup_process()
+      cleaner_pid = start_cleanup_process!()
 
       {:ok, account} = create_account(@config)
       encoded_token = Token.create!(account, nil, 100, @config)
       {:ok, token} = Token.decode(encoded_token, account, @config)
 
-      Process.sleep(1000)
+      sync_tick(cleaner_pid)
       assert exists?(token)
     end
 
     test "preserves expired and used tokens until the retention period expires" do
-      start_cleanup_process(retention: :timer.seconds(2))
+      cleaner_pid = start_cleanup_process!(retention: :timer.seconds(1))
 
       {:ok, account} = create_account(@config)
-      encoded_token = Token.create!(account, nil, -1, @config)
+      encoded_token = Token.create!(account, nil, 0, @config)
       {:ok, expired_token} = Token.decode(encoded_token, account, @config)
 
       encoded_token = Token.create!(account, nil, 100, @config)
       {:ok, used_token} = Token.decode(encoded_token, account, @config)
       Token.use(used_token, account, fn -> {:ok, nil} end, @config)
 
-      Process.sleep(1000)
+      sync_tick(cleaner_pid)
       assert exists?(expired_token)
       assert exists?(used_token)
 
-      eventually(
-        fn ->
-          refute exists?(expired_token)
-          refute exists?(used_token)
-        end,
-        attempts: 100,
-        delay: 100
-      )
+      stop_supervised(Token.Cleanup)
+
+      cleaner_pid =
+        start_cleanup_process!(
+          retention: :timer.seconds(1),
+          now_fun: fn -> future_time(2, :second) end
+        )
+
+      sync_tick(cleaner_pid)
+      refute exists?(expired_token)
+      refute exists?(used_token)
     end
 
-    defp start_cleanup_process(opts \\ []) do
-      opts = Keyword.merge([every: 100, retention: 0, config: @config], opts)
+    defp future_time(quantity, unit),
+      do: DateTime.add(DateTime.utc_now(), quantity, unit)
+
+    defp start_cleanup_process!(opts \\ []) do
+      opts =
+        Keyword.merge(
+          [every: 100, retention: 0, config: @config, telemetry_id: __MODULE__, mode: :manual],
+          opts
+        )
+
       cleanup_pid = start_supervised!({Token.Cleanup, opts})
       Sandbox.allow(VBT.TestRepo, self(), cleanup_pid)
+      cleanup_pid
+    end
+
+    defp sync_tick(cleaner_pid) do
+      Periodic.Test.tick(cleaner_pid)
+      Periodic.Test.assert_periodic_event(__MODULE__, :finished, %{reason: :normal})
     end
 
     defp exists?(token),
