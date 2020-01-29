@@ -10,18 +10,20 @@
       strict: true,
       color: true,
       checks: [
-        # extra enabled checks
-        {VBT.Credo.Check.Readability.MultilineSimpleDo, []},
-        {VBT.Credo.Check.Consistency.ModuleLayout, []},
-        {VBT.Credo.Check.Readability.WithPlaceholder, []},
+        # extra Credo checks
+        {Credo.Check.Readability.AliasAs, []},
+        {Credo.Check.Readability.SinglePipe, []},
+        {Credo.Check.Readability.Specs, []},
+
+        # custom VBT checks
         {VBT.Credo.Check.Consistency.FileLocation,
          ignore_folder_namespace: %{
            "lib/<%= app %>_web" => ~w/channels controllers views/,
            "test/<%= app %>_web" => ~w/channels controllers views/
          }},
-        {Credo.Check.Readability.AliasAs, []},
-        {Credo.Check.Readability.Specs, []},
-        {Credo.Check.Readability.SinglePipe, []},
+        {VBT.Credo.Check.Consistency.ModuleLayout, []},
+        {VBT.Credo.Check.Readability.MultilineSimpleDo, []},
+        {VBT.Credo.Check.Readability.WithPlaceholder, []},
 
         # disabled checks
         {Credo.Check.Design.TagTODO, false},
