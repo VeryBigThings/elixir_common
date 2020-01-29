@@ -1,13 +1,19 @@
 defmodule Mix.Vbt.SourceFile do
   @moduledoc false
 
-  @type t :: %{name: String.t(), content: String.t()}
+  @type t :: %{name: String.t(), content: String.t(), format?: boolean}
 
-  @spec load!(String.t()) :: t
-  def load!(name), do: %{name: name, content: File.read!(name)}
+  @spec load!(String.t(), format?: boolean) :: t
+  def load!(name, opts \\ []) do
+    %{
+      name: name,
+      content: File.read!(name),
+      format?: Keyword.get(opts, :format?, true)
+    }
+  end
 
   @spec store!(t) :: :ok
-  def store!(file), do: File.write!(file.name, format(file.content))
+  def store!(file), do: File.write!(file.name, format(file))
 
   @spec add_to_module(t(), String.t()) :: t()
   def add_to_module(file, code) do
@@ -25,8 +31,17 @@ defmodule Mix.Vbt.SourceFile do
     %{file | content: content}
   end
 
-  defp format(code) do
-    code = to_string(Code.format_string!(code, locals_without_parens: [plug: :*, socket: :*]))
+  @spec append(t, String.t()) :: t
+  def append(file, extra_content), do: update_in(file.content, &(&1 <> extra_content))
+
+  defp format(%{format?: false} = file), do: file.content
+
+  defp format(file) do
+    code =
+      file.content
+      |> Code.format_string!(locals_without_parens: [plug: :*, socket: :*])
+      |> to_string()
+
     if String.ends_with?(code, "\n"), do: code, else: code <> "\n"
   end
 end
