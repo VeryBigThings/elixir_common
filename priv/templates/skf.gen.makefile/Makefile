@@ -43,10 +43,10 @@ require-%:
 # -----------------
 
 dev:
-	@MIX_ENV=dev mix ecto.setup && iex -S mix phx.server 
+	mix ecto.setup && iex -S mix phx.server
 
 test:
-	@MIX_ENV=test mix test
+	mix test
 
 compile:
 	@mix do deps.get, compile
@@ -77,11 +77,11 @@ set-remotes: require-DEVELOPMENT require-STAGING require-PRODUCTION
 
 ## Attach to IEx console on Heroku {REMOTE}
 heroku-console: require-REMOTE
-	@MIX_ENV=dev heroku run "iex -S mix" --remote ${REMOTE}
-	
+	heroku run "iex -S mix" --remote ${REMOTE}
+
 ## Show (and tail) Heroku logs from given {REMOTE}
 heroku-logs: require-REMOTE
-	@MIX_ENV=dev heroku logs --tail --remote ${REMOTE}
+	heroku logs --tail --remote ${REMOTE}
 
 ## Backup database on given Heroku {REMOTE}
 heroku-capture-backup: require-REMOTE

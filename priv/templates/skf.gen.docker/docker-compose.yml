@@ -4,8 +4,6 @@ services:
     build:
       context: .
       target: build
-      args:
-        MIX_ENV: "dev"
     ports:
       - "4000:4000"
     depends_on:

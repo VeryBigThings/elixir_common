@@ -5,7 +5,6 @@ jobs:
     docker:
       - image: circleci/elixir:1.9
         environment:
-          MIX_ENV: "test"
           TEST_REDIS_URL: "redis://localhost:6379/0"
           # endpoint
           HOST: "localhost"
@@ -40,7 +39,7 @@ jobs:
           name: "Compile project"
           command: |
             mix deps.get
-            mix compile --warnings-as-errors
+            MIX_ENV=test mix compile --warnings-as-errors
       - save_cache:
           key: {{ .Environment.CACHE_VERSION }}-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths:
@@ -59,13 +58,13 @@ jobs:
             - '{{ .Environment.CACHE_VERSION}}-dialyzer-cache-'
       - run:
           name: "Restore cached dialyzer files"
-          command: "mkdir -p plts && ls plts | xargs -I % cp plts/% _build/$MIX_ENV/"
+          command: "mkdir -p plts && ls plts | xargs -I % cp plts/% _build/test/"
       - run:
           name: "Build dialyzer plt"
           command: mix dialyzer --plt
       - run:
           name: "Prepare dialyzer files to cache"
-          command: "mkdir -p plts && ls _build/$MIX_ENV | grep dialyxir | xargs -I % cp _build/$MIX_ENV/% -t plts"
+          command: "mkdir -p plts && ls _build/test | grep dialyxir | xargs -I % cp _build/test/% -t plts"
       - save_cache:
           paths:
             - plts
@@ -76,16 +75,16 @@ jobs:
           command: mix dialyzer --halt-exit-status
       - run:
           name: "Create database"
-          command: mix ecto.migrate
+          command: MIX_ENV=test mix ecto.migrate
       - run:
           name: "Run DB migrations"
-          command: mix ecto.migrate
+          command: MIX_ENV=test mix ecto.migrate
       - run:
           name: "Run tests"
           command: mix test
       - run:
           name: "Check migrations reversibility"
-          command: mix ecto.rollback --all
+          command: MIX_ENV=test mix ecto.rollback --all
   deploy:
     docker:
       - image: buildpack-deps:trusty
