@@ -84,7 +84,7 @@ RUN mix do release
 # Minimal (debian-slim) image for production purposes
 # Copies the bundle from pre-release image
 
-FROM debian:9-slim AS release
+FROM debian:10-slim AS release
 
 ARG APP_NAME
 ARG APP_USER=user
