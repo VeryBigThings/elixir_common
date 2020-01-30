@@ -3,7 +3,7 @@
 # ===========================================================
 # Used for development purposes and as a base for pre-release
 
-FROM verybigthings/elixir:1.9 AS build
+FROM verybigthings/elixir:1.9.4 AS build
 
 ARG WORKDIR=/opt/app
 ARG MIX_ENV=prod
@@ -84,7 +84,7 @@ RUN mix do release
 # Minimal (debian-slim) image for production purposes
 # Copies the bundle from pre-release image
 
-FROM debian:9-slim AS release
+FROM debian:10-slim AS release
 
 ARG APP_NAME
 ARG APP_USER=user

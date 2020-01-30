@@ -12,7 +12,8 @@ defmodule SkafolderTester.MixProject do
       aliases: aliases(),
       deps: deps(),
       preferred_cli_env: preferred_cli_env(),
-      dialyzer: dialyzer()
+      dialyzer: dialyzer(),
+      build_path: System.get_env("BUILD_PATH", "_build")
     ]
   end
 

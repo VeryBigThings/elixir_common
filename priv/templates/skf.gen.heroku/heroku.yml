@@ -1,6 +1,5 @@
 build:
   config:
-    MIX_ENV: prod
     APP_NAME: <%= app %>
     SKIP_ASSETS: true
   docker:

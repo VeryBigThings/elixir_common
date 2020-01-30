@@ -26,3 +26,6 @@ skafolder_tester-*.tar
 # we ignore priv/static. You may want to comment
 # this depending on your deployment strategy.
 /priv/static/
+
+# Build folder inside devstack container
+/_builds/

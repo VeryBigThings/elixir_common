@@ -27,10 +27,25 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
   defp adapt_code! do
     source_files()
+    |> adapt_gitignore()
     |> adapt_mix()
     |> configure_endpoint()
     |> configure_repo()
     |> store_source_files!()
+  end
+
+  defp adapt_gitignore(source_files) do
+    update_in(
+      source_files.gitignore,
+      &SourceFile.append(
+        &1,
+        """
+
+        # Build folder inside devstack container
+        /_builds/
+        """
+      )
+    )
   end
 
   defp adapt_mix(source_files) do
@@ -42,6 +57,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         |> MixFile.append_config(:project, "preferred_cli_env: preferred_cli_env()")
         |> SourceFile.add_to_module("defp preferred_cli_env, do: [credo: :test, dialyzer: :test]")
         |> MixFile.append_config(:project, "dialyzer: dialyzer()")
+        |> MixFile.append_config(:project, ~s/build_path: System.get_env("BUILD_PATH", "_build")/)
         |> SourceFile.add_to_module("""
             defp dialyzer do
               [
@@ -150,6 +166,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
   defp source_files do
     %{
+      gitignore: SourceFile.load!(".gitignore", format?: false),
       mix: SourceFile.load!("mix.exs"),
       config: SourceFile.load!("config/config.exs"),
       dev_config: SourceFile.load!("config/dev.exs"),
