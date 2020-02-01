@@ -15,6 +15,7 @@ defmodule VBT.Application do
     end
 
   def start(_type, _args) do
+    VBT.FixedJob.init_time_provider()
     Telemetry.Oban.install_handler()
 
     Supervisor.start_link(
