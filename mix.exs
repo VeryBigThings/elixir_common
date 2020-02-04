@@ -39,7 +39,7 @@ defmodule VBT.Credo.MixProject do
       {:ecto, "~> 3.0"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:oban, "~> 0.12"},
-      {:parent, "~> 0.6"},
+      {:parent, "~> 0.8"},
       {:phoenix_html, "~> 2.0"},
       {:phoenix, "~> 1.4"},
       {:stream_data, "~> 0.4", only: [:test, :dev]}
