@@ -123,7 +123,7 @@ defmodule VBT.Accounts.Token do
            from(
              token in config.schemas.token,
              where: token.id == ^token.id,
-             where: token.account_id == ^account.id,
+             where: field(token, ^account_id_field_name(account)) == ^account.id,
              where: is_nil(token.used_at),
              where: token.expires_at >= ^now
            ),
@@ -133,6 +133,9 @@ defmodule VBT.Accounts.Token do
       _ -> {:error, :invalid}
     end
   end
+
+  defp account_id_field_name(account),
+    do: account.__meta__.schema.__schema__(:association, :tokens).related_key
 
   # ------------------------------------------------------------------------
   # Periodic cleanup
