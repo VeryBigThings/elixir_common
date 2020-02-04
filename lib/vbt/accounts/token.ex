@@ -123,7 +123,7 @@ defmodule VBT.Accounts.Token do
            from(
              token in config.schemas.token,
              where: token.id == ^token.id,
-             where: field(token, ^account_id_field_name(account)) == ^account.id,
+             where: field(token, ^account_id_field_name(config)) == ^account.id,
              where: is_nil(token.used_at),
              where: token.expires_at >= ^now
            ),
@@ -134,8 +134,18 @@ defmodule VBT.Accounts.Token do
     end
   end
 
-  defp account_id_field_name(account),
-    do: account.__meta__.schema.__schema__(:association, :tokens).related_key
+  defp account_id_field_name(config) do
+    account_schema = config.schemas.account
+
+    # Using Ecto schema reflection (https://hexdocs.pm/ecto/Ecto.Schema.html#module-reflection)
+    # to fetch meta about the `:tokens` association.
+    tokens_meta = account_schema.__schema__(:association, :tokens)
+
+    # Since `:tokens` is `has_many`, `tokens_meta` is an instance of `Ecto.Association.Has`
+    # (https://hexdocs.pm/ecto/Ecto.Association.Has.html). The field `related_key` in this
+    # struct contains the name of the column in the tokens table.
+    tokens_meta.related_key
+  end
 
   # ------------------------------------------------------------------------
   # Periodic cleanup
