@@ -62,6 +62,8 @@ defmodule VBT.Integration.SkafolderTest do
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/deps"))
     |> Stream.reject(&File.dir?/1)
     |> Stream.map(&Path.relative_to(&1, folder))
+    # ignoring mix.lock, because its shape can change non-deterministically
+    |> Stream.reject(&(&1 == "mix.lock"))
     |> Enum.sort()
   end
 
