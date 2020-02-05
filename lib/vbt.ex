@@ -15,7 +15,8 @@ defmodule VBT do
 
   By default, this function returns `ExAws`. However, you can change the module globally via
   the `:ex_aws_client` configuration of the `:vbt` app. This should typically be done only in
-  test environment to use a mock defined via `Mox`.
+  test environment to use a mock defined via `Mox`. If you generated your project via the latest
+  skafolder, the mock module named `VBT.TestAwsClient` will be already configured.
   """
   @spec aws_client() :: module()
   def aws_client, do: Application.get_env(:vbt, :ex_aws_client, ExAws)

@@ -10,6 +10,9 @@ defmodule VBT.Integration.SkafolderTest do
     System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
     assert {_output, 0} = mix(~w/vbt.bootstrap --force/)
 
+    # fetch new deps injected by bootstrap
+    assert {_output, 0} = mix(~w/deps.get/)
+
     # make sure that the project can be compiled after the changes have been applied
     assert {_output, 0} = mix(~w/compile/)
 
