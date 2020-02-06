@@ -31,7 +31,7 @@ defmodule VBT.Credo.MixProject do
       {:absinthe_plug, "~> 1.4"},
       {:absinthe_relay, "~> 1.4"},
       {:absinthe, "~> 1.4"},
-      {:bamboo, "~> 1.0"},
+      {:bamboo, "~> 1.4"},
       {:bcrypt_elixir, "~> 2.0"},
       {:credo, "~> 1.1", runtime: false},
       {:dialyxir, "~> 0.5", runtime: false},
