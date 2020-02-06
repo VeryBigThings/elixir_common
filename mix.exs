@@ -37,6 +37,7 @@ defmodule VBT.Credo.MixProject do
       {:dialyxir, "~> 0.5", runtime: false},
       {:ecto_enum, "~> 1.3"},
       {:ecto, "~> 3.0"},
+      {:ex_aws, "~> 2.1"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:oban, "~> 0.12"},
       {:parent, "~> 0.8"},

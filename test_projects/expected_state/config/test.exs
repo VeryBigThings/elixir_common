@@ -1,5 +1,7 @@
 use Mix.Config
 
+config :vbt, :ex_aws_client, VBT.TestAwsClient
+
 # Configure your database
 config :skafolder_tester, SkafolderTester.Repo, pool: Ecto.Adapters.SQL.Sandbox
 

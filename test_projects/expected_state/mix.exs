@@ -44,7 +44,8 @@ defmodule SkafolderTester.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:vbt, path: "../.."}
+      {:vbt, path: "../.."},
+      {:mox, "~> 0.5", only: :test}
     ]
   end
 
