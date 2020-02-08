@@ -125,6 +125,74 @@ defmodule VBT.ProviderTest do
     end
   end
 
+  defmodule TestModule do
+    baz = "baz"
+
+    use Provider,
+      adapter: Provider.SystemEnv,
+      params: [
+        :opt_1,
+        {:opt_2, type: :integer},
+        {:opt_3, default: "foo"},
+
+        # runtime resolving of the default value
+        {:opt_4, default: bar()},
+
+        # compile-time resolving of the default value
+        {:opt_5, default: unquote(baz)}
+      ]
+
+    defp bar, do: "bar"
+  end
+
+  describe "generated module" do
+    setup do
+      Enum.each(1..5, &System.delete_env("OPT_#{&1}"))
+    end
+
+    test "fetch_all/0 succeeds for correct data" do
+      System.put_env("OPT_1", "qux")
+      System.put_env("OPT_2", "42")
+
+      assert TestModule.fetch_all() ==
+               {:ok, %{opt_1: "qux", opt_2: 42, opt_3: "foo", opt_4: "bar", opt_5: "baz"}}
+    end
+
+    test "fetch_all/0 returns errors for invalid data" do
+      assert TestModule.fetch_all() ==
+               {:error, ["OPT_1 is missing", "OPT_2 is missing"]}
+    end
+
+    test "validate!/0 succeeds for correct data" do
+      System.put_env("OPT_1", "some data")
+      System.put_env("OPT_2", "42")
+
+      assert TestModule.validate!() == :ok
+    end
+
+    test "validate!/0 raises on error" do
+      System.put_env("OPT_2", "foobar")
+      error = assert_raise RuntimeError, fn -> TestModule.validate!() end
+      assert error.message =~ "OPT_1 is missing"
+      assert error.message =~ "OPT_2 is invalid"
+    end
+
+    test "access function succeed for correct data" do
+      System.put_env("OPT_1", "some data")
+      System.put_env("OPT_2", "42")
+
+      assert TestModule.opt_1() == "some data"
+      assert TestModule.opt_2() == 42
+      assert TestModule.opt_3() == "foo"
+      assert TestModule.opt_4() == "bar"
+      assert TestModule.opt_5() == "baz"
+    end
+
+    test "access function raises for on error" do
+      assert_raise RuntimeError, "OPT_1 is missing", fn -> TestModule.opt_1() end
+    end
+  end
+
   defp param_spec(overrides \\ []) do
     name = :"test_env_#{unique_positive_integer()}"
     opts = Map.merge(%{type: :string, default: nil}, Map.new(overrides))
