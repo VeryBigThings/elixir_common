@@ -1,4 +1,6 @@
 defmodule VBT.Provider.SystemEnv do
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
+  @moduledoc "Provider storage adapter which retrieves values from OS env vars."
   @behaviour VBT.Provider.Adapter
 
   @impl VBT.Provider.Adapter
