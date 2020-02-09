@@ -22,11 +22,11 @@ defmodule VBT.Credo.Check.Readability.WithPlaceholder do
   information immediately:
 
       defp find_resource(user) do
-        with :error -> Resource.fetch(user), do: {:error, :not_found}
+        with :error <- Resource.fetch(user), do: {:error, :not_found}
       end
 
       defp authorize(resource, user) do
-        with :error -> Resource.authorize(resource, user), do: {:error, :unauthorized}
+        with :error <- Resource.authorize(resource, user), do: {:error, :unauthorized}
       end
 
   At this point, the validation chain in `with` is more explicit:
