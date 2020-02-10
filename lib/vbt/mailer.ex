@@ -50,29 +50,34 @@ defmodule VBT.Mailer do
   Finally, you can define the mailer module in your context:
 
       defmodule MyMailer do
-        # Note that `MyMailer` is also a Bamboo mailer, so it should be configured in config
-        # scripts.
         use VBT.Mailer,
           oban_worker: [queue: "email"],
-          templates: "templates"
+          templates: "templates",
+          adapter: Bamboo.SendGridAdapter
 
-          @spec send_password_reset(String.t(), String.t()) ::
-            {:ok, Oban.Job.t} | {:error, Ecto.Changeset.t}
-          def send_password_reset(email, password_reset_link) do
-            VBT.Mailer.enqueue(
-              __MODULE__,
-              "sender@x.y.z",
-              "recipient@x.y.z",
-              "Reset your password",
-              %{
-                layout: :some_layout,
-                template: :some_template,
-                password_reset_link: password_reset_link
-              }
-            )
-          end
-        def
+        @spec send_password_reset(String.t(), String.t()) ::
+          {:ok, Oban.Job.t} | {:error, Ecto.Changeset.t}
+        def send_password_reset(email, password_reset_link) do
+          VBT.Mailer.enqueue(
+            __MODULE__,
+            "sender@x.y.z",
+            "recipient@x.y.z",
+            "Reset your password",
+            %{
+              layout: :some_layout,
+              template: :some_template,
+              password_reset_link: password_reset_link
+            }
+          )
+        end
+
+        @impl VBT.Mailer
+        def config(), do: %{api_key: System.fetch_env!("SENDGRID_API_KEY")}
       end
+
+  Mailer is a wrapper around `Bamboo`, so it can use any conforming adapter. The adapter will only
+  be used in `:prod`. Mailer always uses `Bamboo.LocalAdapter` in `:dev`, and `Bamboo.TestAdapter`
+  in `:test`.
 
   ## Transactions
 
@@ -143,6 +148,8 @@ defmodule VBT.Mailer do
               optional(atom) => any
             }
 
+  @callback config :: map
+
   # ------------------------------------------------------------------------
   # API
   # ------------------------------------------------------------------------
@@ -150,9 +157,15 @@ defmodule VBT.Mailer do
   @doc "Composes the email and sends it to the target address."
   @spec send!(module, Bamboo.Email.address(), Bamboo.Email.address(), String.t(), body) :: :ok
   def send!(mailer, from, to, subject, body) do
-    Bamboo.Email.new_email(from: from, to: to, subject: subject)
-    |> set_body(body, mailer)
-    |> mailer.deliver_now()
+    [adapter] = Keyword.fetch!(mailer.__info__(:attributes), __MODULE__)
+    config = mailer.config()
+
+    email =
+      [from: from, to: to, subject: subject]
+      |> Bamboo.Email.new_email()
+      |> set_body(body, mailer)
+
+    Bamboo.Mailer.deliver_now(adapter, email, config, [])
 
     :ok
   end
@@ -200,10 +213,25 @@ defmodule VBT.Mailer do
   @doc false
   defmacro __using__(opts) do
     quote do
-      app = Keyword.fetch!(Mix.Project.config(), :app)
-      use Bamboo.Mailer, otp_app: app
+      @behaviour unquote(__MODULE__)
+
+      unquote(bamboo_fragment(opts))
       unquote(phoenix_fragment(opts))
       unquote(oban_fragment(opts))
+    end
+  end
+
+  defp bamboo_fragment(opts) do
+    quote do
+      adapter =
+        case Mix.env() do
+          :dev -> Bamboo.LocalAdapter
+          :test -> Bamboo.TestAdapter
+          :prod -> Keyword.fetch!(unquote(opts), :adapter)
+        end
+
+      Module.register_attribute(__MODULE__, unquote(__MODULE__), persist: true)
+      Module.put_attribute(__MODULE__, unquote(__MODULE__), adapter)
     end
   end
 
