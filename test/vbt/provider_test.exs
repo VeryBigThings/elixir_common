@@ -172,6 +172,26 @@ defmodule VBT.ProviderTest do
     test "access function raises for on error" do
       assert_raise RuntimeError, "OPT_1 is missing", fn -> TestModule.opt_1() end
     end
+
+    test "template/0 generates config template" do
+      assert TestModule.template() ==
+               """
+               # string
+               OPT_1=
+
+               # integer
+               OPT_2=
+
+               # string
+               # OPT_3=foo
+
+               # string
+               # OPT_4=bar
+
+               # string
+               # OPT_5=baz
+               """
+    end
   end
 
   defp param_spec(overrides \\ []) do

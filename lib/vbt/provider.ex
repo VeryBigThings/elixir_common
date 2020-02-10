@@ -73,6 +73,14 @@ defmodule VBT.Provider do
   conditionally define the function only in required mix env, by moving the function definition
   under an `if Mix.env() == ` conditional.
 
+  ## Generating template
+
+  The config module will contain the `template/0` function which generates the configuration
+  template. To print the template to stdout, you can invoke:
+
+      MIX_ENV=prod mix compile
+      MIX_ENV=prod mix run --no-start -e 'IO.puts(MySystem.Config.template())'
+
   ## Lower level API
 
   The foundational retrieval functionality is available via functions of this module, such as
@@ -224,6 +232,12 @@ defmodule VBT.Provider do
           end
         end
       )
+
+      @doc "Returns a template configuration file."
+      @spec template :: String.t()
+      def template do
+        unquote(Keyword.fetch!(spec, :source)).template(%{unquote_splicing(quoted_params)})
+      end
     end
   end
 
@@ -255,6 +269,7 @@ defmodule VBT.Provider do
 
   defmodule Source do
     @moduledoc "Contract for storage sources."
+    alias VBT.Provider
 
     @doc """
     Invoked to provide the values for the given parameters.
@@ -262,9 +277,12 @@ defmodule VBT.Provider do
     This function should return all values in the requested orders. For each param which is not
     available, `nil` should be returned.
     """
-    @callback values([VBT.Provider.param_name()]) :: [VBT.Provider.value()]
+    @callback values([Provider.param_name()]) :: [Provider.value()]
 
     @doc "Invoked to convert the param name to storage specific name."
-    @callback display_name(VBT.Provider.param_name()) :: String.t()
+    @callback display_name(Provider.param_name()) :: String.t()
+
+    @doc "Invoked to create operator template."
+    @callback template(Provider.params()) :: String.t()
   end
 end
