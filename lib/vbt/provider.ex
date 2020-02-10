@@ -10,7 +10,7 @@ defmodule VBT.Provider do
 
       defmodule MySystem.Config do
         use VBT.Provider,
-          adapter: VBT.Provider.SystemEnv,
+          source: VBT.Provider.SystemEnv,
           params: [
             {:db_host, dev: "localhost"},
             {:db_name, dev: "my_db_dev", test: "my_db_test"},
@@ -56,7 +56,7 @@ defmodule VBT.Provider do
 
       defmodule MySystem.Config do
         use VBT.Provider,
-          adapter: VBT.Provider.SystemEnv,
+          source: VBT.Provider.SystemEnv,
           params: [
             # db_name/0 will be invoked when you try to retrieve this parameter (or all parameters)
             {:db_name, dev: db_name()},
@@ -84,7 +84,7 @@ defmodule VBT.Provider do
 
   alias Ecto.Changeset
 
-  @type adapter :: module
+  @type source :: module
   @type params :: %{param_name => param_spec}
   @type param_name :: atom
   @type param_spec :: %{type: type, default: value}
@@ -97,13 +97,13 @@ defmodule VBT.Provider do
   # ------------------------------------------------------------------------
 
   @doc "Retrieves all params according to the given specification."
-  @spec fetch_all(adapter, params) :: {:ok, data} | {:error, [String.t()]}
-  def fetch_all(adapter, params) do
+  @spec fetch_all(source, params) :: {:ok, data} | {:error, [String.t()]}
+  def fetch_all(source, params) do
     types = Enum.into(params, %{}, fn {name, spec} -> {name, spec.type} end)
 
     data =
       params
-      |> Stream.zip(adapter.values(Map.keys(types)))
+      |> Stream.zip(source.values(Map.keys(types)))
       |> Enum.into(%{}, fn {{param, opts}, provided_value} ->
         value = if is_nil(provided_value), do: opts.default, else: provided_value
         {param, value}
@@ -114,21 +114,21 @@ defmodule VBT.Provider do
     |> Changeset.validate_required(Map.keys(types), message: "is missing")
     |> case do
       %Changeset{valid?: true} = changeset -> {:ok, Changeset.apply_changes(changeset)}
-      %Changeset{valid?: false} = changeset -> {:error, changeset_error(adapter, changeset)}
+      %Changeset{valid?: false} = changeset -> {:error, changeset_error(source, changeset)}
     end
   end
 
   @doc "Retrieves a single paparameters."
-  @spec fetch_one(adapter, param_name, param_spec) :: {:ok, value} | {:error, [String.t()]}
-  def fetch_one(adapter, param_name, param_spec) do
-    with {:ok, map} <- fetch_all(adapter, %{param_name => param_spec}),
+  @spec fetch_one(source, param_name, param_spec) :: {:ok, value} | {:error, [String.t()]}
+  def fetch_one(source, param_name, param_spec) do
+    with {:ok, map} <- fetch_all(source, %{param_name => param_spec}),
          do: {:ok, Map.fetch!(map, param_name)}
   end
 
   @doc "Retrieves a single param, raising if the value is not available."
-  @spec fetch_one!(adapter, param_name, param_spec) :: value
-  def fetch_one!(adapter, param, param_spec) do
-    case fetch_one(adapter, param, param_spec) do
+  @spec fetch_one!(source, param_name, param_spec) :: value
+  def fetch_one!(source, param, param_spec) do
+    case fetch_one(source, param, param_spec) do
       {:ok, value} -> value
       {:error, errors} -> raise Enum.join(errors, ", ")
     end
@@ -138,7 +138,7 @@ defmodule VBT.Provider do
   # Private
   # ------------------------------------------------------------------------
 
-  defp changeset_error(adapter, changeset) do
+  defp changeset_error(source, changeset) do
     changeset
     |> Ecto.Changeset.traverse_errors(fn {msg, opts} ->
       Enum.reduce(
@@ -148,7 +148,7 @@ defmodule VBT.Provider do
       )
     end)
     |> Enum.flat_map(fn {key, errors} ->
-      Enum.map(errors, &"#{adapter.display_name(key)} #{&1}")
+      Enum.map(errors, &"#{source.display_name(key)} #{&1}")
     end)
     |> Enum.sort()
   end
@@ -190,7 +190,7 @@ defmodule VBT.Provider do
       @spec fetch_all :: {:ok, %{unquote_splicing(typespecs)}} | {:error, [String.t()]}
       def fetch_all do
         VBT.Provider.fetch_all(
-          unquote(Keyword.fetch!(spec, :adapter)),
+          unquote(Keyword.fetch!(spec, :source)),
 
           # quoted_params is itself a keyword list, so we need to convert it into a map
           %{unquote_splicing(quoted_params)}
@@ -217,7 +217,7 @@ defmodule VBT.Provider do
           # credo:disable-for-next-line Credo.Check.Readability.Specs
           def unquote(param_name)() do
             VBT.Provider.fetch_one!(
-              unquote(Keyword.fetch!(spec, :adapter)),
+              unquote(Keyword.fetch!(spec, :source)),
               unquote(param_name),
               unquote(param_spec)
             )
@@ -253,8 +253,8 @@ defmodule VBT.Provider do
     {param_name, [type: Keyword.get(param_spec, :type, :string), default: default_value]}
   end
 
-  defmodule Adapter do
-    @moduledoc "Contract for storage adapters."
+  defmodule Source do
+    @moduledoc "Contract for storage sources."
 
     @doc """
     Invoked to provide the values for the given parameters.

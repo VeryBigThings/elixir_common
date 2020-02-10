@@ -2,6 +2,7 @@ defmodule VBT.ProviderTest do
   use ExUnit.Case, async: true
   import VBT.TestHelper
   alias VBT.Provider
+  alias VBT.ProviderTest.TestModule
 
   describe "fetch_one" do
     test "returns correct value" do
@@ -125,26 +126,6 @@ defmodule VBT.ProviderTest do
     end
   end
 
-  defmodule TestModule do
-    baz = "baz"
-
-    use Provider,
-      adapter: Provider.SystemEnv,
-      params: [
-        :opt_1,
-        {:opt_2, type: :integer},
-        {:opt_3, default: "foo"},
-
-        # runtime resolving of the default value
-        {:opt_4, default: bar()},
-
-        # compile-time resolving of the default value
-        {:opt_5, default: unquote(baz)}
-      ]
-
-    defp bar, do: "bar"
-  end
-
   describe "generated module" do
     setup do
       Enum.each(1..5, &System.delete_env("OPT_#{&1}"))
@@ -201,4 +182,24 @@ defmodule VBT.ProviderTest do
   end
 
   defp error(param, message), do: "#{param.os_env_name} #{message}"
+
+  defmodule TestModule do
+    baz = "baz"
+
+    use Provider,
+      source: Provider.SystemEnv,
+      params: [
+        :opt_1,
+        {:opt_2, type: :integer},
+        {:opt_3, default: "foo"},
+
+        # runtime resolving of the default value
+        {:opt_4, default: bar()},
+
+        # compile-time resolving of the default value
+        {:opt_5, default: unquote(baz)}
+      ]
+
+    defp bar, do: "bar"
+  end
 end
