@@ -126,7 +126,7 @@ defmodule VBT.Provider do
     end
   end
 
-  @doc "Retrieves a single paparameters."
+  @doc "Retrieves a single parameter."
   @spec fetch_one(source, param_name, param_spec) :: {:ok, value} | {:error, [String.t()]}
   def fetch_one(source, param_name, param_spec) do
     with {:ok, map} <- fetch_all(source, %{param_name => param_spec}),
