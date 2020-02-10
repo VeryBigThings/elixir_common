@@ -128,25 +128,41 @@ defmodule VBT.ProviderTest do
 
   describe "generated module" do
     setup do
-      Enum.each(1..5, &System.delete_env("OPT_#{&1}"))
+      Enum.each(1..7, &System.delete_env("OPT_#{&1}"))
     end
 
     test "fetch_all/0 succeeds for correct data" do
       System.put_env("OPT_1", "qux")
       System.put_env("OPT_2", "42")
+      System.put_env("OPT_6", "false")
+      System.put_env("OPT_7", "3.14")
 
       assert TestModule.fetch_all() ==
-               {:ok, %{opt_1: "qux", opt_2: 42, opt_3: "foo", opt_4: "bar", opt_5: "baz"}}
+               {:ok,
+                %{
+                  opt_1: "qux",
+                  opt_2: 42,
+                  opt_3: "foo",
+                  opt_4: "bar",
+                  opt_5: "baz",
+                  opt_6: false,
+                  opt_7: 3.14
+                }}
     end
 
     test "fetch_all/0 returns errors for invalid data" do
       assert TestModule.fetch_all() ==
-               {:error, ["OPT_1 is missing", "OPT_2 is missing"]}
+               {
+                 :error,
+                 ["OPT_1 is missing", "OPT_2 is missing", "OPT_6 is missing", "OPT_7 is missing"]
+               }
     end
 
     test "validate!/0 succeeds for correct data" do
       System.put_env("OPT_1", "some data")
       System.put_env("OPT_2", "42")
+      System.put_env("OPT_6", "false")
+      System.put_env("OPT_7", "3.14")
 
       assert TestModule.validate!() == :ok
     end
@@ -156,17 +172,23 @@ defmodule VBT.ProviderTest do
       error = assert_raise RuntimeError, fn -> TestModule.validate!() end
       assert error.message =~ "OPT_1 is missing"
       assert error.message =~ "OPT_2 is invalid"
+      assert error.message =~ "OPT_6 is missing"
+      assert error.message =~ "OPT_7 is missing"
     end
 
     test "access function succeed for correct data" do
       System.put_env("OPT_1", "some data")
       System.put_env("OPT_2", "42")
+      System.put_env("OPT_6", "false")
+      System.put_env("OPT_7", "3.14")
 
       assert TestModule.opt_1() == "some data"
       assert TestModule.opt_2() == 42
       assert TestModule.opt_3() == "foo"
       assert TestModule.opt_4() == "bar"
       assert TestModule.opt_5() == "baz"
+      assert TestModule.opt_6() == false
+      assert TestModule.opt_7() == 3.14
     end
 
     test "access function raises for on error" do
@@ -190,6 +212,12 @@ defmodule VBT.ProviderTest do
 
                # string
                # OPT_5=baz
+
+               # boolean
+               OPT_6=
+
+               # float
+               OPT_7=
                """
     end
   end
@@ -217,7 +245,9 @@ defmodule VBT.ProviderTest do
         {:opt_4, default: bar()},
 
         # compile-time resolving of the default value
-        {:opt_5, default: unquote(baz)}
+        {:opt_5, default: unquote(baz)},
+        {:opt_6, type: :boolean},
+        {:opt_7, type: :float}
       ]
 
     defp bar, do: "bar"
