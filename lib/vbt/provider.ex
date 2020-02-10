@@ -178,6 +178,7 @@ defmodule VBT.Provider do
             type =
               case Keyword.fetch!(param_spec, :type) do
                 :integer -> quote(do: integer())
+                :float -> quote(do: float())
                 :boolean -> quote(do: boolean())
                 :string -> quote(do: String.t())
               end
