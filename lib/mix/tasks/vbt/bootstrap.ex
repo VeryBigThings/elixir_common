@@ -31,6 +31,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> adapt_mix()
     |> configure_endpoint()
     |> configure_repo()
+    |> adapt_app_module()
     |> store_source_files!()
   end
 
@@ -156,6 +157,21 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   end
 
   # ------------------------------------------------------------------------
+  # App module
+  # ------------------------------------------------------------------------
+
+  defp adapt_app_module(source_files) do
+    update_in(
+      source_files.app_module.content,
+      &String.replace(
+        &1,
+        ~r/(\s*def start\(.*?do)/s,
+        "\\1\n#{Mix.Vbt.context_module_name()}.OperatorConfig.validate!()\n"
+      )
+    )
+  end
+
+  # ------------------------------------------------------------------------
   # Common functions
   # ------------------------------------------------------------------------
 
@@ -168,7 +184,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       test_config: SourceFile.load!("config/test.exs"),
       prod_config: SourceFile.load!("config/prod.exs"),
       endpoint: load_web_file("endpoint.ex"),
-      repo: load_context_file("repo.ex")
+      repo: load_context_file("repo.ex"),
+      app_module: load_context_file("application.ex")
     }
   end
 
