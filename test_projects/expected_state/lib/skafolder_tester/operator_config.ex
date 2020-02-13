@@ -2,6 +2,8 @@ defmodule SkafolderTester.OperatorConfig do
   use VBT.Provider,
     source: VBT.Provider.SystemEnv,
     params: [
+      {:release_level, dev: "dev"},
+
       # database
       {:db_url, dev: dev_db_url()},
       {:db_pool_size, type: :integer, default: 10},
