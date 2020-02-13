@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
     Enum.each(
       ~w/makefile docker circleci heroku github_pr_template credo dialyzer formatter_config
-      tool_versions aws_mock/,
+      tool_versions aws_mock operator_config/,
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 
@@ -139,19 +139,14 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     SourceFile.add_to_module(
       repo_file,
       """
-
-      @db_url_env if Mix.env() == :test,
-                do: "TEST_DATABASE_URL",
-                else: "DATABASE_URL"
-
       @impl Ecto.Repo
       def init(_type, config) do
         config =
           Keyword.merge(
             config,
-            url: System.fetch_env!(@db_url_env),
-            pool_size: String.to_integer(System.fetch_env!("DATABASE_POOL_SIZE")),
-            ssl: System.fetch_env!("DATABASE_SSL") == "true"
+            url: #{Mix.Vbt.context_module_name()}.OperatorConfig.db_url(),
+            pool_size: #{Mix.Vbt.context_module_name()}.OperatorConfig.db_pool_size(),
+            ssl: #{Mix.Vbt.context_module_name()}.OperatorConfig.db_ssl()
           )
 
         {:ok, config}

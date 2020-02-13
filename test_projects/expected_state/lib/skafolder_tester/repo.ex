@@ -3,18 +3,14 @@ defmodule SkafolderTester.Repo do
     otp_app: :skafolder_tester,
     adapter: Ecto.Adapters.Postgres
 
-  @db_url_env if Mix.env() == :test,
-                do: "TEST_DATABASE_URL",
-                else: "DATABASE_URL"
-
   @impl Ecto.Repo
   def init(_type, config) do
     config =
       Keyword.merge(
         config,
-        url: System.fetch_env!(@db_url_env),
-        pool_size: String.to_integer(System.fetch_env!("DATABASE_POOL_SIZE")),
-        ssl: System.fetch_env!("DATABASE_SSL") == "true"
+        url: SkafolderTester.OperatorConfig.db_url(),
+        pool_size: SkafolderTester.OperatorConfig.db_pool_size(),
+        ssl: SkafolderTester.OperatorConfig.db_ssl()
       )
 
     {:ok, config}

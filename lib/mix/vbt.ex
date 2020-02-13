@@ -8,7 +8,10 @@ defmodule Mix.Vbt do
   def endpoint_module, do: Module.concat(Macro.camelize("#{otp_app()}_web"), Endpoint)
 
   @spec repo_module :: module
-  def repo_module, do: Module.concat(Macro.camelize("#{otp_app()}"), Repo)
+  def repo_module, do: Module.concat(context_module_name(), Repo)
+
+  @spec context_module_name :: String.t()
+  def context_module_name, do: Macro.camelize("#{otp_app()}")
 
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   def bindings(opts \\ [], defaults \\ []) do
