@@ -14,7 +14,7 @@ defmodule VBT.Integration.SkafolderTest do
     assert {_output, 0} = mix(~w/deps.get/)
 
     # make sure that the project can be compiled after the changes have been applied
-    assert {_output, 0} = mix(~w/compile/)
+    assert {_output, 0} = mix(~w/compile --warnings-as-errors/)
 
     with {:error, differences} <- differences() do
       if System.get_env("SYNC_BOOTSTRAP_TEST", "false") != "true" do
