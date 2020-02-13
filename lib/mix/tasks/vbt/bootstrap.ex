@@ -32,7 +32,10 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> configure_endpoint()
     |> configure_repo()
     |> adapt_app_module()
+    |> drop_prod_secret()
     |> store_source_files!()
+
+    File.rm(Path.join(~w/config prod.secret.exs/))
   end
 
   defp adapt_gitignore(source_files) do
@@ -179,6 +182,17 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         &1,
         ~r/(\s*def start\(.*?do)/s,
         "\\1\n#{Mix.Vbt.context_module_name()}.OperatorConfig.validate!()\n"
+      )
+    )
+  end
+
+  defp drop_prod_secret(source_files) do
+    update_in(
+      source_files.prod_config.content,
+      &String.replace(
+        &1,
+        ~s/import_config "prod.secret.exs"/,
+        ""
       )
     )
   end
