@@ -11,7 +11,7 @@ defmodule MySystem.Repo.Migrations.MigrateOban10 do
   def up, do: Oban.Migrations.up()
   def down, do: Oban.Migrations.down()
 end
-``
+```
 
 ### **[Breaking]** VBT.Mailer adapter configuration
 
