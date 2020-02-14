@@ -60,11 +60,13 @@ defmodule SkafolderTester.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate", "test"],
-      credo: ["compile", "credo"]
+      credo: ["compile", "credo"],
+      operator_template: ["compile", &operator_template/1]
     ]
   end
 
-  defp preferred_cli_env, do: [credo: :test, dialyzer: :test]
+  defp preferred_cli_env,
+    do: [credo: :test, dialyzer: :test, operator_template: :prod]
 
   defp dialyzer do
     [
@@ -72,4 +74,7 @@ defmodule SkafolderTester.MixProject do
       ignore_warnings: "dialyzer.ignore-warnings"
     ]
   end
+
+  defp operator_template(_),
+    do: IO.puts(SkafolderTester.OperatorConfig.template())
 end

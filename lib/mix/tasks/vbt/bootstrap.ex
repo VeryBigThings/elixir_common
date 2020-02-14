@@ -54,11 +54,19 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       source_files.mix,
       fn mix_file ->
         mix_file
-        |> MixFile.append_config(:aliases, ~s/credo: ["compile", "credo"]/)
+        |> MixFile.append_config(:aliases, ~s|credo: ["compile", "credo"]|)
+        |> MixFile.append_config(
+          :aliases,
+          ~s|operator_template: ["compile", &operator_template/1]|
+        )
         |> MixFile.append_config(:project, "preferred_cli_env: preferred_cli_env()")
-        |> SourceFile.add_to_module("defp preferred_cli_env, do: [credo: :test, dialyzer: :test]")
+        |> SourceFile.add_to_module("
+            defp preferred_cli_env,
+              do: [credo: :test, dialyzer: :test, operator_template: :prod]
+
+        ")
         |> MixFile.append_config(:project, "dialyzer: dialyzer()")
-        |> MixFile.append_config(:project, ~s/build_path: System.get_env("BUILD_PATH", "_build")/)
+        |> MixFile.append_config(:project, ~s|build_path: System.get_env("BUILD_PATH", "_build")|)
         |> SourceFile.add_to_module("""
             defp dialyzer do
               [
@@ -66,6 +74,10 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
                 ignore_warnings: "dialyzer.ignore-warnings"
               ]
             end
+
+            defp operator_template(_),
+              do: IO.puts(#{Mix.Vbt.context_module_name()}.OperatorConfig.template())
+
         """)
       end
     )
