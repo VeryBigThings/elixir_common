@@ -86,6 +86,28 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     )
   end
 
+  defp adapt_app_module(source_files) do
+    update_in(
+      source_files.app_module.content,
+      &String.replace(
+        &1,
+        ~r/(\s*def start\(.*?do)/s,
+        "\\1\n#{Mix.Vbt.context_module_name()}.OperatorConfig.validate!()\n"
+      )
+    )
+  end
+
+  defp drop_prod_secret(source_files) do
+    update_in(
+      source_files.prod_config.content,
+      &String.replace(
+        &1,
+        ~s/import_config "prod.secret.exs"/,
+        ""
+      )
+    )
+  end
+
   # ------------------------------------------------------------------------
   # Endpoint configuration
   # ------------------------------------------------------------------------
@@ -168,32 +190,6 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         {:ok, config}
       end
       """
-    )
-  end
-
-  # ------------------------------------------------------------------------
-  # App module
-  # ------------------------------------------------------------------------
-
-  defp adapt_app_module(source_files) do
-    update_in(
-      source_files.app_module.content,
-      &String.replace(
-        &1,
-        ~r/(\s*def start\(.*?do)/s,
-        "\\1\n#{Mix.Vbt.context_module_name()}.OperatorConfig.validate!()\n"
-      )
-    )
-  end
-
-  defp drop_prod_secret(source_files) do
-    update_in(
-      source_files.prod_config.content,
-      &String.replace(
-        &1,
-        ~s/import_config "prod.secret.exs"/,
-        ""
-      )
     )
   end
 
