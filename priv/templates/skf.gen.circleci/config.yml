@@ -6,10 +6,6 @@ jobs:
       - image: circleci/elixir:1.9
         environment:
           TEST_REDIS_URL: "redis://localhost:6379/0"
-          # endpoint
-          HOST: "localhost"
-          PORT: "4000"
-          SECRET_KEY_BASE: "EvenMuchLongerSecretThatMustBeAtleast64BytesBecauseCookieStoreExpectsIt"
       - image: circleci/postgres:10-alpine-postgis
         environment:
           POSTGRES_USER: "postgres"

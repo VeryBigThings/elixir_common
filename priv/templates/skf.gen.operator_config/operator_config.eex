@@ -2,9 +2,15 @@ defmodule <%= Mix.Vbt.context_module_name() %>.OperatorConfig do
   use VBT.Provider,
     source: VBT.Provider.SystemEnv,
     params: [
+      # database
       {:db_url, dev: dev_db_url()},
       {:db_pool_size, type: :integer, default: 10},
-      {:db_ssl, type: :boolean, default: false}
+      {:db_ssl, type: :boolean, default: false},
+
+      # endpoint
+      {:host, dev: "localhost"},
+      {:port, type: :integer, default: 4000, test: 4002},
+      {:secret_key_base, dev: "<%= System.get_env("SECRET_KEY_BASE") || VBT.Skafolder.random_string(64) %>"}
     ]
 
   if Mix.env() in ~w/dev test/a do

@@ -2,9 +2,15 @@ defmodule SkafolderTester.OperatorConfig do
   use VBT.Provider,
     source: VBT.Provider.SystemEnv,
     params: [
+      # database
       {:db_url, dev: dev_db_url()},
       {:db_pool_size, type: :integer, default: 10},
-      {:db_ssl, type: :boolean, default: false}
+      {:db_ssl, type: :boolean, default: false},
+
+      # endpoint
+      {:host, dev: "localhost"},
+      {:port, type: :integer, default: 4000, test: 4002},
+      {:secret_key_base, dev: "test_only_secret_key_base"}
     ]
 
   if Mix.env() in ~w/dev test/a do
