@@ -81,6 +81,9 @@ defmodule VBT.Provider do
       MIX_ENV=prod mix compile
       MIX_ENV=prod mix run --no-start -e 'IO.puts(MySystem.Config.template())'
 
+  If the project is bootstrapped with `mix vbt.bootstrap`, you can do this by invoking
+  `mix operator_template`. This task will by default be invoked in prod mix env.
+
   ## Lower level API
 
   The foundational retrieval functionality is available via functions of this module, such as

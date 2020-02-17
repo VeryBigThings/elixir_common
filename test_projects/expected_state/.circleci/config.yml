@@ -6,20 +6,11 @@ jobs:
       - image: circleci/elixir:1.9
         environment:
           TEST_REDIS_URL: "redis://localhost:6379/0"
-          # endpoint
-          HOST: "localhost"
-          PORT: "4000"
-          SECRET_KEY_BASE: "EvenMuchLongerSecretThatMustBeAtleast64BytesBecauseCookieStoreExpectsIt"
-          # database
-          DATABASE_URL: "postgres://postgres:@localhost/skafolder_tester_test"
-          TEST_DATABASE_URL: "postgres://postgres:@localhost/skafolder_tester_test"
-          DATABASE_POOL_SIZE: "10"
-          DATABASE_SSL: "false"
       - image: circleci/postgres:10-alpine-postgis
         environment:
           POSTGRES_USER: "postgres"
           POSTGRES_DB: "skafolder_tester_test"
-          POSTGRES_PASSWORD: ""
+          POSTGRES_PASSWORD: "postgres"
       - image: circleci/redis:4-alpine
     working_directory: ~/app
     steps:

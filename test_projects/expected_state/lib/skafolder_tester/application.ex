@@ -6,6 +6,8 @@ defmodule SkafolderTester.Application do
   use Application
 
   def start(_type, _args) do
+    SkafolderTester.OperatorConfig.validate!()
+
     # List all child processes to be supervised
     children = [
       # Start the Ecto repository
