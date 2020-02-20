@@ -1,4 +1,8 @@
 version: 2
+orbs:
+  jq: circleci/jq@1.9.0 # needed to install tools from docker orb
+  docker: circleci/docker@0.5.0
+  heroku: circleci/heroku@1.0.1
 jobs:
   build:
     parallelism: 1
@@ -81,9 +85,13 @@ jobs:
       - image: buildpack-deps:trusty
     steps:
       - checkout
-      - run:
-          name: Deploy master to $RELEASE_ENVIRONMENT
-          command: 'git push --force https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git $CIRCLE_BRANCH:master'
+      - setup_remote_docker:
+          version: 18.09.3
+      - jq/install
+      - docker/install-docker
+      - heroku/install
+      - run: make heroku/build-and-push
+      - run: make heroku/release
 workflows:
   version: 2
   release_ci:

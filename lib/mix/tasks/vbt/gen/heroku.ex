@@ -25,7 +25,6 @@ defmodule Mix.Tasks.Vbt.Gen.Heroku do
 
   def files_for_docker_deployments(template_root) do
     %{
-      Path.join([template_root, "heroku.yml"]) => "heroku.yml",
       Path.join([template_root, "db_tasks", "migrate.sh"]) =>
         Path.join(["rel", "bin", "migrate.sh"]),
       Path.join([template_root, "db_tasks", "rollback.sh"]) =>

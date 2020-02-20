@@ -17,6 +17,9 @@ useradd --uid $USER_ID \
 chown -R $USER_NAME. /opt/cache
 chown -R $USER_NAME. $WORKDIR
 
+runuser -l $USER_NAME -c "mkdir -p /opt/app/.ssh"
+runuser -l $USER_NAME -c "ssh-keyscan github.com > /opt/app/.ssh/known_hosts"
+
 # Run the command attached to the process with PID 1 so that signals get
 # passed to the process/app being run
 echo "Starting with USER=$USER_NAME UID=$USER_ID"
