@@ -1,32 +1,39 @@
-.PHONY: \
-	dev \
-	test \
-	compile \
-	seed-db \
-	reset-db \
-	reseed-db \
-<%= if cloud && cloud == "heroku" do %>
-	set-remotes \
-	heroku-console \
-	heroku-capture-backup \
-	heroku-latest.dump \
-	import-latest-db \
-	heroku-ci-deploy \
-<% end %>
-<%= if docker do %>
-	devstack \
-	devstack-build \
-	devstack-clean \
-	devstack-shell \
-	devstack-run
-<% end %>
+<%=
+  common_targets =
+	  """
+		.PHONY: ~w/dev test compile seed-db reset-db reseed-db
+		"""
 
+	devstack_targets =
+	  if docker do
+		  """
+			# devstack
+			.PHONY: devstack devstack-build devstack-clean devstack-shell devstack-run
+			"""
+		end
+
+	heroku_targets =
+		if cloud == "heroku" do
+		  """
+			# heroku
+			.PHONY: set-remote heroku-console heroku-capture-backup heroku-latest.dump import-latest-db \\
+							heroku/login heroku/build-web heroku/build-release heroku/push-web heroku/push-release \\
+							heroku/build-and-push heroku/release
+			"""
+		end
+
+	[common_targets, heroku_targets, devstack_targets]
+	|> Stream.reject(&is_nil/1)
+	|> Enum.join("\n")
+%>
 DEFAULT_GOAL: help
 
 # TODO read database name from Mix.Config
 PGDATABASE?=<%= app %>_backend_dev
 
+
 export LOCAL_USER_ID ?= $(shell id -u $$USER)
+export DOCKER_BUILDKIT=1
 
 # -------------------
 # --- DEFINITIONS ---
@@ -96,9 +103,47 @@ import-latest-db: require-PGDATABASE heroku-latest.dump
 	createdb ${PGDATABASE} && \
 	pg_restore --verbose --clean --no-acl --no-owner --dbname=${PGDATABASE} heroku-latest.dump
 
-## Deploy to Heroku (CI task)
-heroku-ci-deploy: require-CIRCLE_BRANCH require-HEROKU_API_KEY require-HEROKU_APP_NAME
-	@git push --force https://heroku:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git ${CIRCLE_BRANCH}:master
+# -------------------------------
+# --- DOCKER HEROKU PRODSTACK ---
+# -------------------------------
+
+APP_NAME?=`grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'`
+HEROKU_REGISTRY=registry.heroku.com
+
+## Logs in to heroku container registry
+heroku/login: require-HEROKU_API_KEY require-HEROKU_REGISTRY
+	@docker login --username=_ --password=$(HEROKU_API_KEY) $(HEROKU_REGISTRY)
+
+## Builds the production Docker web image
+heroku/build-web: require-APP_NAME require-HEROKU_REGISTRY require-HEROKU_APP_NAME
+	@docker build --ssh default .\
+		--target release \
+		--build-arg MIX_ENV=prod \
+		--build-arg APP_NAME=${APP_NAME} \
+		--tag ${HEROKU_REGISTRY}/${HEROKU_APP_NAME}/web
+
+## Builds the production Docker release phase image
+heroku/build-release: require-HEROKU_REGISTRY require-HEROKU_APP_NAME
+	@docker build --ssh default .\
+		--target release-phase \
+		--build-arg MIX_ENV=prod \
+		--build-arg APP_NAME=${APP_NAME} \
+		--tag ${HEROKU_REGISTRY}/${HEROKU_APP_NAME}/release
+
+## Push heroku web image to container registry
+heroku/push-web: require-HEROKU_APP_NAME require-HEROKU_REGISTRY
+	@docker push ${HEROKU_REGISTRY}/${HEROKU_APP_NAME}/web
+
+## Push heroku release phase image to container registry
+heroku/push-release: require-HEROKU_APP_NAME require-HEROKU_REGISTRY
+	@docker push ${HEROKU_REGISTRY}/${HEROKU_APP_NAME}/release
+
+## Builds production images and pushes them to heroku container registry
+heroku/build-and-push: heroku/login heroku/build-web heroku/build-release heroku/push-web heroku/push-release
+
+## Creates a new release on heroku
+heroku/release: require-HEROKU_APP_NAME require-HEROKU_API_KEY
+	@HEROKU_API_KEY=$(HEROKU_API_KEY) heroku container:release web release -a $(HEROKU_APP_NAME)
 <% end %>
 
 <%= if docker do %>
@@ -108,7 +153,10 @@ heroku-ci-deploy: require-CIRCLE_BRANCH require-HEROKU_API_KEY require-HEROKU_AP
 
 ## Builds the development Docker image
 devstack-build:
-	@docker-compose build
+	@docker build --ssh default .\
+		--target build \
+		--build-arg MIX_ENV=dev \
+		--tag <%= app %>:latest
 
 ## Stops all development containers
 devstack-clean:
@@ -123,7 +171,7 @@ devstack-shell:
 	@docker exec -e COLUMNS="`tput cols`" -e LINES="`tput lines`" -u ${LOCAL_USER_ID} -it $$(docker-compose ps -q web) /bin/bash -c "reset -w && /bin/bash"
 
 ## Starts the development server inside docker
-devstack-run:
+devstack-run: devstack-build
 	@docker-compose up -d &&\
 		docker-compose exec web mix deps.get && \
 		docker-compose exec web mix ecto.setup && \

@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:experimental
+
 # ===========================================================
 # === BUILD STAGE - Development image with necessary deps ===
 # ===========================================================
@@ -39,6 +41,8 @@ RUN mix local.hex --force && \
 
 RUN mix archive.install hex phx_new $PHOENIX_VERSION --force
 
+RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan github.com > ~/.ssh/known_hosts
+
 # Set entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
@@ -64,7 +68,7 @@ ENV APP_NAME=${APP_NAME} \
 COPY . .
 
 # Fetch and compile deps and compile app code
-RUN mix do deps.get, deps.compile, compile
+RUN --mount=type=ssh mix do deps.get, deps.compile, compile
 
 # Compile assets and calc digest
 RUN if [ "$SKIP_ASSETS" = "false" ]; then \
@@ -113,3 +117,10 @@ USER ${APP_USER}
 
 CMD trap 'exit' INT; ${WORKDIR}/bin/${APP_NAME} start
 
+
+############################################################################
+## RELEASE PHASE - run migrations on Heroku before production application ##
+############################################################################
+FROM release AS release-phase
+
+CMD trap 'exit' INT; /opt/app/bin/migrate.sh
