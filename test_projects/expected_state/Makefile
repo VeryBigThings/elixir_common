@@ -1,25 +1,11 @@
-.PHONY: \
-	dev \
-	test \
-	compile \
-	seed-db \
-	reset-db \
-	reseed-db \
+.PHONY: ~w/dev test compile seed-db reset-db reseed-db
 
-	set-remotes \
-	heroku-console \
-	heroku-capture-backup \
-	heroku-latest.dump \
-	import-latest-db \
-	heroku-ci-deploy \
+# heroku
+.PHONY: set-remote heroku-console heroku-capture-backup heroku-latest.dump import-latest-db \
+			  heroku-ci-deploy
 
-
-	devstack \
-	devstack-build \
-	devstack-clean \
-	devstack-shell \
-	devstack-run
-
+# devstack
+.PHONY: devstack devstack-build devstack-clean devstack-shell devstack-run
 
 DEFAULT_GOAL: help
 

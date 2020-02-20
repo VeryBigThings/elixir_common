@@ -1,26 +1,30 @@
-.PHONY: \
-	dev \
-	test \
-	compile \
-	seed-db \
-	reset-db \
-	reseed-db \
-<%= if cloud && cloud == "heroku" do %>
-	set-remotes \
-	heroku-console \
-	heroku-capture-backup \
-	heroku-latest.dump \
-	import-latest-db \
-	heroku-ci-deploy \
-<% end %>
-<%= if docker do %>
-	devstack \
-	devstack-build \
-	devstack-clean \
-	devstack-shell \
-	devstack-run
-<% end %>
+<%=
+  common_targets =
+	  """
+		.PHONY: ~w/dev test compile seed-db reset-db reseed-db
+		"""
 
+	devstack_targets =
+	  if docker do
+		  """
+			# devstack
+			.PHONY: devstack devstack-build devstack-clean devstack-shell devstack-run
+			"""
+		end
+
+	heroku_targets =
+		if cloud == "heroku" do
+		  """
+			# heroku
+			.PHONY: set-remote heroku-console heroku-capture-backup heroku-latest.dump import-latest-db \\
+						  heroku-ci-deploy
+			"""
+		end
+
+	[common_targets, heroku_targets, devstack_targets]
+	|> Stream.reject(&is_nil/1)
+	|> Enum.join("\n")
+%>
 DEFAULT_GOAL: help
 
 # TODO read database name from Mix.Config
