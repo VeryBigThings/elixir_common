@@ -79,6 +79,10 @@ defmodule VBT.Mailer do
   be used in `:prod`. Mailer always uses `Bamboo.LocalAdapter` in `:dev`, and `Bamboo.TestAdapter`
   in `:test`.
 
+  If you prefer to test the real adapter in development mode, you can pass the
+  `dev_adapter: Bamboo.SendGridAdapter` option (or any other real adapter you're using). However,
+  it's advised to instead test the real mailer by running the `:prod`-compiled version locally.
+
   ## Transactions
 
   If you need to send an e-mail inside a transaction, you can invoke `enqueue/5` from within
@@ -222,16 +226,16 @@ defmodule VBT.Mailer do
   end
 
   defp bamboo_fragment(opts) do
-    quote do
+    quote bind_quoted: [module: __MODULE__, opts: opts] do
       adapter =
         case Mix.env() do
-          :dev -> Bamboo.LocalAdapter
+          :dev -> Keyword.get(opts, :dev_adapter, Bamboo.LocalAdapter)
           :test -> Bamboo.TestAdapter
-          :prod -> Keyword.fetch!(unquote(opts), :adapter)
+          :prod -> Keyword.fetch!(opts, :adapter)
         end
 
-      Module.register_attribute(__MODULE__, unquote(__MODULE__), persist: true)
-      Module.put_attribute(__MODULE__, unquote(__MODULE__), adapter)
+      Module.register_attribute(__MODULE__, module, persist: true)
+      Module.put_attribute(__MODULE__, module, adapter)
     end
   end
 
