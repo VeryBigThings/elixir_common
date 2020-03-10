@@ -84,6 +84,7 @@ jobs:
         name: "Check OTP release"
         command: |
           MIX_ENV=test mix release --overwrite
+          _build/test/rel/banmed/bin/check_config.sh
           _build/test/rel/banmed/bin/rollback.sh --all
           _build/test/rel/banmed/bin/migrate.sh
           _build/test/rel/banmed/bin/seed.sh

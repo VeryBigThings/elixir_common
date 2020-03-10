@@ -118,9 +118,10 @@ USER ${APP_USER}
 CMD trap 'exit' INT; ${WORKDIR}/bin/${APP_NAME} start
 
 
-############################################################################
-## RELEASE PHASE - run migrations on Heroku before production application ##
-############################################################################
+#############################################################################################
+## RELEASE PHASE - check config and run migrations on Heroku before production application ##
+#############################################################################################
 FROM release AS release-phase
 
+CMD trap 'exit' INT; /opt/app/bin/check_config.sh
 CMD trap 'exit' INT; /opt/app/bin/migrate.sh

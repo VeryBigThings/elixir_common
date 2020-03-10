@@ -13,6 +13,8 @@ defmodule SkafolderTesterApp.Release do
 
   @app Keyword.fetch!(Mix.Project.config(), :app)
 
+  def check_config, do: SkafolderTester.Config.validate!()
+
   def migrate(args \\ []) do
     start_services()
     run_migrations(args)
