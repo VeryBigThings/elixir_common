@@ -24,4 +24,4 @@ fi
 
 script_dir=$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)
 args="$@"
-$script_dir/skafolder_tester eval "SkafolderTester.ReleaseTasks.rollback(~w($args))"
+$script_dir/skafolder_tester eval "SkafolderTesterApp.Release.rollback(~w($args))"

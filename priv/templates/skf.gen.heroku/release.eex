@@ -1,6 +1,6 @@
 # credo:disable-for-this-file Credo.Check.Readability.Specs
 
-defmodule <%= base_module %>.ReleaseTasks do
+defmodule <%= Mix.Vbt.app_module_name() %>.Release do
   @moduledoc false
 
   @start_apps [

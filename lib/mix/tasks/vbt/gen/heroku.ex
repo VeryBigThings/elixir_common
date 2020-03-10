@@ -24,10 +24,10 @@ defmodule Mix.Tasks.Vbt.Gen.Heroku do
       end
     )
 
-    Path.join(@template_root, "release_tasks.eex")
+    Path.join(@template_root, "release.eex")
     |> VBT.Skafolder.eval_from_templates(bindings)
     |> VBT.Skafolder.generate_file(
-      Path.join([File.cwd!(), "lib", to_string(Mix.Vbt.otp_app()), "release_tasks.ex"]),
+      Path.join([File.cwd!(), "lib", Macro.underscore(Mix.Vbt.app_module_name()), "release.ex"]),
       args
     )
   end

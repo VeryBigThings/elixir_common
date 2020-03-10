@@ -24,4 +24,4 @@ fi
 
 script_dir=$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)
 args="$@"
-$script_dir/<%= app %> eval "<%= base_module %>.ReleaseTasks.rollback(~w($args))"
+$script_dir/<%= app %> eval "<%= Mix.Vbt.app_module_name() %>.Release.rollback(~w($args))"

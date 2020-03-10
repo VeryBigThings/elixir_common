@@ -1,6 +1,6 @@
 # credo:disable-for-this-file Credo.Check.Readability.Specs
 
-defmodule SkafolderTester.ReleaseTasks do
+defmodule SkafolderTesterApp.Release do
   @moduledoc false
 
   @start_apps [
