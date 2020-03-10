@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
     Enum.each(
       ~w/makefile docker circleci heroku github_pr_template credo dialyzer formatter_config
-      tool_versions aws_mock operator_config/,
+      tool_versions aws_mock config/,
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 
@@ -82,7 +82,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
             end
 
             defp operator_template(_),
-              do: IO.puts(#{Mix.Vbt.context_module_name()}.OperatorConfig.template())
+              do: IO.puts(#{Mix.Vbt.context_module_name()}.Config.template())
 
         """)
       end
@@ -95,7 +95,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       &String.replace(
         &1,
         ~r/(\s*def start\(.*?do)/s,
-        "\\1\n#{Mix.Vbt.context_module_name()}.OperatorConfig.validate!()\n"
+        "\\1\n#{Mix.Vbt.context_module_name()}.Config.validate!()\n"
       )
     )
   end
@@ -133,15 +133,15 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       def init(_type, config) do
         config =
           config
-          |> Keyword.put(:secret_key_base, #{Mix.Vbt.context_module_name()}.OperatorConfig.secret_key_base())
+          |> Keyword.put(:secret_key_base, #{Mix.Vbt.context_module_name()}.Config.secret_key_base())
           |> Keyword.update(:url, url_config(), &Keyword.merge(&1, url_config()))
           |> Keyword.update(:http, http_config(), &(http_config() ++ (&1 || [])))
 
         {:ok, config}
       end
 
-      defp url_config, do: [host: #{Mix.Vbt.context_module_name()}.OperatorConfig.host()]
-      defp http_config, do: [:inet6, port: #{Mix.Vbt.context_module_name()}.OperatorConfig.port()]
+      defp url_config, do: [host: #{Mix.Vbt.context_module_name()}.Config.host()]
+      defp http_config, do: [:inet6, port: #{Mix.Vbt.context_module_name()}.Config.port()]
       """
     )
   end
@@ -185,9 +185,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         config =
           Keyword.merge(
             config,
-            url: #{Mix.Vbt.context_module_name()}.OperatorConfig.db_url(),
-            pool_size: #{Mix.Vbt.context_module_name()}.OperatorConfig.db_pool_size(),
-            ssl: #{Mix.Vbt.context_module_name()}.OperatorConfig.db_ssl()
+            url: #{Mix.Vbt.context_module_name()}.Config.db_url(),
+            pool_size: #{Mix.Vbt.context_module_name()}.Config.db_pool_size(),
+            ssl: #{Mix.Vbt.context_module_name()}.Config.db_ssl()
           )
 
         {:ok, config}

@@ -76,5 +76,5 @@ defmodule SkafolderTester.MixProject do
   end
 
   defp operator_template(_),
-    do: IO.puts(SkafolderTester.OperatorConfig.template())
+    do: IO.puts(SkafolderTester.Config.template())
 end
