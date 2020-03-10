@@ -23,7 +23,7 @@ defmodule SkafolderTester.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {SkafolderTester.Application, []},
+      mod: {SkafolderTesterApp, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end

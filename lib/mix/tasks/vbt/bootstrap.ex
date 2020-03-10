@@ -65,6 +65,14 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         |> setup_dialyzer()
         |> setup_release()
         |> MixFile.append_config(:project, ~s|build_path: System.get_env("BUILD_PATH", "_build")|)
+        |> Map.update!(
+          :content,
+          &String.replace(
+            &1,
+            "#{Mix.Vbt.context_module_name()}.Application",
+            "#{Mix.Vbt.app_module_name()}"
+          )
+        )
       end
     )
   end
@@ -130,11 +138,15 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   defp adapt_app_module(source_files) do
     update_in(
       source_files.app_module.content,
-      &String.replace(
-        &1,
-        ~r/(\s*def start\(.*?do)/s,
-        "\\1\n#{Mix.Vbt.context_module_name()}.Config.validate!()\n"
-      )
+      &(&1
+        |> String.replace(
+          ~r/(\s*def start\(.*?do)/s,
+          "\\1\n#{Mix.Vbt.context_module_name()}.Config.validate!()\n"
+        )
+        |> String.replace(
+          "defmodule #{Mix.Vbt.context_module_name()}.Application",
+          "defmodule #{Mix.Vbt.app_module_name()}"
+        ))
     )
   end
 
@@ -248,7 +260,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       prod_config: SourceFile.load!("config/prod.exs"),
       endpoint: load_web_file("endpoint.ex"),
       repo: load_context_file("repo.ex"),
-      app_module: load_context_file("application.ex")
+      app_module:
+        load_context_file("application.ex", output: Path.join("lib", "#{Vbt.otp_app()}_app.ex"))
     }
   end
 
@@ -258,8 +271,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   defp load_web_file(location),
     do: SourceFile.load!(Path.join(["lib", "#{Vbt.otp_app()}_web", location]))
 
-  defp load_context_file(location),
-    do: SourceFile.load!(Path.join(["lib", "#{Vbt.otp_app()}", location]))
+  defp load_context_file(location, opts \\ []),
+    do: SourceFile.load!(Path.join(["lib", "#{Vbt.otp_app()}", location]), opts)
 
   defp store_source_files!(source_files),
     do: source_files |> Map.values() |> Enum.each(&SourceFile.store!/1)

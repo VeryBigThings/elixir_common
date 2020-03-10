@@ -32,6 +32,7 @@ defmodule VBT.Integration.SkafolderTest do
 
   defp initialize_project do
     File.mkdir_p!(build_path())
+    File.rm_rf(Path.join([build_path(), "lib"]))
     File.cp_r!(source_path(), build_path())
     mix!(~w/deps.get/)
     mix!(~w/compile/)

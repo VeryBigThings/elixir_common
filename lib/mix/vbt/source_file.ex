@@ -8,12 +8,17 @@ defmodule Mix.Vbt.SourceFile do
     %{
       name: name,
       content: File.read!(name),
-      format?: Keyword.get(opts, :format?, true)
+      format?: Keyword.get(opts, :format?, true),
+      output: Keyword.get(opts, :output, name)
     }
   end
 
   @spec store!(t) :: :ok
-  def store!(file), do: File.write!(file.name, format(file))
+  def store!(file) do
+    File.write!(file.output, format(file))
+    if file.output != file.name, do: File.rm!(file.name)
+    :ok
+  end
 
   @spec add_to_module(t(), String.t()) :: t()
   def add_to_module(file, code) do
