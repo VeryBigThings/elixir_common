@@ -23,6 +23,13 @@ defmodule Mix.Tasks.Vbt.Gen.Heroku do
         File.chmod!(destination, 0o744)
       end
     )
+
+    Path.join(@template_root, "release_tasks.eex")
+    |> VBT.Skafolder.eval_from_templates(bindings)
+    |> VBT.Skafolder.generate_file(
+      Path.join([File.cwd!(), "lib", to_string(Mix.Vbt.otp_app()), "release_tasks.ex"]),
+      args
+    )
   end
 
   def files_for_docker_deployments(template_root) do

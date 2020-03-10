@@ -22,5 +22,6 @@ if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
   exit 0;
 fi
 
+script_dir=$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)
 args="$@"
-/opt/app/bin/skafolder_tester_backend eval "SkafolderTester.ReleaseTasks.migrate(~w($args))"
+$script_dir/skafolder_tester eval "SkafolderTester.ReleaseTasks.migrate(~w($args))"
