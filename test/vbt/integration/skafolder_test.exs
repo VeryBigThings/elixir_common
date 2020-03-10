@@ -1,5 +1,7 @@
 defmodule VBT.Integration.SkafolderTest do
   use ExUnit.Case, async: true
+  require Bitwise
+
   @moduletag :integration
 
   @tag timeout: :timer.minutes(3)
@@ -51,19 +53,24 @@ defmodule VBT.Integration.SkafolderTest do
       |> Stream.filter(fn file ->
         output_path = Path.join(build_path(), file)
         output_content = File.read!(output_path)
-        output_mode = File.stat!(output_path).mode
 
         expected_path = Path.join(expected_path(), file)
         expected_content = File.read!(expected_path)
-        expected_mode = File.stat!(expected_path).mode
 
-        output_content != expected_content or output_mode != expected_mode
+        output_content != expected_content or not same_mode?(output_path, expected_path)
       end)
       |> Enum.sort()
 
     if Enum.all?([missing, unexpected, changed], &Enum.empty?/1),
       do: :ok,
       else: {:error, %{missing: missing, unexpected: unexpected, changed: changed}}
+  end
+
+  defp same_mode?(file1, file2) do
+    # we're testing only `x` bit of the owner since that's the only bit that git tracks
+    # (see https://medium.com/@tahteche/how-git-treats-changes-in-file-permissions-f71874ca239d)
+    Bitwise.band(File.stat!(file1).mode, 0b1_000_000) ==
+      Bitwise.band(File.stat!(file2).mode, 0b1_000_000)
   end
 
   defp source_files(folder) do
