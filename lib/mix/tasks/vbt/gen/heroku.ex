@@ -19,6 +19,8 @@ defmodule Mix.Tasks.Vbt.Gen.Heroku do
         source
         |> VBT.Skafolder.eval_from_templates(bindings)
         |> VBT.Skafolder.generate_file(destination, args)
+
+        File.chmod!(destination, 0o744)
       end
     )
   end

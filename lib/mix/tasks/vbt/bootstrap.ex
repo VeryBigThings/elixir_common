@@ -60,31 +60,59 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       source_files.mix,
       fn mix_file ->
         mix_file
+
+        # aliases
         |> MixFile.append_config(:aliases, ~s|credo: ["compile", "credo"]|)
         |> MixFile.append_config(
           :aliases,
           ~s|operator_template: ["compile", &operator_template/1]|
         )
+
+        # preferred mix environments
         |> MixFile.append_config(:project, "preferred_cli_env: preferred_cli_env()")
         |> SourceFile.add_to_module("
-            defp preferred_cli_env,
-              do: [credo: :test, dialyzer: :test, operator_template: :prod]
+          defp preferred_cli_env,
+            do: [credo: :test, dialyzer: :test, release: :prod, operator_template: :prod]
 
-        ")
+          ")
+
+        # dialyzer
         |> MixFile.append_config(:project, "dialyzer: dialyzer()")
-        |> MixFile.append_config(:project, ~s|build_path: System.get_env("BUILD_PATH", "_build")|)
         |> SourceFile.add_to_module("""
-            defp dialyzer do
-              [
-                plt_add_apps: [:ex_unit, :mix],
-                ignore_warnings: "dialyzer.ignore-warnings"
-              ]
-            end
+        defp dialyzer do
+          [
+            plt_add_apps: [:ex_unit, :mix],
+            ignore_warnings: "dialyzer.ignore-warnings"
+          ]
+        end
 
-            defp operator_template(_),
-              do: IO.puts(#{Mix.Vbt.context_module_name()}.Config.template())
+        defp operator_template(_),
+          do: IO.puts(#{Mix.Vbt.context_module_name()}.Config.template())
 
         """)
+
+        # OTP release
+        |> MixFile.append_config(:project, "releases: releases()")
+        |> SourceFile.add_to_module("""
+        defp releases() do
+          [
+            #{Mix.Vbt.otp_app()}: [
+              include_executables_for: [:unix],
+              steps: [:assemble, &copy_bin_files/1]
+            ]
+          ]
+        end
+
+        # solution from https://elixirforum.com/t/equivalent-to-distillerys-boot-hooks-in-mix-release-elixir-1-9/23431/2
+        defp copy_bin_files(release) do
+          File.cp_r("rel/bin", Path.join(release.path, "bin"))
+          release
+        end
+
+        """)
+
+        # other
+        |> MixFile.append_config(:project, ~s|build_path: System.get_env("BUILD_PATH", "_build")|)
       end
     )
   end

@@ -48,9 +48,15 @@ defmodule VBT.Integration.SkafolderTest do
       expected_files
       |> MapSet.intersection(output_files)
       |> Stream.filter(fn file ->
-        output = File.read!(Path.join(build_path(), file))
-        expected = File.read!(Path.join(expected_path(), file))
-        output != expected
+        output_path = Path.join(build_path(), file)
+        output_content = File.read!(output_path)
+        output_mode = File.stat!(output_path).mode
+
+        expected_path = Path.join(expected_path(), file)
+        expected_content = File.read!(expected_path)
+        expected_mode = File.stat!(expected_path).mode
+
+        output_content != expected_content or output_mode != expected_mode
       end)
       |> Enum.sort()
 
@@ -103,7 +109,7 @@ defmodule VBT.Integration.SkafolderTest do
     source = Path.join(build_path(), file)
     destination = Path.join(expected_path(), file)
     File.mkdir_p!(Path.dirname(destination))
-    File.copy!(source, destination)
+    File.cp!(source, destination)
   end
 
   defp mix!(args) do
