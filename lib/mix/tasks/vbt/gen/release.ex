@@ -14,8 +14,11 @@ defmodule Mix.Tasks.Vbt.Gen.Release do
     bindings = Mix.Vbt.bindings()
 
     Enum.each(
-      files_for_docker_deployments(@template_root),
-      fn {source, destination} ->
+      ~w/migrate rollback seed check_config/,
+      fn bin_file ->
+        source = Path.join([@template_root, "bin", "#{bin_file}.sh"])
+        destination = Path.join(["rel", "bin", "#{bin_file}.sh"])
+
         source
         |> VBT.Skafolder.eval_from_templates(bindings)
         |> VBT.Skafolder.generate_file(destination, args)
@@ -30,15 +33,5 @@ defmodule Mix.Tasks.Vbt.Gen.Release do
       Path.join([File.cwd!(), "lib", Macro.underscore(Mix.Vbt.app_module_name()), "release.ex"]),
       args
     )
-  end
-
-  def files_for_docker_deployments(template_root) do
-    %{
-      Path.join([template_root, "db_tasks", "migrate.sh"]) =>
-        Path.join(["rel", "bin", "migrate.sh"]),
-      Path.join([template_root, "db_tasks", "rollback.sh"]) =>
-        Path.join(["rel", "bin", "rollback.sh"]),
-      Path.join([template_root, "db_tasks", "seed.sh"]) => Path.join(["rel", "bin", "seed.sh"])
-    }
   end
 end
