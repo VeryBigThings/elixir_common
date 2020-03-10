@@ -1,9 +1,9 @@
 defmodule Mix.Vbt.SourceFile do
   @moduledoc false
 
-  @type t :: %{name: String.t(), content: String.t(), format?: boolean}
+  @type t :: %{name: String.t(), content: String.t(), format?: boolean, output: String.t()}
 
-  @spec load!(String.t(), format?: boolean) :: t
+  @spec load!(String.t(), format?: boolean, output: String.t()) :: t
   def load!(name, opts \\ []) do
     %{
       name: name,
