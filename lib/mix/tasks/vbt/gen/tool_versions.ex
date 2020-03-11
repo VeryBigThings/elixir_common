@@ -9,13 +9,15 @@ defmodule Mix.Tasks.Vbt.Gen.ToolVersions do
       Mix.raise("mix vbt.gen.tool_versions can only be run inside an application directory")
     end
 
-    VBT.Skafolder.generate_file(
-      """
-      elixir 1.10-otp-22
-      erlang 22.2
-      """,
-      ".tool-versions",
-      args
-    )
+    tools =
+      Enum.concat(
+        [
+          "elixir 1.10-otp-22",
+          "erlang 22.2"
+        ],
+        if(File.dir?("assets"), do: ["nodejs 13.10.1"], else: [])
+      )
+
+    VBT.Skafolder.generate_file([Enum.join(tools, "\n"), ?\n], ".tool-versions", args)
   end
 end
