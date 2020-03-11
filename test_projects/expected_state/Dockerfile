@@ -70,17 +70,8 @@ COPY . .
 # Fetch and compile deps and compile app code
 RUN --mount=type=ssh mix do deps.get, deps.compile, compile
 
-# Compile assets and calc digest
-RUN if [ "$SKIP_ASSETS" = "false" ]; then \
-  cd assets && \
-  yarn install && \
-  yarn deploy && \
-  cd - && \
-  mix phx.digest; \
-  fi
-
 # Build the OTP release
-RUN mix do release
+RUN mix release
 
 ############################################
 ## RELEASE STAGE - production application ##

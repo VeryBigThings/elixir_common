@@ -62,7 +62,8 @@ defmodule SkafolderTester.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate", "test"],
       credo: ["compile", "credo"],
-      operator_template: ["compile", &operator_template/1]
+      operator_template: ["compile", &operator_template/1],
+      release: release_steps()
     ]
   end
 
@@ -92,5 +93,17 @@ defmodule SkafolderTester.MixProject do
   defp copy_bin_files(release) do
     File.cp_r("rel/bin", Path.join(release.path, "bin"))
     release
+  end
+
+  defp release_steps do
+    if Mix.env() != :prod or System.get_env("SKIP_ASSETS") == "true" or not File.dir?("assets") do
+      []
+    else
+      [
+        "cmd 'cd assets && yarn install && yarn deploy'",
+        "phx.digest"
+      ]
+    end
+    |> Enum.concat(["release"])
   end
 end

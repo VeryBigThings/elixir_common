@@ -133,6 +133,20 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     """)
+    |> MixFile.append_config(:aliases, ~s|release: release_steps()|)
+    |> SourceFile.add_to_module("""
+      defp release_steps do
+        if Mix.env != :prod or System.get_env("SKIP_ASSETS") == "true" or not File.dir?("assets") do
+          []
+        else
+          [
+            "cmd 'cd assets && yarn install && yarn deploy'",
+            "phx.digest"
+          ]
+        end
+        |> Enum.concat(["release"])
+      end
+    """)
   end
 
   defp adapt_app_module(source_files) do
