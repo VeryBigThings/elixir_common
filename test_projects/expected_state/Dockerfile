@@ -110,5 +110,5 @@ CMD trap 'exit' INT; ${WORKDIR}/bin/skafolder_tester start
 FROM release AS release-phase
 
 CMD trap 'exit' INT; \
-  /opt/app/skafolder_tester/bin/check_config.sh && \
-  /opt/app/skafolder_tester/bin/migrate.sh
+  /opt/app/bin/check_config.sh && \
+  /opt/app/bin/migrate.sh

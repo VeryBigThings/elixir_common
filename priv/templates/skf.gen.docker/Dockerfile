@@ -110,5 +110,5 @@ CMD trap 'exit' INT; ${WORKDIR}/bin/<%= app %> start
 FROM release AS release-phase
 
 CMD trap 'exit' INT; \
-  /opt/app/<%= Mix.Vbt.otp_app() %>/bin/check_config.sh && \
-  /opt/app/<%= Mix.Vbt.otp_app() %>/bin/migrate.sh
+  /opt/app/bin/check_config.sh && \
+  /opt/app/bin/migrate.sh
