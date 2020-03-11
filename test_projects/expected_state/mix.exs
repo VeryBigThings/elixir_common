@@ -100,7 +100,7 @@ defmodule SkafolderTester.MixProject do
       []
     else
       [
-        "cmd 'cd assets && yarn install && yarn deploy'",
+        "cmd 'cd assets && npm install && npm run deploy'",
         "phx.digest"
       ]
     end
