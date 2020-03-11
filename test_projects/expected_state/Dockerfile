@@ -57,30 +57,18 @@ CMD ["/bin/bash", "-c", "while true; do sleep 10; done;"]
 
 FROM build AS pre-release
 
-ARG APP_NAME
-
 # Set SKIP_ASSETS to true (in your Makefile) if your Phoenix project does not have static assets
 ARG SKIP_ASSETS=false
 
-ENV APP_NAME=${APP_NAME} \
-  SKIP_ASSETS=${SKIP_ASSETS}
+ENV SKIP_ASSETS=${SKIP_ASSETS}
 
 COPY . .
 
 # Fetch and compile deps and compile app code
 RUN --mount=type=ssh mix do deps.get, deps.compile, compile
 
-# Compile assets and calc digest
-RUN if [ "$SKIP_ASSETS" = "false" ]; then \
-  cd assets && \
-  yarn install && \
-  yarn deploy && \
-  cd - && \
-  mix phx.digest; \
-  fi
-
 # Build the OTP release
-RUN mix do release
+RUN mix release
 
 ############################################
 ## RELEASE STAGE - production application ##
@@ -90,7 +78,6 @@ RUN mix do release
 
 FROM debian:10-slim AS release
 
-ARG APP_NAME
 ARG APP_USER=user
 ARG WORKDIR=/opt/app
 
@@ -103,24 +90,26 @@ RUN apt-get update && apt-get install -y \
   bash \
   git \
   libpq-dev \
-  libjson-c-dev
+  libjson-c-dev \
+  curl
 
-ENV APP_NAME=${APP_NAME}
 # Copy over the build artifact from the previous step and create a non root user
 RUN useradd --create-home ${APP_USER}
 WORKDIR $WORKDIR
 
-COPY --from=pre-release /opt/cache/_build/prod/rel/${APP_NAME} .
+COPY --from=pre-release /opt/cache/_build/prod/rel/skafolder_tester .
 
 RUN chown -R ${APP_USER}: ${WORKDIR}
 USER ${APP_USER}
 
-CMD trap 'exit' INT; ${WORKDIR}/bin/${APP_NAME} start
+CMD trap 'exit' INT; ${WORKDIR}/bin/skafolder_tester start
 
 
-############################################################################
-## RELEASE PHASE - run migrations on Heroku before production application ##
-############################################################################
+#############################################################################################
+## RELEASE PHASE - check config and run migrations on Heroku before production application ##
+#############################################################################################
 FROM release AS release-phase
 
-CMD trap 'exit' INT; /opt/app/bin/migrate.sh
+CMD trap 'exit' INT; \
+  /opt/app/bin/check_config.sh && \
+  /opt/app/bin/migrate.sh

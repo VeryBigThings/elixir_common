@@ -1,6 +1,6 @@
-defmodule <%= Mix.Vbt.context_module_name() %>.OperatorConfig do
-  use VBT.Provider,
-    source: VBT.Provider.SystemEnv,
+defmodule <%= Mix.Vbt.context_module_name() %>.Config do
+  use Provider,
+    source: Provider.SystemEnv,
     params: [
       {:release_level, dev: "dev"},
 

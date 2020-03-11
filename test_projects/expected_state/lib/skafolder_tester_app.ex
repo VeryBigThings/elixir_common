@@ -1,4 +1,4 @@
-defmodule SkafolderTester.Application do
+defmodule SkafolderTesterApp do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
@@ -6,7 +6,7 @@ defmodule SkafolderTester.Application do
   use Application
 
   def start(_type, _args) do
-    SkafolderTester.OperatorConfig.validate!()
+    SkafolderTester.Config.validate!()
 
     # List all child processes to be supervised
     children = [

@@ -11,8 +11,8 @@ defmodule Mix.Tasks.Vbt.Gen.ToolVersions do
 
     VBT.Skafolder.generate_file(
       """
-      elixir 1.9.4-otp-22
-      erlang 22.2.3
+      elixir 1.10-otp-22
+      erlang 22.2
       """,
       ".tool-versions",
       args

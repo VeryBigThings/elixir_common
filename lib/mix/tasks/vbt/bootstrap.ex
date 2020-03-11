@@ -13,8 +13,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     Enum.each(
-      ~w/makefile docker circleci heroku github_pr_template credo dialyzer formatter_config
-      tool_versions aws_mock operator_config/,
+      ~w/makefile docker circleci release github_pr_template credo dialyzer formatter_config
+      tool_versions aws_mock config/,
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 
@@ -60,43 +60,107 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       source_files.mix,
       fn mix_file ->
         mix_file
-        |> MixFile.append_config(:aliases, ~s|credo: ["compile", "credo"]|)
-        |> MixFile.append_config(
-          :aliases,
-          ~s|operator_template: ["compile", &operator_template/1]|
-        )
-        |> MixFile.append_config(:project, "preferred_cli_env: preferred_cli_env()")
-        |> SourceFile.add_to_module("
-            defp preferred_cli_env,
-              do: [credo: :test, dialyzer: :test, operator_template: :prod]
-
-        ")
-        |> MixFile.append_config(:project, "dialyzer: dialyzer()")
+        |> setup_aliases()
+        |> setup_preferred_cli_env()
+        |> setup_dialyzer()
+        |> setup_release()
         |> MixFile.append_config(:project, ~s|build_path: System.get_env("BUILD_PATH", "_build")|)
-        |> SourceFile.add_to_module("""
-            defp dialyzer do
-              [
-                plt_add_apps: [:ex_unit, :mix],
-                ignore_warnings: "dialyzer.ignore-warnings"
-              ]
-            end
-
-            defp operator_template(_),
-              do: IO.puts(#{Mix.Vbt.context_module_name()}.OperatorConfig.template())
-
-        """)
+        |> Map.update!(
+          :content,
+          &String.replace(
+            &1,
+            "#{Mix.Vbt.context_module_name()}.Application",
+            "#{Mix.Vbt.app_module_name()}"
+          )
+        )
       end
     )
+  end
+
+  defp setup_aliases(mix_file) do
+    mix_file
+    |> MixFile.append_config(:aliases, ~s|credo: ["compile", "credo"]|)
+    |> MixFile.append_config(
+      :aliases,
+      ~s|operator_template: ["compile", &operator_template/1]|
+    )
+  end
+
+  defp setup_preferred_cli_env(mix_file) do
+    mix_file
+    |> MixFile.append_config(:project, "preferred_cli_env: preferred_cli_env()")
+    |> SourceFile.add_to_module("""
+    defp preferred_cli_env,
+      do: [credo: :test, dialyzer: :test, release: :prod, operator_template: :prod]
+
+    """)
+  end
+
+  defp setup_dialyzer(mix_file) do
+    mix_file
+    |> MixFile.append_config(:project, "dialyzer: dialyzer()")
+    |> SourceFile.add_to_module("""
+    defp dialyzer do
+      [
+        plt_add_apps: [:ex_unit, :mix],
+        ignore_warnings: "dialyzer.ignore-warnings"
+      ]
+    end
+
+    defp operator_template(_),
+      do: IO.puts(#{Mix.Vbt.context_module_name()}.Config.template())
+
+    """)
+  end
+
+  defp setup_release(mix_file) do
+    mix_file
+    |> MixFile.append_config(:project, "releases: releases()")
+    |> SourceFile.add_to_module("""
+    defp releases() do
+      [
+        #{Mix.Vbt.otp_app()}: [
+          include_executables_for: [:unix],
+          steps: [:assemble, &copy_bin_files/1]
+        ]
+      ]
+    end
+
+    # solution from https://elixirforum.com/t/equivalent-to-distillerys-boot-hooks-in-mix-release-elixir-1-9/23431/2
+    defp copy_bin_files(release) do
+      File.cp_r("rel/bin", Path.join(release.path, "bin"))
+      release
+    end
+
+    """)
+    |> MixFile.append_config(:aliases, ~s|release: release_steps()|)
+    |> SourceFile.add_to_module("""
+      defp release_steps do
+        if Mix.env != :prod or System.get_env("SKIP_ASSETS") == "true" or not File.dir?("assets") do
+          []
+        else
+          [
+            "cmd 'cd assets && yarn install && yarn deploy'",
+            "phx.digest"
+          ]
+        end
+        |> Enum.concat(["release"])
+      end
+    """)
   end
 
   defp adapt_app_module(source_files) do
     update_in(
       source_files.app_module.content,
-      &String.replace(
-        &1,
-        ~r/(\s*def start\(.*?do)/s,
-        "\\1\n#{Mix.Vbt.context_module_name()}.OperatorConfig.validate!()\n"
-      )
+      &(&1
+        |> String.replace(
+          ~r/(\s*def start\(.*?do)/s,
+          "\\1\n#{Mix.Vbt.context_module_name()}.Config.validate!()\n"
+        )
+        |> String.replace(
+          "defmodule #{Mix.Vbt.context_module_name()}.Application",
+          "defmodule #{Mix.Vbt.app_module_name()}"
+        ))
     )
   end
 
@@ -133,15 +197,15 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       def init(_type, config) do
         config =
           config
-          |> Keyword.put(:secret_key_base, #{Mix.Vbt.context_module_name()}.OperatorConfig.secret_key_base())
+          |> Keyword.put(:secret_key_base, #{Mix.Vbt.context_module_name()}.Config.secret_key_base())
           |> Keyword.update(:url, url_config(), &Keyword.merge(&1, url_config()))
           |> Keyword.update(:http, http_config(), &(http_config() ++ (&1 || [])))
 
         {:ok, config}
       end
 
-      defp url_config, do: [host: #{Mix.Vbt.context_module_name()}.OperatorConfig.host()]
-      defp http_config, do: [:inet6, port: #{Mix.Vbt.context_module_name()}.OperatorConfig.port()]
+      defp url_config, do: [host: #{Mix.Vbt.context_module_name()}.Config.host()]
+      defp http_config, do: [:inet6, port: #{Mix.Vbt.context_module_name()}.Config.port()]
       """
     )
   end
@@ -185,9 +249,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         config =
           Keyword.merge(
             config,
-            url: #{Mix.Vbt.context_module_name()}.OperatorConfig.db_url(),
-            pool_size: #{Mix.Vbt.context_module_name()}.OperatorConfig.db_pool_size(),
-            ssl: #{Mix.Vbt.context_module_name()}.OperatorConfig.db_ssl()
+            url: #{Mix.Vbt.context_module_name()}.Config.db_url(),
+            pool_size: #{Mix.Vbt.context_module_name()}.Config.db_pool_size(),
+            ssl: #{Mix.Vbt.context_module_name()}.Config.db_ssl()
           )
 
         {:ok, config}
@@ -210,7 +274,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       prod_config: SourceFile.load!("config/prod.exs"),
       endpoint: load_web_file("endpoint.ex"),
       repo: load_context_file("repo.ex"),
-      app_module: load_context_file("application.ex")
+      app_module:
+        load_context_file("application.ex", output: Path.join("lib", "#{Vbt.otp_app()}_app.ex"))
     }
   end
 
@@ -220,8 +285,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   defp load_web_file(location),
     do: SourceFile.load!(Path.join(["lib", "#{Vbt.otp_app()}_web", location]))
 
-  defp load_context_file(location),
-    do: SourceFile.load!(Path.join(["lib", "#{Vbt.otp_app()}", location]))
+  defp load_context_file(location, opts \\ []),
+    do: SourceFile.load!(Path.join(["lib", "#{Vbt.otp_app()}", location]), opts)
 
   defp store_source_files!(source_files),
     do: source_files |> Map.values() |> Enum.each(&SourceFile.store!/1)

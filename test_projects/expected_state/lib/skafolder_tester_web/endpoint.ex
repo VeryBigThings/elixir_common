@@ -46,13 +46,13 @@ defmodule SkafolderTesterWeb.Endpoint do
   def init(_type, config) do
     config =
       config
-      |> Keyword.put(:secret_key_base, SkafolderTester.OperatorConfig.secret_key_base())
+      |> Keyword.put(:secret_key_base, SkafolderTester.Config.secret_key_base())
       |> Keyword.update(:url, url_config(), &Keyword.merge(&1, url_config()))
       |> Keyword.update(:http, http_config(), &(http_config() ++ (&1 || [])))
 
     {:ok, config}
   end
 
-  defp url_config, do: [host: SkafolderTester.OperatorConfig.host()]
-  defp http_config, do: [:inet6, port: SkafolderTester.OperatorConfig.port()]
+  defp url_config, do: [host: SkafolderTester.Config.host()]
+  defp http_config, do: [:inet6, port: SkafolderTester.Config.port()]
 end

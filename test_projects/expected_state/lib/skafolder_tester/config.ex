@@ -1,6 +1,6 @@
-defmodule SkafolderTester.OperatorConfig do
-  use VBT.Provider,
-    source: VBT.Provider.SystemEnv,
+defmodule SkafolderTester.Config do
+  use Provider,
+    source: Provider.SystemEnv,
     params: [
       {:release_level, dev: "dev"},
 

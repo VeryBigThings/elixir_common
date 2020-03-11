@@ -89,7 +89,6 @@ import-latest-db: require-PGDATABASE heroku-latest.dump
 # --- DOCKER HEROKU PRODSTACK ---
 # -------------------------------
 
-APP_NAME?=`grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'`
 HEROKU_REGISTRY=registry.heroku.com
 
 ## Logs in to heroku container registry
@@ -97,11 +96,10 @@ heroku/login: require-HEROKU_API_KEY require-HEROKU_REGISTRY
 	@docker login --username=_ --password=$(HEROKU_API_KEY) $(HEROKU_REGISTRY)
 
 ## Builds the production Docker web image
-heroku/build-web: require-APP_NAME require-HEROKU_REGISTRY require-HEROKU_APP_NAME
+heroku/build-web: require-HEROKU_REGISTRY require-HEROKU_APP_NAME
 	@docker build --ssh default .\
 		--target release \
 		--build-arg MIX_ENV=prod \
-		--build-arg APP_NAME=${APP_NAME} \
 		--tag ${HEROKU_REGISTRY}/${HEROKU_APP_NAME}/web
 
 ## Builds the production Docker release phase image
@@ -109,7 +107,6 @@ heroku/build-release: require-HEROKU_REGISTRY require-HEROKU_APP_NAME
 	@docker build --ssh default .\
 		--target release-phase \
 		--build-arg MIX_ENV=prod \
-		--build-arg APP_NAME=${APP_NAME} \
 		--tag ${HEROKU_REGISTRY}/${HEROKU_APP_NAME}/release
 
 ## Push heroku web image to container registry

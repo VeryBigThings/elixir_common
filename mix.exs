@@ -43,6 +43,7 @@ defmodule VBT.Credo.MixProject do
       {:parent, "~> 0.8"},
       {:phoenix_html, "~> 2.0"},
       {:phoenix, "~> 1.4"},
+      {:provider, github: "VeryBigThings/provider"},
       {:stream_data, "~> 0.4", only: [:test, :dev]}
     ]
   end

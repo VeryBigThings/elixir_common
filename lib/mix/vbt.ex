@@ -13,6 +13,9 @@ defmodule Mix.Vbt do
   @spec context_module_name :: String.t()
   def context_module_name, do: Macro.camelize("#{otp_app()}")
 
+  @spec app_module_name :: String.t()
+  def app_module_name, do: "#{context_module_name()}App"
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   def bindings(opts \\ [], defaults \\ []) do
     app = otp_app()
