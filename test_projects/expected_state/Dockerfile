@@ -90,7 +90,8 @@ RUN apt-get update && apt-get install -y \
   bash \
   git \
   libpq-dev \
-  libjson-c-dev
+  libjson-c-dev \
+  curl
 
 # Copy over the build artifact from the previous step and create a non root user
 RUN useradd --create-home ${APP_USER}
