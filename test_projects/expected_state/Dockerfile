@@ -57,13 +57,10 @@ CMD ["/bin/bash", "-c", "while true; do sleep 10; done;"]
 
 FROM build AS pre-release
 
-ARG APP_NAME
-
 # Set SKIP_ASSETS to true (in your Makefile) if your Phoenix project does not have static assets
 ARG SKIP_ASSETS=false
 
-ENV APP_NAME=${APP_NAME} \
-  SKIP_ASSETS=${SKIP_ASSETS}
+ENV SKIP_ASSETS=${SKIP_ASSETS}
 
 COPY . .
 
@@ -81,7 +78,6 @@ RUN mix release
 
 FROM debian:10-slim AS release
 
-ARG APP_NAME
 ARG APP_USER=user
 ARG WORKDIR=/opt/app
 
@@ -96,17 +92,16 @@ RUN apt-get update && apt-get install -y \
   libpq-dev \
   libjson-c-dev
 
-ENV APP_NAME=${APP_NAME}
 # Copy over the build artifact from the previous step and create a non root user
 RUN useradd --create-home ${APP_USER}
 WORKDIR $WORKDIR
 
-COPY --from=pre-release /opt/cache/_build/prod/rel/${APP_NAME} .
+COPY --from=pre-release /opt/cache/_build/prod/rel/skafolder_tester .
 
 RUN chown -R ${APP_USER}: ${WORKDIR}
 USER ${APP_USER}
 
-CMD trap 'exit' INT; ${WORKDIR}/bin/${APP_NAME} start
+CMD trap 'exit' INT; ${WORKDIR}/bin/skafolder_tester start
 
 
 #############################################################################################
