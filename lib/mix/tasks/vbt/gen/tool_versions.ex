@@ -24,6 +24,7 @@ defmodule Mix.Tasks.Vbt.Gen.ToolVersions do
     # we'll return the latest hard-coded defaults. This is a "best effort" approach which may fail
     # occasionally, but in that case a developer will be warned and they can adjust the
     # `.tool_versions` content manually.
+    Application.ensure_all_started(:hackney)
     get_latest_versions!()
   catch
     _, _ ->
@@ -95,7 +96,7 @@ defmodule Mix.Tasks.Vbt.Gen.ToolVersions do
   defp nodejs_version(elixir_version) do
     %{"nodejs_version" => nodejs_version} =
       Regex.named_captures(
-        ~r/NODEjs_VERSION\s+(?<nodejs_version>\d+\.\d+\.\d+)/,
+        ~r/NODE_VERSION\s+(?<nodejs_version>\d+\.\d+\.\d+)/,
         dockerfile("VeryBigThings/dockerfiles", "elixir/#{elixir_version}")
       )
 
