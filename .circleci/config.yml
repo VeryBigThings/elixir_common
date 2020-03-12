@@ -6,7 +6,7 @@ jobs:
   build:
     parallelism: 1
     docker:
-      - image: verybigthings/elixir:1.9
+      - image: verybigthings/elixir:1.10
         environment:
           MIX_ENV: "test"
       - image: circleci/postgres:10.1-alpine
