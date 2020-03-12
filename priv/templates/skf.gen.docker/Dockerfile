@@ -5,7 +5,7 @@
 # ===========================================================
 # Used for development purposes and as a base for pre-release
 
-FROM verybigthings/elixir:1.9.4 AS build
+FROM verybigthings/elixir:1.10.2 AS build
 
 ARG WORKDIR=/opt/app
 ARG MIX_ENV=prod

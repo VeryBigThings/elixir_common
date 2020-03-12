@@ -1,5 +1,6 @@
 defmodule VBT.Credo.Check.Readability.WithPlaceholder do
   @moduledoc false
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   @checkdoc """

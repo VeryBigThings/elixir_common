@@ -7,6 +7,7 @@ defmodule Mix.Tasks.Vbt.Gen.Makefile do
 
     - `--cloud` - specifies the target cloud. Possible values are `heroku` (default), and `aws`.
   """
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   use Mix.Task

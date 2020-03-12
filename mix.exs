@@ -5,7 +5,7 @@ defmodule VBT.Credo.MixProject do
     [
       app: :vbt,
       version: "0.1.0",
-      elixir: "~> 1.9",
+      elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
@@ -39,6 +39,7 @@ defmodule VBT.Credo.MixProject do
       {:ecto, "~> 3.0"},
       {:ex_aws, "~> 2.1"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
+      {:httpoison, "~> 1.0"},
       {:oban, "~> 1.0"},
       {:parent, "~> 0.8"},
       {:phoenix_html, "~> 2.0"},

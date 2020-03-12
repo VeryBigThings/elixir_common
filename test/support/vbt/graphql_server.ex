@@ -1,5 +1,6 @@
 defmodule VBT.GraphqlServer do
   @moduledoc false
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   use Phoenix.Endpoint, otp_app: :vbt

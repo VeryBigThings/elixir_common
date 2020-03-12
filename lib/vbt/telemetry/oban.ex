@@ -1,5 +1,6 @@
 defmodule VBT.Telemetry.Oban do
   @moduledoc false
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   require Logger

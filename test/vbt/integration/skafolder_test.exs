@@ -10,7 +10,8 @@ defmodule VBT.Integration.SkafolderTest do
 
     # hardcoding the generated secret key to ensure reproducible output
     System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
-    assert {_output, 0} = mix(~w/vbt.bootstrap --force/)
+    assert {output, 0} = mix(~w/vbt.bootstrap --force/)
+    refute output =~ "Error fetching latest tool versions"
 
     # fetch new deps injected by bootstrap
     assert {_output, 0} = mix(~w/deps.get/)
@@ -79,8 +80,9 @@ defmodule VBT.Integration.SkafolderTest do
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/deps"))
     |> Stream.reject(&File.dir?/1)
     |> Stream.map(&Path.relative_to(&1, folder))
-    # ignoring mix.lock, because its shape can change non-deterministically
+    # ignoring files whose content may change unpredictably
     |> Stream.reject(&(&1 == "mix.lock"))
+    |> Stream.reject(&(&1 == ".tool_versions"))
     |> Enum.sort()
   end
 
