@@ -1,5 +1,6 @@
 defmodule VBT.Credo.Check.Consistency.FileLocation do
   @moduledoc false
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   @checkdoc """

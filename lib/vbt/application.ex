@@ -1,5 +1,6 @@
 defmodule VBT.Application do
   @moduledoc false
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   use Application

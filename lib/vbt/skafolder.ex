@@ -1,5 +1,6 @@
 defmodule VBT.Skafolder do
   @moduledoc false
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   def generate_file(content, file, args) do

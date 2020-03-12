@@ -1,5 +1,6 @@
 defmodule VBT.TestRepo do
   @moduledoc false
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   use Ecto.Repo, otp_app: :vbt, adapter: Ecto.Adapters.Postgres
