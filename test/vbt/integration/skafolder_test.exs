@@ -10,7 +10,8 @@ defmodule VBT.Integration.SkafolderTest do
 
     # hardcoding the generated secret key to ensure reproducible output
     System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
-    assert {_output, 0} = mix(~w/vbt.bootstrap --force/)
+    assert {output, 0} = mix(~w/vbt.bootstrap --force/)
+    refute output =~ "Error fetching latest tool versions"
 
     # fetch new deps injected by bootstrap
     assert {_output, 0} = mix(~w/deps.get/)
