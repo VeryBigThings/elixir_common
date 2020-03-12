@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Vbt.Gen.ToolVersions do
           "elixir 1.10-otp-22",
           "erlang 22.2"
         ],
-        if(File.dir?("assets"), do: ["nodejs 13.10.1"], else: [])
+        if(File.dir?("assets"), do: ["nodejs 12.14.1"], else: [])
       )
 
     VBT.Skafolder.generate_file([Enum.join(tools, "\n"), ?\n], ".tool-versions", args)
