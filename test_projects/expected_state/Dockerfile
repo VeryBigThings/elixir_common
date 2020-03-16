@@ -62,10 +62,16 @@ ARG SKIP_ASSETS=false
 
 ENV SKIP_ASSETS=${SKIP_ASSETS}
 
-COPY . .
+# First we're copying the minimal subset of the app needed to fetch and build the deps. This
+# allows us to use the cached docker layer in the cases where only the regular code is changed,
+# which means we avoid about extra 4 minutes during the docker build.
+COPY mix.exs mix.lock ./
+COPY config .
+RUN --mount=type=ssh mix do deps.get, deps.compile
 
-# Fetch and compile deps and compile app code
-RUN --mount=type=ssh mix do deps.get, deps.compile, compile
+# Now we copy the entire project and compile it.
+COPY . .
+RUN mix compile
 
 # Build the OTP release
 RUN mix release
