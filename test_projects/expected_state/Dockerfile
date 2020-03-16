@@ -29,7 +29,6 @@ RUN apt-get update && apt-get install -y \
   make \
   postgresql-client \
   postgresql-contrib \
-  redis-tools \
   vim
 
 WORKDIR $WORKDIR

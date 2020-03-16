@@ -8,14 +8,11 @@ jobs:
     parallelism: 1
     docker:
       - image: circleci/elixir:1.9
-        environment:
-          TEST_REDIS_URL: "redis://localhost:6379/0"
       - image: circleci/postgres:10-alpine-postgis
         environment:
           POSTGRES_USER: "postgres"
           POSTGRES_DB: "skafolder_tester_test"
           POSTGRES_PASSWORD: "postgres"
-      - image: circleci/redis:4-alpine
     working_directory: ~/app
     steps:
       - checkout
@@ -24,9 +21,6 @@ jobs:
       - run:
           name: Wait for PG
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
-      - run:
-          name: Wait for Redis
-          command: dockerize -wait tcp://localhost:6379 -timeout 1m
       - restore_cache:
           keys:
             - '{{ .Environment.CACHE_VERSION }}-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}'
