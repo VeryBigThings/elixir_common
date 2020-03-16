@@ -99,13 +99,14 @@ RUN apt-get update && apt-get install -y \
   libjson-c-dev \
   curl
 
-# Copy over the build artifact from the previous step and create a non root user
+# Create a non root user and the working folder
 RUN useradd --create-home ${APP_USER}
 WORKDIR $WORKDIR
+RUN chown ${APP_USER}: ${WORKDIR}
 
-COPY --from=pre-release /opt/cache/_build/prod/rel/<%= app %> .
+# Copy over the build artifact from the previous step
+COPY --chown=${APP_USER} --from=pre-release /opt/cache/_build/prod/rel/<%= app %> .
 
-RUN chown -R ${APP_USER}: ${WORKDIR}
 USER ${APP_USER}
 
 CMD trap 'exit' INT; ${WORKDIR}/bin/<%= app %> start
