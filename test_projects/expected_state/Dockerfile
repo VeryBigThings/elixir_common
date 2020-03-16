@@ -64,7 +64,7 @@ ENV SKIP_ASSETS=${SKIP_ASSETS}
 # which means we avoid about extra 4 minutes during the docker build.
 COPY mix.exs mix.lock ./
 COPY config .
-RUN --mount=type=ssh mix do deps.get, deps.compile
+RUN --mount=type=ssh MIX_ENV=prod mix do deps.get, deps.compile
 
 # Now we copy the entire project and build the OTP release.
 COPY . .
