@@ -24,7 +24,8 @@ defmodule Mix.Tasks.Vbt.Gen.ToolVersions do
     %{
       elixir: "#{versions.elixir.major}.#{versions.elixir.minor}-otp-#{versions.erlang.major}",
       erlang: "#{versions.erlang.major}.#{versions.erlang.minor}",
-      nodejs: to_string(versions.nodejs)
+      nodejs: to_string(versions.nodejs),
+      postgres: "#{versions.postgres.major}.#{versions.postgres.minor}"
     }
   end
 end

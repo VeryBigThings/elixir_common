@@ -17,10 +17,10 @@ defmodule Mix.Vbt do
   @spec app_module_name :: String.t()
   def app_module_name, do: "#{context_module_name()}App"
 
-  @spec tool_versions :: %{tool => Version.t()} when tool: :elixir | :erlang | :nodejs
+  @spec tool_versions :: %{tool => Version.t()} when tool: :elixir | :erlang | :nodejs | :postgres
   def tool_versions do
     with nil <- :persistent_term.get({__MODULE__, :tool_versions}, nil) do
-      tool_versions = compute_latest_tool_versions()
+      tool_versions = Map.put(compute_latest_tool_versions(), :postgres, Version.parse!("11.2.0"))
       :persistent_term.put({__MODULE__, :tool_versions}, tool_versions)
       tool_versions
     end
