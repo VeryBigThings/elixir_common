@@ -19,6 +19,28 @@ defmodule Mix.Vbt do
 
   @spec tool_versions :: %{tool => Version.t()} when tool: :elixir | :erlang | :nodejs
   def tool_versions do
+    with nil <- :persistent_term.get({__MODULE__, :tool_versions}, nil) do
+      tool_versions = compute_latest_tool_versions()
+      :persistent_term.put({__MODULE__, :tool_versions}, tool_versions)
+      tool_versions
+    end
+  end
+
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
+  def bindings(opts \\ [], defaults \\ []) do
+    app = otp_app()
+    additional_bindings = Keyword.merge(defaults, opts)
+    Keyword.merge([app: app, base_module: base_module(app)], additional_bindings)
+  end
+
+  defp base_module(app) do
+    case Application.get_env(app, :namespace, app) do
+      ^app -> app |> to_string |> Macro.camelize()
+      mod -> inspect(mod)
+    end
+  end
+
+  defp compute_latest_tool_versions do
     # We'll try to figure out the latest supported versions by examining the content of
     # VeryBigThings/dockerfiles and official Elixir/Erlang repositories on GitHub. If that fails,
     # we'll return the latest hard-coded defaults. This is a "best effort" approach which may fail
@@ -42,20 +64,6 @@ defmodule Mix.Vbt do
         erlang: Version.parse!("22.2.8"),
         nodejs: Version.parse!("12.14.1")
       }
-  end
-
-  # credo:disable-for-this-file Credo.Check.Readability.Specs
-  def bindings(opts \\ [], defaults \\ []) do
-    app = otp_app()
-    additional_bindings = Keyword.merge(defaults, opts)
-    Keyword.merge([app: app, base_module: base_module(app)], additional_bindings)
-  end
-
-  defp base_module(app) do
-    case Application.get_env(app, :namespace, app) do
-      ^app -> app |> to_string |> Macro.camelize()
-      mod -> inspect(mod)
-    end
   end
 
   defp get_latest_versions! do
