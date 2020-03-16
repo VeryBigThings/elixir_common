@@ -8,10 +8,8 @@
 FROM verybigthings/elixir:1.10.2 AS build
 
 ARG WORKDIR=/opt/app
-ARG MIX_ENV=prod
 ARG APP_USER=user
 
-ENV MIX_ENV=${MIX_ENV}
 ENV WORKDIR=$WORKDIR
 ENV APP_USER=$APP_USER
 ENV CACHE_DIR=/opt/cache
@@ -29,7 +27,6 @@ RUN apt-get update && apt-get install -y \
   make \
   postgresql-client \
   postgresql-contrib \
-  redis-tools \
   vim
 
 WORKDIR $WORKDIR
@@ -62,12 +59,15 @@ ARG SKIP_ASSETS=false
 
 ENV SKIP_ASSETS=${SKIP_ASSETS}
 
+# First we're copying the minimal subset of the app needed to fetch and build the deps. This
+# allows us to use the cached docker layer in the cases where only the regular code is changed,
+# which means we avoid about extra 4 minutes during the docker build.
+COPY mix.exs mix.lock ./
+COPY config .
+RUN --mount=type=ssh MIX_ENV=prod mix do deps.get, deps.compile
+
+# Now we copy the entire project and build the OTP release.
 COPY . .
-
-# Fetch and compile deps and compile app code
-RUN --mount=type=ssh mix do deps.get, deps.compile, compile
-
-# Build the OTP release
 RUN mix release
 
 ############################################
@@ -93,13 +93,14 @@ RUN apt-get update && apt-get install -y \
   libjson-c-dev \
   curl
 
-# Copy over the build artifact from the previous step and create a non root user
+# Create a non root user and the working folder
 RUN useradd --create-home ${APP_USER}
 WORKDIR $WORKDIR
+RUN chown ${APP_USER}: ${WORKDIR}
 
-COPY --from=pre-release /opt/cache/_build/prod/rel/<%= app %> .
+# Copy over the build artifact from the previous step
+COPY --chown=${APP_USER} --from=pre-release /opt/cache/_build/prod/rel/<%= app %> .
 
-RUN chown -R ${APP_USER}: ${WORKDIR}
 USER ${APP_USER}
 
 CMD trap 'exit' INT; ${WORKDIR}/bin/<%= app %> start

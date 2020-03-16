@@ -3,7 +3,7 @@
 # heroku
 .PHONY: set-remote heroku-console heroku-capture-backup heroku-latest.dump import-latest-db \
 				heroku/login heroku/build-web heroku/build-release heroku/push-web heroku/push-release \
-				heroku/build-and-push heroku/release
+				heroku/build-and-push heroku/release heroku/manual-deploy heroku/confirm-manual-deploy
 
 # devstack
 .PHONY: devstack devstack-build devstack-clean devstack-shell devstack-run
@@ -99,14 +99,12 @@ heroku/login: require-HEROKU_API_KEY require-HEROKU_REGISTRY
 heroku/build-web: require-HEROKU_REGISTRY require-HEROKU_APP_NAME
 	@docker build --ssh default .\
 		--target release \
-		--build-arg MIX_ENV=prod \
 		--tag ${HEROKU_REGISTRY}/${HEROKU_APP_NAME}/web
 
 ## Builds the production Docker release phase image
 heroku/build-release: require-HEROKU_REGISTRY require-HEROKU_APP_NAME
 	@docker build --ssh default .\
 		--target release-phase \
-		--build-arg MIX_ENV=prod \
 		--tag ${HEROKU_REGISTRY}/${HEROKU_APP_NAME}/release
 
 ## Push heroku web image to container registry
@@ -124,6 +122,14 @@ heroku/build-and-push: heroku/login heroku/build-web heroku/build-release heroku
 heroku/release: require-HEROKU_APP_NAME require-HEROKU_API_KEY
 	@HEROKU_API_KEY=$(HEROKU_API_KEY) heroku container:release web release -a $(HEROKU_APP_NAME)
 
+## Deploys the local version to heroku
+heroku/manual-deploy: HEROKU_API_KEY?=`heroku auth:token`
+heroku/manual-deploy: require-HEROKU_APP_NAME heroku/confirm-manual-deploy heroku/build-and-push heroku/release
+
+heroku/confirm-manual-deploy:
+ 	@printf "This will deploy your local working copy to $(HEROKU_APP_NAME). Continue [y/N]? " && read ans && [ $${ans:-N} = y ]
+
+
 
 
 # -----------------------
@@ -134,7 +140,6 @@ heroku/release: require-HEROKU_APP_NAME require-HEROKU_API_KEY
 devstack-build:
 	@docker build --ssh default .\
 		--target build \
-		--build-arg MIX_ENV=dev \
 		--tag skafolder_tester:latest
 
 ## Stops all development containers

@@ -182,6 +182,19 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   defp configure_endpoint(source_files) do
     source_files
     |> update_files(~w/config dev_config test_config prod_config/a, &remove_endpoint_settings/1)
+    |> update_in(
+      [:prod_config],
+      &ConfigFile.update_endpoint_config(
+        &1,
+        fn config ->
+          Keyword.merge(config,
+            url: [scheme: "https", port: 443],
+            force_ssl: [rewrite_on: [:x_forwarded_proto]],
+            server: true
+          )
+        end
+      )
+    )
     |> update_in([:endpoint], &setup_runtime_endpoint_config/1)
   end
 
