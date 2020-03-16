@@ -8,10 +8,8 @@
 FROM verybigthings/elixir:1.10.2 AS build
 
 ARG WORKDIR=/opt/app
-ARG MIX_ENV=prod
 ARG APP_USER=user
 
-ENV MIX_ENV=${MIX_ENV}
 ENV WORKDIR=$WORKDIR
 ENV APP_USER=$APP_USER
 ENV CACHE_DIR=/opt/cache
@@ -68,11 +66,8 @@ COPY mix.exs mix.lock ./
 COPY config .
 RUN --mount=type=ssh mix do deps.get, deps.compile
 
-# Now we copy the entire project and compile it.
+# Now we copy the entire project and build the OTP release.
 COPY . .
-RUN mix compile
-
-# Build the OTP release
 RUN mix release
 
 ############################################

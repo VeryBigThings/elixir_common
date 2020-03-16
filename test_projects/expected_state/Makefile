@@ -99,14 +99,12 @@ heroku/login: require-HEROKU_API_KEY require-HEROKU_REGISTRY
 heroku/build-web: require-HEROKU_REGISTRY require-HEROKU_APP_NAME
 	@docker build --ssh default .\
 		--target release \
-		--build-arg MIX_ENV=prod \
 		--tag ${HEROKU_REGISTRY}/${HEROKU_APP_NAME}/web
 
 ## Builds the production Docker release phase image
 heroku/build-release: require-HEROKU_REGISTRY require-HEROKU_APP_NAME
 	@docker build --ssh default .\
 		--target release-phase \
-		--build-arg MIX_ENV=prod \
 		--tag ${HEROKU_REGISTRY}/${HEROKU_APP_NAME}/release
 
 ## Push heroku web image to container registry
@@ -142,7 +140,6 @@ heroku/confirm-manual-deploy:
 devstack-build:
 	@docker build --ssh default .\
 		--target build \
-		--build-arg MIX_ENV=dev \
 		--tag skafolder_tester:latest
 
 ## Stops all development containers
