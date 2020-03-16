@@ -7,7 +7,7 @@ jobs:
   build:
     parallelism: 1
     docker:
-      - image: circleci/elixir:1.9
+      - image: verybigthings/elixir:<%= Mix.Vbt.tool_versions().elixir %>
       - image: circleci/postgres:10-alpine-postgis
         environment:
           POSTGRES_USER: "postgres"
