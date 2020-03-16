@@ -2,6 +2,8 @@ defmodule Mix.Vbt do
   @moduledoc false
   require Logger
 
+  @type tool :: :elixir | :erlang | :nodejs | :postgres
+
   @spec otp_app :: atom
   def otp_app, do: Keyword.fetch!(Mix.Project.config(), :app)
 
@@ -17,7 +19,7 @@ defmodule Mix.Vbt do
   @spec app_module_name :: String.t()
   def app_module_name, do: "#{context_module_name()}App"
 
-  @spec tool_versions :: %{tool => Version.t()} when tool: :elixir | :erlang | :nodejs | :postgres
+  @spec tool_versions :: %{tool => Version.t()}
   def tool_versions do
     with nil <- :persistent_term.get({__MODULE__, :tool_versions}, nil) do
       tool_versions = Map.put(compute_latest_tool_versions(), :postgres, Version.parse!("11.2.0"))
