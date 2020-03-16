@@ -18,7 +18,7 @@
 			# heroku
 			.PHONY: set-remote heroku-console heroku-capture-backup heroku-latest.dump import-latest-db \\
 							heroku/login heroku/build-web heroku/build-release heroku/push-web heroku/push-release \\
-							heroku/build-and-push heroku/release
+							heroku/build-and-push heroku/release heroku/manual-deploy heroku/confirm-manual-deploy
 			"""
 		end
 
@@ -141,6 +141,14 @@ heroku/build-and-push: heroku/login heroku/build-web heroku/build-release heroku
 ## Creates a new release on heroku
 heroku/release: require-HEROKU_APP_NAME require-HEROKU_API_KEY
 	@HEROKU_API_KEY=$(HEROKU_API_KEY) heroku container:release web release -a $(HEROKU_APP_NAME)
+
+## Deploys the local version to heroku
+heroku/manual-deploy: HEROKU_API_KEY?=`heroku auth:token`
+heroku/manual-deploy: require-HEROKU_APP_NAME heroku/confirm-manual-deploy heroku/build-and-push heroku/release
+
+heroku/confirm-manual-deploy:
+ 	@printf "This will deploy your local working copy to $(HEROKU_APP_NAME). Continue [y/N]? " && read ans && [ $${ans:-N} = y ]
+
 <% end %>
 
 <%= if docker do %>
