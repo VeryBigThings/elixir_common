@@ -74,7 +74,7 @@ jobs:
             - tmp/skafolder_tester/_build
   update_docs:
     docker:
-      - image: verybigthings/elixir:1.9
+      - image: verybigthings/elixir:1.10
     working_directory: ~/app
     steps:
       - checkout
