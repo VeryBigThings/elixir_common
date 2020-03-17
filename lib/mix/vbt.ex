@@ -106,9 +106,15 @@ defmodule Mix.Vbt do
       |> Regex.named_captures(dockerfile("c0b/docker-elixir", elixir_major_minor_version))
       |> Map.fetch!("erlang_major_version")
 
-    ~r/OTP_VERSION="(?<erlang_version>\d+\.\d+\.\d+)"/
+    ~r/OTP_VERSION="(?<erlang_version>\d+\.\d+(\.\d+)?)"/
     |> Regex.named_captures(dockerfile("erlang/docker-erlang-otp", erlang_major_version))
     |> Map.fetch!("erlang_version")
+    |> String.split(".")
+    |> case do
+      [major, minor] -> [major, minor, 0]
+      [_major, _minor, _patch] = version -> version
+    end
+    |> Enum.join(".")
   end
 
   defp nodejs_version(elixir_major_minor_version) do
