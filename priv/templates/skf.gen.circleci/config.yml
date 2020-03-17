@@ -8,7 +8,7 @@ jobs:
     parallelism: 1
     docker:
       - image: verybigthings/elixir:<%= Mix.Vbt.tool_versions().elixir %>
-      - image: circleci/postgres:<%= Mix.Vbt.tool_versions().postgres.major %>.<%= Mix.Vbt.tool_versions().postgres.minor %>-alpine-postgis
+      - image: circleci/postgres:<%= Mix.Vbt.tool_versions().postgres.major %>.<%= Mix.Vbt.tool_versions().postgres.minor %>-postgis
         environment:
           POSTGRES_USER: "postgres"
           POSTGRES_DB: "<%= app %>_test"

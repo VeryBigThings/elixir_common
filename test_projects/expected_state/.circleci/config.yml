@@ -8,7 +8,7 @@ jobs:
     parallelism: 1
     docker:
       - image: verybigthings/elixir:1.10.2
-      - image: circleci/postgres:12.2-alpine-postgis
+      - image: circleci/postgres:12.2-postgis
         environment:
           POSTGRES_USER: "postgres"
           POSTGRES_DB: "skafolder_tester_test"
