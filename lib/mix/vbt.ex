@@ -22,7 +22,7 @@ defmodule Mix.Vbt do
   @spec tool_versions :: %{tool => Version.t()}
   def tool_versions do
     with nil <- :persistent_term.get({__MODULE__, :tool_versions}, nil) do
-      tool_versions = Map.put(compute_latest_tool_versions(), :postgres, Version.parse!("11.2.0"))
+      tool_versions = Map.put(compute_latest_tool_versions(), :postgres, Version.parse!("12.2.0"))
       :persistent_term.put({__MODULE__, :tool_versions}, tool_versions)
       tool_versions
     end
