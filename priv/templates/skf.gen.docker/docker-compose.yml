@@ -21,7 +21,7 @@ services:
       nofile: 1024
       nproc: 63090
   db:
-    image: "postgres:11.2-alpine"
+    image: "postgres:<%= Mix.Vbt.tool_versions().postgres.major %>.<%= Mix.Vbt.tool_versions().postgres.minor %>-alpine"
     volumes:
         - db:/var/lib/postgresql/data
     ports:

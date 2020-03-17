@@ -5,7 +5,7 @@
 # ===========================================================
 # Used for development purposes and as a base for pre-release
 
-FROM verybigthings/elixir:1.10.2 AS build
+FROM verybigthings/elixir:<%= Mix.Vbt.tool_versions().elixir %> AS build
 
 ARG WORKDIR=/opt/app
 ARG APP_USER=user

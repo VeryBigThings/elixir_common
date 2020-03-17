@@ -60,6 +60,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       source_files.mix,
       fn mix_file ->
         mix_file
+        |> adapt_min_elixir_version()
         |> setup_aliases()
         |> setup_preferred_cli_env()
         |> setup_dialyzer()
@@ -74,6 +75,16 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
           )
         )
       end
+    )
+  end
+
+  defp adapt_min_elixir_version(mix_file) do
+    elixir = Mix.Vbt.tool_versions().elixir
+
+    Map.update!(
+      mix_file,
+      :content,
+      &String.replace(&1, ~r/elixir: ".*"/, ~s/elixir: "~> #{elixir.major}.#{elixir.minor}"/)
     )
   end
 
