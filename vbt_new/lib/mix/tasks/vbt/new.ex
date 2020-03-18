@@ -14,13 +14,14 @@ defmodule Mix.Tasks.Vbt.New do
   alias Mix.Vbt.{MixFile, SourceFile}
 
   def run(args) do
+    project_folder = project_folder!(args)
+
     Application.ensure_all_started(:inets)
     Application.ensure_all_started(:ssl)
 
     Mix.Task.run("archive.install", ["hex", "phx_new", "~> 1.4", "--force"])
     Mix.Task.run("phx.new", args)
 
-    project_folder = project_folder!(args)
     add_vbt_dep(project_folder)
     bootstrap_project(project_folder)
   end
