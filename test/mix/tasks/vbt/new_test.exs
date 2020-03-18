@@ -1,23 +1,26 @@
-defmodule VBT.Integration.SkafolderTest do
-  use ExUnit.Case, async: true
-  require Bitwise
-
-  @moduletag :integration
+defmodule Mix.Tasks.Vbt.NewTest do
+  use ExUnit.Case, async: false
 
   @tag timeout: :timer.minutes(3)
-  test "vbt.bootstrap" do
-    initialize_project()
-
+  test "mix.vbt.new" do
     # hardcoding the generated secret key to ensure reproducible output
     System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
-    assert {output, 0} = mix(~w/vbt.bootstrap --force/)
-    refute output =~ "Error fetching latest tool versions"
 
-    # fetch new deps injected by bootstrap
-    assert {_output, 0} = mix(~w/deps.get/)
+    output =
+      instrument_mix_shell(fn ->
+        # Response to fetch deps question by phx.new. We won't fetch deps immediately, since this is
+        # done automatically by the `vbt.new` task.
+        send(self(), {:mix_shell_input, :yes?, false})
 
-    # make sure that the project can be compiled after the changes have been applied
-    assert {_output, 0} = mix(~w/compile --warnings-as-errors/)
+        File.rm_rf(build_path())
+
+        # capturing stderr to suppress mix warning when this project's mix module is reloaded
+        ExUnit.CaptureIO.capture_io(:stderr, fn ->
+          Mix.Tasks.Vbt.New.run(~w/#{build_path()} --no-html --no-webpack/)
+        end)
+      end)
+
+    refute output.error =~ "Error fetching latest tool versions"
 
     with {:error, differences} <- differences() do
       if System.get_env("SYNC_BOOTSTRAP_TEST", "false") != "true" do
@@ -33,12 +36,28 @@ defmodule VBT.Integration.SkafolderTest do
     end
   end
 
-  defp initialize_project do
-    File.mkdir_p!(build_path())
-    File.rm_rf(Path.join([build_path(), "lib"]))
-    File.cp_r!(source_path(), build_path())
-    mix!(~w/deps.get/)
-    mix!(~w/compile/)
+  defp instrument_mix_shell(fun) do
+    current_shell = Mix.shell()
+    Mix.shell(Mix.Shell.Process)
+
+    try do
+      fun.()
+
+      # collect output messages
+      Stream.repeatedly(fn ->
+        receive do
+          {:mix_shell, :info, msg} -> {:info, msg}
+          {:mix_shell, :error, msg} -> {:error, msg}
+        after
+          0 -> nil
+        end
+      end)
+      |> Stream.take_while(&(not is_nil(&1)))
+      |> Enum.group_by(fn {type, _msg} -> type end, fn {_type, msg} -> msg end)
+      |> Enum.into(%{info: "", error: ""}, fn {key, messages} -> {key, to_string(messages)} end)
+    after
+      Mix.shell(current_shell)
+    end
   end
 
   defp differences do
@@ -53,10 +72,10 @@ defmodule VBT.Integration.SkafolderTest do
       |> MapSet.intersection(output_files)
       |> Stream.filter(fn file ->
         output_path = Path.join(build_path(), file)
-        output_content = File.read!(output_path)
+        output_content = normalize_content(File.read!(output_path))
 
         expected_path = Path.join(expected_path(), file)
-        expected_content = File.read!(expected_path)
+        expected_content = normalize_content(File.read!(expected_path))
 
         output_content != expected_content or not same_mode?(output_path, expected_path)
       end)
@@ -65,6 +84,11 @@ defmodule VBT.Integration.SkafolderTest do
     if Enum.all?([missing, unexpected, changed], &Enum.empty?/1),
       do: :ok,
       else: {:error, %{missing: missing, unexpected: unexpected, changed: changed}}
+  end
+
+  defp normalize_content(content) do
+    # removes `signing_salt: "random stuff"` to avoid false positives
+    String.replace(content, ~r/signing_salt: ".*"/, "")
   end
 
   defp same_mode?(file1, file2) do
@@ -122,14 +146,6 @@ defmodule VBT.Integration.SkafolderTest do
     File.cp!(source, destination)
   end
 
-  defp mix!(args) do
-    {output, 0} = mix(args)
-    output
-  end
-
-  defp mix(args), do: System.cmd("mix", args, stderr_to_stdout: true, cd: build_path())
-
-  defp source_path, do: Path.join(~w/test_projects skafolder_tester/)
   defp build_path, do: Path.join(~w/tmp skafolder_tester/)
   defp expected_path, do: Path.join(~w/test_projects expected_state/)
 end

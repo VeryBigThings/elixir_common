@@ -1,6 +1,5 @@
 defmodule Mix.Vbt do
   @moduledoc false
-  require Logger
 
   @type tool :: :elixir | :erlang | :nodejs | :postgres
 
@@ -53,7 +52,7 @@ defmodule Mix.Vbt do
     Enum.into(get_latest_versions!(), %{}, fn {key, version} -> {key, Version.parse!(version)} end)
   catch
     _, _ ->
-      Logger.warn("""
+      Mix.shell().error("""
 
       Error fetching latest tool versions, using default versions instead.
 
