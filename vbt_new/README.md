@@ -1,21 +1,7 @@
 # VbtNew
 
-**TODO: Add description**
+This project powers the `vbt.new` mix task.
 
-## Installation
+If you want to manually test this task, simply invoke `mix vbt.new` from this project's folder. Note that the entire task is tested via `mix test`. The first test run will take about 90 seconds, but subsequent runs will have a fairly reasonable time of about 5 seconds.
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `vbt_new` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:vbt_new, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/vbt_new](https://hexdocs.pm/vbt_new).
-
+Since this project generates a mix archive, you shouldn't add any runtime dependencies to the project (compile-time dependencies are fine).
