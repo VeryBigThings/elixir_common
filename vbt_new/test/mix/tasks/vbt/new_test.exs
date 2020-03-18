@@ -36,6 +36,12 @@ defmodule Mix.Tasks.Vbt.NewTest do
         """)
       end
     end
+
+    assert {_output, 0} =
+             System.cmd("mix", ["do", "deps.get,", "compile"],
+               cd: build_path(),
+               stderr_to_stdout: true
+             )
   end
 
   defp instrument_mix_shell(fun) do
