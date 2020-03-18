@@ -22,8 +22,6 @@ defmodule VbtNew.MixProject do
 
   defp deps do
     [
-      {:httpoison, "~> 1.0"},
-      {:jason, "~> 1.1"},
       {:vbt, path: "..", only: [:dev, :test], runtime: false}
     ]
   end
@@ -38,7 +36,7 @@ defmodule VbtNew.MixProject do
 
   defp dialyzer do
     [
-      plt_add_apps: ~w/mix eex/a
+      plt_add_apps: ~w/mix eex inets ssl/a
     ]
   end
 

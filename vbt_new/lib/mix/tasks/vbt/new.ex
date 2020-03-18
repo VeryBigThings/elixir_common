@@ -14,6 +14,9 @@ defmodule Mix.Tasks.Vbt.New do
   alias Mix.Vbt.{MixFile, SourceFile}
 
   def run(args) do
+    Application.ensure_all_started(:inets)
+    Application.ensure_all_started(:ssl)
+
     Mix.Task.run("archive.install", ["hex", "phx_new", "~> 1.4", "--force"])
     Mix.Task.run("phx.new", args)
 

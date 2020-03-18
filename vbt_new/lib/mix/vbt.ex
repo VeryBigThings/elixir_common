@@ -108,12 +108,12 @@ defmodule Mix.Vbt do
   end
 
   defp elixir_major_minor_version do
-    %HTTPoison.Response{status_code: 200, body: body} =
-      HTTPoison.get!("https://api.github.com/repos/verybigthings/dockerfiles/contents/elixir")
+    dockerfiles_content =
+      http_get!("https://api.github.com/repos/verybigthings/dockerfiles/contents/elixir")
 
-    body
-    |> Jason.decode!()
-    |> Enum.map(&Map.fetch!(&1, "name"))
+    # need to manually parse the json because archive can't depend on 3rd party apps
+    Regex.scan(~r/"name":"(.+?)"/, dockerfiles_content)
+    |> Enum.map(fn [_, version] -> version end)
     |> Enum.sort_by(
       &(&1
         |> String.split(".")
@@ -154,10 +154,13 @@ defmodule Mix.Vbt do
     |> Map.fetch!("nodejs_version")
   end
 
-  defp dockerfile(repo, path) do
-    %HTTPoison.Response{status_code: 200, body: dockerfile} =
-      HTTPoison.get!("https://raw.githubusercontent.com/#{repo}/master/#{path}/Dockerfile")
+  defp dockerfile(repo, path),
+    do: http_get!("https://raw.githubusercontent.com/#{repo}/master/#{path}/Dockerfile")
 
-    dockerfile
+  defp http_get!(url) do
+    {:ok, {{_, 200, _}, _headers, response}} =
+      :httpc.request(:get, {to_charlist(url), [{'User-Agent', 'vbt_new'}]}, [], [])
+
+    to_string(response)
   end
 end
