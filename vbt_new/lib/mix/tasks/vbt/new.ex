@@ -1,4 +1,13 @@
 defmodule Mix.Tasks.Vbt.New do
+  @shortdoc "Generates a new VBT project"
+
+  @moduledoc """
+  #{@shortdoc}
+
+  The task internally invokes `phx.new`, and therefore accepts the same options. However, you must
+  provide the project folder as the first argument to this task, before other switches.
+  """
+
   use Mix.Task
   alias Mix.Vbt.{MixFile, SourceFile}
 
