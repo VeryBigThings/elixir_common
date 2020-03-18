@@ -112,6 +112,7 @@ jobs:
       - run:
           name: "Run tests in vbt_new"
           command: cd vbt_new && mix test
+
   update_docs:
     docker:
       - image: verybigthings/elixir:1.10
@@ -136,6 +137,30 @@ jobs:
       - run:
           name: "Update docs"
           command: aws s3 sync --acl public-read --delete --region us-east-1 ./doc/ s3://vbt-common-docs/
+
+  deploy_mix_new_archive:
+    docker:
+      - image: verybigthings/elixir:1.10
+    working_directory: ~/app
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - restore_cache:
+          key: '{{ .Environment.CACHE_VERSION}}-vbt_new-mix-cache-{{ .Branch }}-{{ checksum "vbt_new/mix.lock" }}'
+      - run:
+          name: "Install awscli"
+          command: apt-get update && apt-get install -y make awscli
+      - run:
+          name: "Get deps"
+          command: cd vbt_new && mix deps.get
+      - run:
+          name: "Build archive"
+          command: cd vbt_new && mix archive.build
+      - run:
+          name: "Push archive to s3"
+          command: aws s3 cp --acl public-read --region us-east-1 ./vbt_new/vbt_new-0.1.0.ez s3://vbt-common-docs/vbt_new.ez
+
 workflows:
   version: 2
   build_feature:
@@ -146,6 +171,11 @@ workflows:
               ignore:
                 - /^WIP\/.*/
       - update_docs:
+          filters:
+            branches:
+              only:
+                - master
+      - deploy_mix_new_archive:
           filters:
             branches:
               only:
