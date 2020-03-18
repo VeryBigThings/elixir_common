@@ -46,7 +46,7 @@ defmodule Mix.Tasks.Vbt.New do
   end
 
   defp bootstrap_project(project_folder) do
-    %{name: name, file: file} = Mix.Project.pop()
+    project = Mix.Project.pop()
 
     try do
       app = project_folder |> Path.basename() |> String.to_atom()
@@ -56,7 +56,7 @@ defmodule Mix.Tasks.Vbt.New do
              do: Mix.Task.run("vbt.bootstrap", ~w/--force/)
       end)
     after
-      Mix.Project.push(name, file)
+      with %{name: name, file: file} <- project, do: Mix.Project.push(name, file)
     end
   end
 end
