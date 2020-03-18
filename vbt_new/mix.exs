@@ -9,7 +9,8 @@ defmodule VbtNew.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       preferred_cli_env: preferred_cli_env(),
-      dialyzer: dialyzer()
+      dialyzer: dialyzer(),
+      aliases: aliases()
     ]
   end
 
@@ -30,13 +31,20 @@ defmodule VbtNew.MixProject do
   defp preferred_cli_env do
     [
       credo: :test,
-      dialyzer: :test
+      dialyzer: :test,
+      "archive.build": :prod
     ]
   end
 
-  defp dialyzer() do
+  defp dialyzer do
     [
       plt_add_apps: ~w/mix eex/a
+    ]
+  end
+
+  defp aliases do
+    [
+      "archive.build": ["compile", "archive.build --include-dot-files"]
     ]
   end
 end
