@@ -14,16 +14,39 @@ defmodule Mix.Tasks.Vbt.New do
   alias Mix.Vbt.{MixFile, SourceFile}
 
   def run(args) do
-    project_folder = project_folder!(args)
-
     Application.ensure_all_started(:inets)
     Application.ensure_all_started(:ssl)
 
+    project_folder = project_folder!(args)
+    if File.exists?(project_folder), do: Mix.raise("folder already exists")
+
     Mix.Task.run("archive.install", ["hex", "phx_new", "~> 1.4", "--force"])
-    Mix.Task.run("phx.new", args)
+
+    current_shell = Mix.shell()
+    Mix.shell(Mix.Shell.Process)
+
+    try do
+      # We'll respond to "fetch deps?" question by phx.new with no.
+      # We won't fetch deps now, because after bootstrapper adds its own changes, deps need to
+      # be refetched again, and fetching deps before that happens leads to a dep conflict.
+      send(self(), {:mix_shell_input, :yes?, false})
+
+      Mix.Task.run("phx.new", args)
+    after
+      Mix.shell(current_shell)
+    end
 
     add_vbt_dep(project_folder)
     bootstrap_project(project_folder)
+
+    Mix.shell().info("""
+
+    The project has been bootstrapped 🎉
+
+    Switch to `#{project_folder}`, invoke `asdf install` and `mix deps.get`.
+    If you didn't provide the `--no-webpack` option, you also need to install
+    npm dependencies with `pushd assets && npm install && popd`.
+    """)
   end
 
   defp project_folder!(args) do
@@ -56,8 +79,7 @@ defmodule Mix.Tasks.Vbt.New do
       app = project_folder |> Path.basename() |> String.to_atom()
 
       Mix.Project.in_project(app, project_folder, [], fn _module ->
-        with :ok <- Mix.Task.run("deps.get"),
-             do: Mix.Task.run("vbt.bootstrap", ~w/--force/)
+        Mix.Task.run("vbt.bootstrap", ~w/--force/)
       end)
     after
       with %{name: name, file: file} <- project, do: Mix.Project.push(name, file)
