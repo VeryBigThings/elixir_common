@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Vbt.NewTest do
   use ExUnit.Case, async: false
 
+  alias Mix.Tasks.Vbt.New
+
   @tag timeout: :timer.minutes(3)
   test "mix.vbt.new" do
     # hardcoding the generated secret key to ensure reproducible output
@@ -16,7 +18,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
 
         # capturing stderr to suppress mix warning when this project's mix module is reloaded
         ExUnit.CaptureIO.capture_io(:stderr, fn ->
-          Mix.Tasks.Vbt.New.run(~w/#{build_path()} --no-html --no-webpack/)
+          New.run(~w/#{build_path()} --no-html --no-webpack/)
         end)
       end)
 

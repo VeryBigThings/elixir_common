@@ -8,6 +8,8 @@ defmodule Mix.Tasks.Vbt.New do
   provide the project folder as the first argument to this task, before other switches.
   """
 
+  # credo:disable-for-this-file Credo.Check.Readability.Specs
+
   use Mix.Task
   alias Mix.Vbt.{MixFile, SourceFile}
 
