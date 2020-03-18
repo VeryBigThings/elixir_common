@@ -8,20 +8,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
     # hardcoding the generated secret key to ensure reproducible output
     System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
 
-    output =
-      instrument_mix_shell(fn ->
-        # Response to fetch deps question by phx.new. We won't fetch deps immediately, since this is
-        # done automatically by the `vbt.new` task.
-        send(self(), {:mix_shell_input, :yes?, false})
-
-        File.rm_rf(build_path())
-
-        # capturing stderr to suppress mix warning when this project's mix module is reloaded
-        ExUnit.CaptureIO.capture_io(:stderr, fn ->
-          New.run(~w/#{build_path()} --no-html --no-webpack/)
-        end)
-      end)
-
+    output = bootstrap_project()
     refute output.error =~ "Error fetching latest tool versions"
 
     with {:error, differences} <- differences() do
@@ -42,6 +29,36 @@ defmodule Mix.Tasks.Vbt.NewTest do
                cd: build_path(),
                stderr_to_stdout: true
              )
+  end
+
+  defp bootstrap_project do
+    instrument_mix_shell(fn ->
+      # Response to fetch deps question by phx.new. We won't fetch deps immediately, since this is
+      # done automatically by the `vbt.new` task.
+      send(self(), {:mix_shell_input, :yes?, false})
+
+      # Naive caching: if the folder already exists, we'll rename it into a temp folder, and
+      # once the test project is bootstrapped, we'll copy over the existing _build and deps
+      if File.exists?(build_path()) do
+        File.rm_rf(tmp_path())
+        File.rename!(build_path(), tmp_path())
+      end
+
+      # capturing stderr to suppress mix warning when this project's mix module is reloaded
+      ExUnit.CaptureIO.capture_io(:stderr, fn ->
+        New.run(~w/#{build_path()} --no-html --no-webpack/)
+      end)
+
+      # Naive caching continued: copy deps & _build from the previous build
+      if File.exists?(tmp_path()) do
+        Enum.each(
+          ~w/deps _build/,
+          &File.cp_r(Path.join(tmp_path(), &1), Path.join(build_path(), &1))
+        )
+
+        File.rm_rf(tmp_path())
+      end
+    end)
   end
 
   defp instrument_mix_shell(fun) do
@@ -155,5 +172,6 @@ defmodule Mix.Tasks.Vbt.NewTest do
   end
 
   defp build_path, do: Path.join(~w/tmp skafolder_tester/)
+  defp tmp_path, do: Path.join(~w/tmp skafolder_tester_tmp/)
   defp expected_path, do: Path.join(~w/test_projects expected_state/)
 end

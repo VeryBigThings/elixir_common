@@ -77,11 +77,6 @@ jobs:
       - run:
           name: "Compile project in vbt_new"
           command: cd vbt_new && mix compile --warnings-as-errors
-      - save_cache:
-          key: '{{ .Environment.CACHE_VERSION}}-vbt_new-mix-cache-{{ .Branch }}-{{ checksum "vbt_new/mix.lock" }}'
-          paths:
-            - vbt_new/deps
-            - vbt_new/_build
       - run:
           name: "Run linter checks in vbt_new"
           command: cd vbt_new && mix credo --strict
@@ -112,6 +107,12 @@ jobs:
       - run:
           name: "Run tests in vbt_new"
           command: cd vbt_new && mix test
+      - save_cache:
+          key: '{{ .Environment.CACHE_VERSION}}-vbt_new-mix-cache-{{ .Branch }}-{{ checksum "vbt_new/mix.lock" }}'
+          paths:
+            - vbt_new/deps
+            - vbt_new/_build
+            - vbt_new/tmp
 
   update_docs:
     docker:
@@ -123,8 +124,6 @@ jobs:
       - run: mix local.rebar --force
       - restore_cache:
           key: '{{ .Environment.CACHE_VERSION}}-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}'
-      - restore_cache:
-          key: '{{ .Environment.CACHE_VERSION}}-skafolder-tester-cache-{{ .Branch }}-{{ checksum "test_projects/skafolder_tester/mix.lock" }}'
       - run:
           name: "Install awscli"
           command: apt-get update && apt-get install -y make awscli
