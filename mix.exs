@@ -1,4 +1,4 @@
-defmodule VBT.Credo.MixProject do
+defmodule VBT.MixProject do
   use Mix.Project
 
   def project do
