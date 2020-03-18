@@ -31,17 +31,17 @@ defmodule Mix.Tasks.Vbt.New do
     end
   end
 
-  defp add_vbt_dep(project_folder) do
-    vbt_dep =
-      case Mix.env() do
-        :prod -> ~s(git: "git@github.com:VeryBigThings/elixir_common_private")
-        :test -> ~s(path: "../../..")
-        :dev -> ~s(path: "#{File.cwd!()}")
-      end
+  vbt_dep =
+    case Mix.env() do
+      :prod -> ~s(git: "git@github.com:VeryBigThings/elixir_common_private")
+      :test -> ~s(path: "../../..")
+      :dev -> ~s(path: "#{File.cwd!()}")
+    end
 
+  defp add_vbt_dep(project_folder) do
     Path.join(project_folder, "mix.exs")
     |> SourceFile.load!()
-    |> MixFile.append_config("deps", "{:vbt, #{vbt_dep}}")
+    |> MixFile.append_config("deps", "{:vbt, #{unquote(vbt_dep)}}")
     |> SourceFile.store!()
   end
 
