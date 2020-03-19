@@ -24,6 +24,8 @@ defmodule VBT.GraphqlServer do
     @moduledoc false
     use Absinthe.Schema
 
+    import_types VBT.Graphql.Scalars
+
     query do
       field :order, :order do
         arg :id, non_null(:integer)
@@ -44,6 +46,22 @@ defmodule VBT.GraphqlServer do
 
         resolve fn arg, resolution ->
           VBT.Auth.verify(resolution, "some_salt", arg.max_age || 100)
+        end
+      end
+
+      field :datetime_usec, :datetime_usec_result do
+        arg :value, :datetime_usec
+
+        resolve fn arg, _ ->
+          decoded = arg.value |> :erlang.term_to_binary() |> Base.encode64()
+
+          {:ok,
+           %{
+             decoded: decoded,
+             encoded: arg.value,
+             encoded_msec: arg.value && DateTime.truncate(arg.value, :millisecond),
+             encoded_sec: arg.value && DateTime.truncate(arg.value, :second)
+           }}
         end
       end
     end
@@ -72,6 +90,13 @@ defmodule VBT.GraphqlServer do
     object :order_item do
       field :product_name, non_null(:string)
       field :quantity, non_null(:integer)
+    end
+
+    object :datetime_usec_result do
+      field :decoded, :string
+      field :encoded, :datetime_usec
+      field :encoded_msec, :datetime_usec
+      field :encoded_sec, :datetime_usec
     end
 
     defp order_item(id), do: %{product_name: "product #{id}", quantity: id}
