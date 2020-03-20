@@ -114,4 +114,3 @@ defmodule SkafolderTesterApp.Release do
 
   defp repos, do: Application.fetch_env!(@app, :ecto_repos)
 end
-
