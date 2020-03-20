@@ -24,11 +24,13 @@ defmodule Mix.Tasks.Vbt.NewTest do
       end
     end
 
-    assert {_output, 0} =
-             System.cmd("mix", ["do", "deps.get,", "compile"],
-               cd: build_path(),
-               stderr_to_stdout: true
-             )
+    case System.cmd("mix", ["do", "deps.get,", "compile,", "credo", "--strict"],
+           cd: build_path(),
+           stderr_to_stdout: true
+         ) do
+      {_output, 0} -> :ok
+      {output, _error} -> flunk("Error running standard checks. Output:\n\n#{output}")
+    end
   end
 
   defp bootstrap_project do
