@@ -27,7 +27,11 @@
 
         # disabled checks
         {Credo.Check.Design.TagTODO, false},
-        {Credo.Check.Readability.ModuleDoc, false}
+        {Credo.Check.Readability.ModuleDoc, false},
+
+        # obsolete checks
+        {Credo.Check.Refactor.MapInto, false},
+        {Credo.Check.Warning.LazyLogging, false}
       ]
     }
   ]
