@@ -6,10 +6,17 @@ In addition, this library contains Credo checks which are specific to the VBT de
 
 ## Project scaffolding
 
-This library also contains various mix tasks which allows you to scaffold standard configuration files for Elixir projects such as:
+First, make sure that your system-wide Elixir version is 1.10 or higher. If you're using asdf, check the contents of `~/.tool-versions`.
 
-- Makefile
-- Docker config, such as Dockerfile, docker-compose.yml, etc.
-- Heroku config, such as Procfile, heroku.yml, etc.
+Next, install the most recent version of the scaffolder:
 
-To scaffold all supported configuration files, invoke `mix vbt.bootstrap` from the project folder. If you want to scaffold individual files (for example only Docker configuration), you can invoke individual tasks. You can find the list of available tasks by invoking `mix help --search vbt.gen`.
+```
+wget -q https://vbt-common-docs.s3.amazonaws.com/vbt_new.ez -O /tmp/vbt_new.ez && \
+  mix archive.install --force /tmp/vbt_new.ez
+```
+
+Run the previous command even if the scaffolder is already installed, because its code changes frequently.
+
+Now you can create the project with `mix vbt.new my_new_project --no-webpack --no-html`
+
+The source code of the scaffolder is in the `vbt_new` folder.

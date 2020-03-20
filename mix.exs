@@ -1,4 +1,4 @@
-defmodule VBT.Credo.MixProject do
+defmodule VBT.MixProject do
   use Mix.Project
 
   def project do
@@ -39,7 +39,6 @@ defmodule VBT.Credo.MixProject do
       {:ecto, "~> 3.0"},
       {:ex_aws, "~> 2.1"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
-      {:httpoison, "~> 1.0"},
       {:oban, "~> 1.0"},
       {:parent, "~> 0.8"},
       {:phoenix_html, "~> 2.0"},
