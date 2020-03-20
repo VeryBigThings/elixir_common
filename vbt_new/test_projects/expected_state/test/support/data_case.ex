@@ -1,3 +1,6 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
+# credo:disable-for-this-file Credo.Check.Design.AliasUsage
+
 defmodule SkafolderTester.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring

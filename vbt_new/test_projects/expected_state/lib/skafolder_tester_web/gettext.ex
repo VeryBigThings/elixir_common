@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
+
 defmodule SkafolderTesterWeb.Gettext do
   @moduledoc """
   A module providing Internationalization with a gettext-based API.

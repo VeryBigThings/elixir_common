@@ -36,6 +36,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> store_source_files!()
 
     File.rm(Path.join(~w/config prod.secret.exs/))
+
+    disable_credo_checks()
   end
 
   defp adapt_gitignore(source_files) do
@@ -184,6 +186,46 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         ""
       )
     )
+  end
+
+  defp disable_credo_checks do
+    # We don't check for specs in views, controllers, channels, and resolvers, because specs aren't
+    # useful there, and they add some noise.
+    Enum.each(
+      Path.wildcard("lib/#{Mix.Vbt.otp_app()}_web/**/*.ex"),
+      &disable_credo_checks(&1, ["Credo.Check.Readability.Specs"])
+    )
+
+    # Same reasoning for the app file.
+    disable_credo_checks("lib/#{Mix.Vbt.otp_app()}_app.ex", ~w/Credo.Check.Readability.Specs/)
+
+    # Some helper files created by phx.new violate these checks, so we'll disable them. This is
+    # not the code we'll edit, so disabling these checks is fine here.
+    disable_credo_checks("lib/#{Mix.Vbt.otp_app()}_web.ex", ~w/
+      Credo.Check.Readability.AliasAs
+      VBT.Credo.Check.Consistency.ModuleLayout
+    /)
+
+    disable_credo_checks("test/support/conn_case.ex", ~w/
+      Credo.Check.Readability.AliasAs
+      Credo.Check.Design.AliasUsage
+    /)
+
+    disable_credo_checks("test/support/data_case.ex", ~w/
+      Credo.Check.Design.AliasUsage
+      Credo.Check.Readability.Specs
+    /)
+
+    disable_credo_checks("test/support/channel_case.ex", ~w/Credo.Check.Design.AliasUsage/)
+  end
+
+  defp disable_credo_checks(file, checks) do
+    checks
+    |> Enum.reduce(
+      file |> SourceFile.load!() |> SourceFile.prepend("\n"),
+      &SourceFile.prepend(&2, "# credo:disable-for-this-file #{&1}\n")
+    )
+    |> SourceFile.store!()
   end
 
   # ------------------------------------------------------------------------

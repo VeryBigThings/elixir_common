@@ -39,6 +39,9 @@ defmodule Mix.Vbt.SourceFile do
   @spec append(t, String.t()) :: t
   def append(file, extra_content), do: update_in(file.content, &(&1 <> extra_content))
 
+  @spec prepend(t, String.t()) :: t
+  def prepend(file, extra_content), do: update_in(file.content, &(extra_content <> &1))
+
   defp format(%{format?: false} = file), do: file.content
 
   defp format(file) do

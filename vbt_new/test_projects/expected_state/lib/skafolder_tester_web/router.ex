@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
+
 defmodule SkafolderTesterWeb.Router do
   use SkafolderTesterWeb, :router
 
@@ -6,6 +8,6 @@ defmodule SkafolderTesterWeb.Router do
   end
 
   scope "/api", SkafolderTesterWeb do
-    pipe_through :api
+    pipe_through(:api)
   end
 end

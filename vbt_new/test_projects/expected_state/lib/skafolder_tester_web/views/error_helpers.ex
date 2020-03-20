@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
+
 defmodule SkafolderTesterWeb.ErrorHelpers do
   @moduledoc """
   Conveniences for translating and building error messages.

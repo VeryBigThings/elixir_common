@@ -1,3 +1,6 @@
+# credo:disable-for-this-file Credo.Check.Design.AliasUsage
+# credo:disable-for-this-file Credo.Check.Readability.AliasAs
+
 defmodule SkafolderTesterWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by

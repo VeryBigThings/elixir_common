@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
+
 defmodule SkafolderTesterApp do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications

@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
+
 defmodule SkafolderTesterWeb.UserSocket do
   use Phoenix.Socket
 

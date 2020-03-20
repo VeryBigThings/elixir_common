@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
+
 defmodule SkafolderTesterWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :skafolder_tester
 
@@ -7,7 +9,7 @@ defmodule SkafolderTesterWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_skafolder_tester_key",
-    signing_salt: "wYl79sQH"
+    signing_salt: "PAo6kj7/"
   ]
 
   socket "/socket", SkafolderTesterWeb.UserSocket,
