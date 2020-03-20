@@ -26,6 +26,8 @@ defmodule Mix.Tasks.Vbt.NewTest do
 
     System.put_env("MIX_ENV", "test")
 
+    Mix.shell().info("Testing the generated project, this may take awhile...")
+
     case System.cmd("mix", ["do", "deps.get,", "compile,", "credo", "--strict,", "dialyzer"],
            cd: build_path(),
            stderr_to_stdout: true
