@@ -9,6 +9,13 @@ defmodule Mix.Tasks.Vbt.Gen.Dialyzer do
       Mix.raise("mix vbt.gen.dialyzer can only be run inside an application directory")
     end
 
-    Mix.Vbt.generate_file("", "dialyzer.ignore-warnings", args)
+    Mix.Vbt.generate_file(
+      """
+      # subtle problem which happens when no routes are defined
+      lib/phoenix/router.ex
+      """,
+      "dialyzer.ignore-warnings",
+      args
+    )
   end
 end

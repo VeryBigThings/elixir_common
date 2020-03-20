@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
 
   alias Mix.Tasks.Vbt.New
 
-  @tag timeout: :timer.minutes(3)
+  @tag timeout: :timer.minutes(20)
   test "mix.vbt.new" do
     # hardcoding the generated secret key to ensure reproducible output
     System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
@@ -24,7 +24,9 @@ defmodule Mix.Tasks.Vbt.NewTest do
       end
     end
 
-    case System.cmd("mix", ["do", "deps.get,", "compile,", "credo", "--strict"],
+    System.put_env("MIX_ENV", "test")
+
+    case System.cmd("mix", ["do", "deps.get,", "compile,", "credo", "--strict,", "dialyzer"],
            cd: build_path(),
            stderr_to_stdout: true
          ) do
