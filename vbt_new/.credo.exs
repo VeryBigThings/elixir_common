@@ -24,7 +24,6 @@
         {VBT.Credo.Check.Readability.WithPlaceholder, []},
 
         # disabled checks
-        {Credo.Check.Readability.Specs, []},
         {Credo.Check.Design.TagTODO, false},
 
         # obsolete checks
