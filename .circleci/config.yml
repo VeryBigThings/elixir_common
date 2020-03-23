@@ -114,7 +114,7 @@ jobs:
             - vbt_new/_build
             - vbt_new/tmp
 
-  update_docs:
+  release:
     docker:
       - image: verybigthings/elixir:1.10
     working_directory: ~/app
@@ -122,6 +122,8 @@ jobs:
       - checkout
       - run: mix local.hex --force
       - run: mix local.rebar --force
+
+      # release docs
       - restore_cache:
           key: '{{ .Environment.CACHE_VERSION}}-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}'
       - run:
@@ -134,17 +136,10 @@ jobs:
           name: "Generate docs"
           command: mix docs
       - run:
-          name: "Update docs"
+          name: "Release docs"
           command: aws s3 sync --acl public-read --delete --region us-east-1 ./doc/ s3://vbt-common-docs/
 
-  deploy_mix_new_archive:
-    docker:
-      - image: verybigthings/elixir:1.10
-    working_directory: ~/app
-    steps:
-      - checkout
-      - run: mix local.hex --force
-      - run: mix local.rebar --force
+      # release vbt.new archive
       - restore_cache:
           key: '{{ .Environment.CACHE_VERSION}}-vbt_new-mix-cache-{{ .Branch }}-{{ checksum "vbt_new/mix.lock" }}'
       - run:
@@ -157,7 +152,7 @@ jobs:
           name: "Build archive"
           command: cd vbt_new && mix archive.build
       - run:
-          name: "Push archive to s3"
+          name: "Release archive"
           command: aws s3 cp --acl public-read --region us-east-1 ./vbt_new/vbt_new-0.1.0.ez s3://vbt-common-docs/vbt_new.ez
 
 workflows:
@@ -169,12 +164,7 @@ workflows:
             branches:
               ignore:
                 - /^WIP\/.*/
-      - update_docs:
-          filters:
-            branches:
-              only:
-                - master
-      - deploy_mix_new_archive:
+      - release:
           filters:
             branches:
               only:
