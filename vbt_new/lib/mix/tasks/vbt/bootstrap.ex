@@ -285,6 +285,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> update_in([:config], &add_global_repo_config/1)
     |> update_files([:dev_config, :test_config], &remove_repo_settings/1)
     |> update_in([:repo], &setup_runtime_repo_config/1)
+    |> update_in([:repo, :content], &String.replace(&1, "use Ecto.Repo", "use VBT.Repo"))
   end
 
   defp add_global_repo_config(config) do
