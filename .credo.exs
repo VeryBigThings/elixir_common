@@ -24,7 +24,11 @@
         {VBT.Credo.Check.Readability.WithPlaceholder, []},
 
         # disabled checks
-        {Credo.Check.Design.TagTODO, false}
+        {Credo.Check.Design.TagTODO, false},
+
+        # obsolete checks
+        {Credo.Check.Refactor.MapInto, false},
+        {Credo.Check.Warning.LazyLogging, false}
       ]
     }
   ]
