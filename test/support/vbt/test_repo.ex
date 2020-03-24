@@ -3,7 +3,7 @@ defmodule VBT.TestRepo do
 
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
-  use Ecto.Repo, otp_app: :vbt, adapter: Ecto.Adapters.Postgres
+  use VBT.Repo, otp_app: :vbt, adapter: Ecto.Adapters.Postgres
 
   @doc false
   def init(_type, opts),

@@ -1,5 +1,5 @@
 defmodule SkafolderTester.Repo do
-  use Ecto.Repo,
+  use VBT.Repo,
     otp_app: :skafolder_tester,
     adapter: Ecto.Adapters.Postgres
 
