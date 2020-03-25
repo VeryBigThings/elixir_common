@@ -92,14 +92,14 @@ defmodule Vbt.RepoTest do
     end
   end
 
-  describe "trans" do
+  describe "transact" do
     test "succeeds if the function returns {:ok, result}" do
-      assert {:ok, returned_account} = TestRepo.trans(fn -> {:ok, insert_account!()} end)
+      assert {:ok, returned_account} = TestRepo.transact(fn -> {:ok, insert_account!()} end)
       assert TestRepo.one!(Account) == returned_account
     end
 
     test "accepts arity 1 function as argument" do
-      TestRepo.trans(fn repo ->
+      TestRepo.transact(fn repo ->
         assert repo == TestRepo
         {:ok, nil}
       end)
@@ -111,7 +111,7 @@ defmodule Vbt.RepoTest do
         {:error, :some_reason}
       end
 
-      assert TestRepo.trans(fun) == {:error, :some_reason}
+      assert TestRepo.transact(fun) == {:error, :some_reason}
       assert TestRepo.one(Account) == nil
     end
   end

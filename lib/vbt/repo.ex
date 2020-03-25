@@ -20,7 +20,7 @@ defmodule VBT.Repo do
   - `fetch` - fetch version of `Repo.get`
   - `fetch_by` - fetch version of `Repo.get_by`
   - `fetch_one` - fetch version of `Repo.one`
-  - `trans` - a wrapper around `Repo.transaction` which does auto rollback if the passed lambda
+  - `transact` - a wrapper around `Repo.transaction` which does auto rollback if the passed lambda
     returns `{:error, reason}`
 
   ## Fetch functions
@@ -117,9 +117,9 @@ defmodule VBT.Repo do
       - If the lambda returns any other kind of result, an exception is raised, and the transaction
         is rolled back.
       """
-      @spec trans((() -> result) | (module -> result), Keyword.t()) :: result
+      @spec transact((() -> result) | (module -> result), Keyword.t()) :: result
             when result: {:ok, any} | {:error, any}
-      def trans(fun, opts \\ []) do
+      def transact(fun, opts \\ []) do
         transaction(fn repo ->
           Function.info(fun, :arity)
           |> case do
