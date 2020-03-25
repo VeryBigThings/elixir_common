@@ -92,6 +92,30 @@ defmodule Vbt.RepoTest do
     end
   end
 
+  describe "transact" do
+    test "succeeds if the function returns {:ok, result}" do
+      assert {:ok, returned_account} = TestRepo.transact(fn -> {:ok, insert_account!()} end)
+      assert TestRepo.one!(Account) == returned_account
+    end
+
+    test "accepts arity 1 function as argument" do
+      TestRepo.transact(fn repo ->
+        assert repo == TestRepo
+        {:ok, nil}
+      end)
+    end
+
+    test "rolls back if the function returns {:error, reason}" do
+      fun = fn ->
+        insert_account!()
+        {:error, :some_reason}
+      end
+
+      assert TestRepo.transact(fun) == {:error, :some_reason}
+      assert TestRepo.one(Account) == nil
+    end
+  end
+
   defp insert_account!(data \\ []) do
     data =
       ~w/name email password_hash/a

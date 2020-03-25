@@ -5,19 +5,28 @@ defmodule VBT.Repo do
   See `__using__/1` for details.
   """
 
+  @type trans_fun ::
+          (() -> {:ok, any} | {:error, any})
+          | (module -> {:ok, any} | {:error, any})
+
   @doc """
   Wrapper around `use Ecto.Repo`.
 
   Invoke `use VBT.Repo` instead of `use Ecto.Repo`. This macro will internally invoke
-  `use Ecto.Repo`, passing it the given options. In addition, the macro will generate a few extra
-  fetch functions:
+  `use Ecto.Repo`, passing it the given options.
+
+  In addition, the macro will generate a few extra functions.
 
   - `fetch` - fetch version of `Repo.get`
   - `fetch_by` - fetch version of `Repo.get_by`
   - `fetch_one` - fetch version of `Repo.one`
+  - `transact` - a wrapper around `Repo.transaction` which does auto rollback if the passed lambda
+    returns `{:error, reason}`
 
-  These fetch functions return the result in the form of `{:ok, result} | {:error, reason}` You
-  can control the error reason with the `:tag` and the `:error` options:
+  ## Fetch functions
+
+  The fetch functions return the result in the form of `{:ok, result} | {:error, reason}` You can
+  control the error reason with the `:tag` and the `:error` options:
 
   ```
   iex> Repo.fetch_one(from Account, where: [id: -1])
@@ -93,6 +102,35 @@ defmodule VBT.Repo do
           [] -> {:error, error_message}
           other -> raise Ecto.MultipleResultsError, queryable: queryable, count: length(other)
         end
+      end
+
+      @doc """
+      Runs the given function inside a transaction.
+
+      This function is a wrapper around `Ecto.Repo.transaction`, with the following differences:
+
+      - It accepts only a lambda of arity 0 or 1 (i.e. it doesn't work with multi).
+      - If the lambda returns `{:ok, result}` the transaction is committed, and `{:ok, result}` is
+        returned.
+      - If the lambda returns `{:error, reason}` the transaction is rolled back, and
+        `{:error, reason}` is returned.
+      - If the lambda returns any other kind of result, an exception is raised, and the transaction
+        is rolled back.
+      """
+      @spec transact((() -> result) | (module -> result), Keyword.t()) :: result
+            when result: {:ok, any} | {:error, any}
+      def transact(fun, opts \\ []) do
+        transaction(fn repo ->
+          Function.info(fun, :arity)
+          |> case do
+            {:arity, 0} -> fun.()
+            {:arity, 1} -> fun.(repo)
+          end
+          |> case do
+            {:ok, result} -> result
+            {:error, reason} -> rollback(reason)
+          end
+        end)
       end
     end
   end
