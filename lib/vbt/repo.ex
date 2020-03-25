@@ -110,7 +110,7 @@ defmodule VBT.Repo do
       This function is a wrapper around `Ecto.Repo.transaction`, with the following differences:
 
       - It accepts only a lambda of arity 0 or 1 (i.e. it doesn't work with multi).
-      - If the lambda returns `{:ok, result}` the transcation is committed, and `{:ok, result}` is
+      - If the lambda returns `{:ok, result}` the transaction is committed, and `{:ok, result}` is
         returned.
       - If the lambda returns `{:error, reason}` the transaction is rolled back, and
         `{:error, reason}` is returned.
