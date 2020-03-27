@@ -13,12 +13,18 @@ defmodule Mix.Tasks.Vbt.Gen.FormatterConfig do
       """
       [
         import_deps: [:absinthe, :ecto, :ecto_enum, :ecto_sql, :phoenix],
-        inputs: ["*.{ex,exs}", "priv/*/seeds.exs", "{config,lib,test}/**/*.{ex,exs}"],
-        subdirectories: ["priv/*/migrations"]
+        inputs: [
+          "*.{ex,exs}",
+          "priv/*/seeds.exs",
+          "priv/*/migrations/*.exs",
+          "{config,lib,test}/**/*.{ex,exs}"
+        ]
       ]
       """,
       ".formatter.exs",
       args
     )
+
+    File.rm_rf("priv/repo/migrations/.formatter.exs")
   end
 end
