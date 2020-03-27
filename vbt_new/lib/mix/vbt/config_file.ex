@@ -12,7 +12,7 @@ defmodule Mix.Vbt.ConfigFile do
   def prepend(file, code) do
     update_in(
       file.content,
-      &String.replace(&1, ~r/(?<=use Mix.Config\n)\n/s, "\n#{code}\n")
+      &String.replace(&1, ~r/(?<=use Mix.Config\n)\n/s, "\n#{code}\n\n")
     )
   end
 

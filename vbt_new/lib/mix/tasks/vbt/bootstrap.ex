@@ -232,7 +232,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   defp config_bcrypt(source_files) do
     update_in(
       source_files.test_config,
-      &ConfigFile.prepend(&1, "config :bcrypt_elixir, :log_rounds, 1\n")
+      &ConfigFile.prepend(&1, "config :bcrypt_elixir, :log_rounds, 1")
     )
   end
 
