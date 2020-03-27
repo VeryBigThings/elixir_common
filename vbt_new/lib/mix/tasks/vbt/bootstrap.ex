@@ -33,6 +33,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> configure_repo()
     |> adapt_app_module()
     |> drop_prod_secret()
+    |> config_bcrypt()
     |> store_source_files!()
 
     File.rm(Path.join(~w/config prod.secret.exs/))
@@ -226,6 +227,13 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       &SourceFile.prepend(&2, "# credo:disable-for-this-file #{&1}\n")
     )
     |> SourceFile.store!()
+  end
+
+  defp config_bcrypt(source_files) do
+    update_in(
+      source_files.test_config,
+      &ConfigFile.add_new_config(&1, "config :bcrypt_elixir, :log_rounds, 1\n")
+    )
   end
 
   # ------------------------------------------------------------------------
