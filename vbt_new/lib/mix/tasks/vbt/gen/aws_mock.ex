@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Vbt.Gen.AwsMock do
     |> SourceFile.store!()
 
     SourceFile.load!("config/test.exs")
-    |> ConfigFile.add_new_config("config :vbt, :ex_aws_client, VBT.TestAwsClient\n")
+    |> ConfigFile.prepend("config :vbt, :ex_aws_client, VBT.TestAwsClient\n")
     |> SourceFile.store!()
 
     SourceFile.load!("test/test_helper.exs")

@@ -232,7 +232,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   defp config_bcrypt(source_files) do
     update_in(
       source_files.test_config,
-      &ConfigFile.add_new_config(&1, "config :bcrypt_elixir, :log_rounds, 1\n")
+      &ConfigFile.prepend(&1, "config :bcrypt_elixir, :log_rounds, 1\n")
     )
   end
 
@@ -299,7 +299,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   defp add_global_repo_config(config) do
     config
     |> ConfigFile.update_config(&Keyword.merge(&1, generators: [binary_id: true]))
-    |> ConfigFile.add_new_config("""
+    |> ConfigFile.prepend("""
         config #{inspect(Vbt.otp_app())}, #{inspect(Vbt.repo_module())},
           adapter: Ecto.Adapters.Postgres,
           migration_primary_key: [type: :binary_id],

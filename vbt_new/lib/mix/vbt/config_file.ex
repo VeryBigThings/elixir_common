@@ -8,8 +8,8 @@ defmodule Mix.Vbt.ConfigFile do
   @spec app :: atom
   def app, do: Keyword.fetch!(Mix.Project.config(), :app)
 
-  @spec add_new_config(SourceFile.t(), String.t()) :: SourceFile.t()
-  def add_new_config(file, code) do
+  @spec prepend(SourceFile.t(), String.t()) :: SourceFile.t()
+  def prepend(file, code) do
     update_in(
       file.content,
       &String.replace(&1, ~r/(?<=use Mix.Config\n)\n/s, "\n#{code}\n")
