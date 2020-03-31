@@ -12,13 +12,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       Mix.raise("mix vbt.bootstrap can only be run inside an application directory")
     end
 
-    Enum.each(
-      ~w/tool_versions/,
-      &Mix.Task.run("vbt.gen.#{&1}", args)
-    )
-
     create_from_templates(args)
-
     adapt_code!()
   end
 
