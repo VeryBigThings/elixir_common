@@ -17,6 +17,13 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   end
 
   defp generate_files(args) do
+    # This function will load all .eex which reside under priv/templates, and generate
+    # corresponding files in the client project. The folder structure of the generated files will
+    # match the folder structure inside priv/templates. Each generated file will have the same name
+    # as the source template, minus the .eex suffix. If the template file is executable by the
+    # owner, the generated file will also be executable (only by the owner user). Finally, files
+    # in priv/template which don't have the .eex extension will be ignored.
+
     templates_path = Path.join(~w/#{Application.app_dir(:vbt_new)} priv templates/)
 
     bindings = [
