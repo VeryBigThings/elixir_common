@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     Enum.each(
-      ~w/makefile formatter_config tool_versions aws_mock/,
+      ~w/formatter_config tool_versions aws_mock/,
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 
@@ -29,7 +29,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       app: Mix.Vbt.otp_app(),
       context_folder: to_string(Mix.Vbt.otp_app()),
       app_folder: Macro.underscore(Mix.Vbt.app_module_name()),
-      web_folder: "#{Mix.Vbt.otp_app()}_web"
+      web_folder: "#{Mix.Vbt.otp_app()}_web",
+      cloud: "heroku",
+      docker: true
     ]
 
     {mix_generator_opts, _args} = OptionParser.parse!(args, switches: [force: :boolean])
