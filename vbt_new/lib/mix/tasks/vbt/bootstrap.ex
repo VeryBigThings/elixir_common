@@ -18,7 +18,33 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 
+    create_from_templates(args)
+
     adapt_code!()
+  end
+
+  defp create_from_templates(args) do
+    templates_path = Path.join(~w/#{Application.app_dir(:vbt_new)} priv templates/)
+
+    bindings = [
+      app: Mix.Vbt.otp_app(),
+      context_folder: to_string(Mix.Vbt.otp_app()),
+      app_folder: Macro.underscore(Mix.Vbt.app_module_name()),
+      web_folder: "#{Mix.Vbt.otp_app()}_web"
+    ]
+
+    for template <- Path.wildcard(Path.join(templates_path, "**/*.eex")) do
+      target_file =
+        template
+        |> Path.relative_to(templates_path)
+        |> String.replace(~r/\.eex$/, "")
+        # The path in the priv dir may contain <%= %> expressions, so we need to eval the path
+        |> EEx.eval_string(bindings)
+
+      template
+      |> EEx.eval_file(bindings)
+      |> Mix.Vbt.generate_file(target_file, args)
+    end
   end
 
   # ------------------------------------------------------------------------
