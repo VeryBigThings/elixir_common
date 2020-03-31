@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     Enum.each(
-      ~w/formatter_config tool_versions aws_mock/,
+      ~w/tool_versions aws_mock/,
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 
@@ -74,6 +74,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> store_source_files!()
 
     File.rm(Path.join(~w/config prod.secret.exs/))
+    File.rm_rf("priv/repo/migrations/.formatter.exs")
 
     disable_credo_checks()
   end
