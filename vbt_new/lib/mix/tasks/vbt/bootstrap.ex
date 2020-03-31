@@ -13,8 +13,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     Enum.each(
-      ~w/makefile docker circleci github_pr_template credo dialyzer formatter_config
-      tool_versions aws_mock/,
+      ~w/makefile docker github_pr_template credo dialyzer formatter_config tool_versions aws_mock/,
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 
@@ -35,7 +34,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
     {mix_generator_opts, _args} = OptionParser.parse!(args, switches: [force: :boolean])
 
-    for template <- Path.wildcard(Path.join(templates_path, "**/*.eex")) do
+    for template <- Path.wildcard(Path.join(templates_path, "**/*.eex"), match_dot: true) do
       target_file =
         template
         |> Path.relative_to(templates_path)
