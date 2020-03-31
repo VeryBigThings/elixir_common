@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     Enum.each(
-      ~w/makefile docker circleci release github_pr_template credo dialyzer formatter_config
+      ~w/makefile docker circleci github_pr_template credo dialyzer formatter_config
       tool_versions aws_mock/,
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
@@ -33,6 +33,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       web_folder: "#{Mix.Vbt.otp_app()}_web"
     ]
 
+    {mix_generator_opts, _args} = OptionParser.parse!(args, switches: [force: :boolean])
+
     for template <- Path.wildcard(Path.join(templates_path, "**/*.eex")) do
       target_file =
         template
@@ -41,9 +43,17 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         # The path in the priv dir may contain <%= %> expressions, so we need to eval the path
         |> EEx.eval_string(bindings)
 
-      template
-      |> EEx.eval_file(bindings)
-      |> Mix.Vbt.generate_file(target_file, args)
+      content = EEx.eval_file(template, bindings)
+
+      if Mix.Generator.create_file(target_file, content, mix_generator_opts) do
+        # If the exec permission bit for the owner in the source template is set, we'll set the
+        # same bit in the destination. In doing so we're preserving the exec permission. Note that
+        # we're only doing this for the owner, because that's the only bit preserved by git.
+        if match?(<<1::1, _rest::6>>, <<File.stat!(template).mode::7>>) do
+          new_mode = Bitwise.bor(File.stat!(target_file).mode, 0b1_000_000)
+          File.chmod!(target_file, new_mode)
+        end
+      end
     end
   end
 
