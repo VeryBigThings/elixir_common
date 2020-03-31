@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     Enum.each(
-      ~w/tool_versions aws_mock/,
+      ~w/tool_versions/,
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 
@@ -70,6 +70,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> configure_repo()
     |> adapt_app_module()
     |> drop_prod_secret()
+    |> adapt_aws_mocks()
     |> config_bcrypt()
     |> store_source_files!()
 
@@ -274,6 +275,19 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     )
   end
 
+  defp adapt_aws_mocks(source_files) do
+    source_files
+    |> update_in([:mix], &MixFile.append_config(&1, :deps, ~s/{:mox, "~> 0.5", only: :test}/))
+    |> update_in(
+      [:test_config],
+      &ConfigFile.prepend(&1, "config :vbt, :ex_aws_client, VBT.TestAwsClient")
+    )
+    |> update_in(
+      [:test_helper],
+      &SourceFile.append(&1, "Mox.defmock(VBT.TestAwsClient, for: ExAws.Behaviour)")
+    )
+  end
+
   # ------------------------------------------------------------------------
   # Endpoint configuration
   # ------------------------------------------------------------------------
@@ -388,7 +402,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       endpoint: load_web_file("endpoint.ex"),
       repo: load_context_file("repo.ex"),
       app_module:
-        load_context_file("application.ex", output: Path.join("lib", "#{Vbt.otp_app()}_app.ex"))
+        load_context_file("application.ex", output: Path.join("lib", "#{Vbt.otp_app()}_app.ex")),
+      test_helper: SourceFile.load!("test/test_helper.exs")
     }
   end
 
