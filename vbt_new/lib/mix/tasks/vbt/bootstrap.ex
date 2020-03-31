@@ -12,11 +12,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       Mix.raise("mix vbt.bootstrap can only be run inside an application directory")
     end
 
-    create_from_templates(args)
+    generate_files(args)
     adapt_code!()
   end
 
-  defp create_from_templates(args) do
+  defp generate_files(args) do
     templates_path = Path.join(~w/#{Application.app_dir(:vbt_new)} priv templates/)
 
     bindings = [
