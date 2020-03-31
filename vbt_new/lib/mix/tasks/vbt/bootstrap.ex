@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     Enum.each(
-      ~w/makefile docker github_pr_template formatter_config tool_versions aws_mock/,
+      ~w/makefile github_pr_template formatter_config tool_versions aws_mock/,
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 
