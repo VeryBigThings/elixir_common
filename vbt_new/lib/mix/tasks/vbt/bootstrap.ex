@@ -16,6 +16,10 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     adapt_code!()
   end
 
+  # ------------------------------------------------------------------------
+  # File generation
+  # ------------------------------------------------------------------------
+
   defp generate_files(args) do
     # This function will load all .eex which reside under priv/templates, and generate
     # corresponding files in the client project. The folder structure of the generated files will
