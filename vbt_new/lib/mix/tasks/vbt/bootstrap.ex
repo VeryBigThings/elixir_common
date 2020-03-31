@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
     Enum.each(
       ~w/makefile docker circleci release github_pr_template credo dialyzer formatter_config
-      tool_versions aws_mock config/,
+      tool_versions aws_mock/,
       &Mix.Task.run("vbt.gen.#{&1}", args)
     )
 
