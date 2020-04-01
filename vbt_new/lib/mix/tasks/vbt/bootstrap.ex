@@ -30,15 +30,6 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
     templates_path = Path.join(~w/#{Application.app_dir(:vbt_new)} priv templates/)
 
-    bindings = [
-      app: Mix.Vbt.otp_app(),
-      context_folder: to_string(Mix.Vbt.otp_app()),
-      app_folder: Macro.underscore(Mix.Vbt.app_module_name()),
-      web_folder: "#{Mix.Vbt.otp_app()}_web",
-      cloud: "heroku",
-      docker: true
-    ]
-
     {mix_generator_opts, _args} = OptionParser.parse!(args, switches: [force: :boolean])
 
     for template <- Path.wildcard(Path.join(templates_path, "**/*.eex"), match_dot: true) do
@@ -46,10 +37,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         template
         |> Path.relative_to(templates_path)
         |> String.replace(~r/\.eex$/, "")
-        # The path in the priv dir may contain <%= %> expressions, so we need to eval the path
-        |> EEx.eval_string(bindings)
+        |> String.replace(~r(lib/context/), "lib/#{Mix.Vbt.otp_app()}/")
+        |> String.replace(~r(lib/app/), "lib/#{Macro.underscore(Mix.Vbt.app_module_name())}/")
+        |> String.replace(~r(lib/web/), "lib/#{Mix.Vbt.otp_app()}_web/")
 
-      content = EEx.eval_file(template, bindings)
+      content = EEx.eval_file(template, app: Mix.Vbt.otp_app(), cloud: "heroku", docker: true)
 
       if Mix.Generator.create_file(target_file, content, mix_generator_opts) do
         # If the exec permission bit for the owner in the source template is set, we'll set the
