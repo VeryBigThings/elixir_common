@@ -1,4 +1,4 @@
-# SkafolderTester
+# <%= Mix.Vbt.context_module_name() %>
 
 TODO: add project overview here
 
@@ -44,6 +44,6 @@ The main container will also map the port 4000 to the host. Consequently, you ca
 In some cases you may want run the production version locally. This can be useful for some testing inside the environment which is more similar to production. For example, a dev version might use a mock mail adapter to send e-mails, while in the OTP release the real mail adapter is used. The suggested way to do this is to build and run the OTP release locally:
 
 1. run `mix release` to build the OTP release
-2. run `MIX_ENV=dev mix operator_template > /tmp/skafolder_tester.env`
-3. open /tmp/skafolder_tester.env and uncomment all the default settings, tweaking the ones which you need (e.g. access tokens for external services)
-4. invoke `(. /tmp/skafolder_tester.env && _build/prod/rel/skafolder_tester/bin/skafolder_tester start)`
+2. run `MIX_ENV=dev mix operator_template > /tmp/<%= Mix.Vbt.otp_app() %>.env`
+3. open /tmp/<%= Mix.Vbt.otp_app() %>.env and uncomment all the default settings, tweaking the ones which you need (e.g. access tokens for external services)
+4. invoke `(. /tmp/<%= Mix.Vbt.otp_app() %>.env && _build/prod/rel/<%= Mix.Vbt.otp_app() %>/bin/<%= Mix.Vbt.otp_app() %> start)`
