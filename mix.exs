@@ -34,7 +34,7 @@ defmodule VBT.MixProject do
       {:absinthe, "~> 1.4"},
       {:bamboo, "~> 1.4"},
       {:bcrypt_elixir, "~> 2.0"},
-      {:credo, "~> 1.1", runtime: false},
+      {:credo, "~> 1.4", runtime: false},
       {:dialyxir, "~> 0.5", runtime: false},
       {:ecto_enum, "~> 1.3"},
       {:ecto, "~> 3.0"},
