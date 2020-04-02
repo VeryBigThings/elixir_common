@@ -41,7 +41,7 @@ defmodule VBT.TestHelperTest do
       assert e.message == "Assertion with == failed"
     end
 
-    defp token_expired?() do
+    defp token_expired? do
       current_value = Process.get(:expected_value, 0)
       Process.put(:expected_value, current_value + 1)
       current_value == 5
