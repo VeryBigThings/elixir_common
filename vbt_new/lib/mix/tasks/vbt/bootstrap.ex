@@ -12,13 +12,47 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       Mix.raise("mix vbt.bootstrap can only be run inside an application directory")
     end
 
-    Enum.each(
-      ~w/makefile docker circleci release github_pr_template credo dialyzer formatter_config
-      tool_versions aws_mock config/,
-      &Mix.Task.run("vbt.gen.#{&1}", args)
-    )
-
+    generate_files(args)
     adapt_code!()
+  end
+
+  # ------------------------------------------------------------------------
+  # File generation
+  # ------------------------------------------------------------------------
+
+  defp generate_files(args) do
+    # This function will load all .eex which reside under priv/templates, and generate
+    # corresponding files in the client project. The folder structure of the generated files will
+    # match the folder structure inside priv/templates. Each generated file will have the same name
+    # as the source template, minus the .eex suffix. If the template file is executable by the
+    # owner, the generated file will also be executable (only by the owner user). Finally, files
+    # in priv/template which don't have the .eex extension will be ignored.
+
+    templates_path = Path.join(~w/#{Application.app_dir(:vbt_new)} priv templates/)
+
+    {mix_generator_opts, _args} = OptionParser.parse!(args, switches: [force: :boolean])
+
+    for template <- Path.wildcard(Path.join(templates_path, "**/*.eex"), match_dot: true) do
+      target_file =
+        template
+        |> Path.relative_to(templates_path)
+        |> String.replace(~r/\.eex$/, "")
+        |> String.replace(~r(lib/context/), "lib/#{Mix.Vbt.otp_app()}/")
+        |> String.replace(~r(lib/app/), "lib/#{Macro.underscore(Mix.Vbt.app_module_name())}/")
+        |> String.replace(~r(lib/web/), "lib/#{Mix.Vbt.otp_app()}_web/")
+
+      content = EEx.eval_file(template, app: Mix.Vbt.otp_app(), cloud: "heroku", docker: true)
+
+      if Mix.Generator.create_file(target_file, content, mix_generator_opts) do
+        # If the exec permission bit for the owner in the source template is set, we'll set the
+        # same bit in the destination. In doing so we're preserving the exec permission. Note that
+        # we're only doing this for the owner, because that's the only bit preserved by git.
+        if match?(<<1::1, _rest::6>>, <<File.stat!(template).mode::7>>) do
+          new_mode = Bitwise.bor(File.stat!(target_file).mode, 0b1_000_000)
+          File.chmod!(target_file, new_mode)
+        end
+      end
+    end
   end
 
   # ------------------------------------------------------------------------
@@ -33,10 +67,12 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> configure_repo()
     |> adapt_app_module()
     |> drop_prod_secret()
+    |> adapt_aws_mocks()
     |> config_bcrypt()
     |> store_source_files!()
 
     File.rm(Path.join(~w/config prod.secret.exs/))
+    File.rm_rf("priv/repo/migrations/.formatter.exs")
 
     disable_credo_checks()
   end
@@ -236,6 +272,19 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     )
   end
 
+  defp adapt_aws_mocks(source_files) do
+    source_files
+    |> update_in([:mix], &MixFile.append_config(&1, :deps, ~s/{:mox, "~> 0.5", only: :test}/))
+    |> update_in(
+      [:test_config],
+      &ConfigFile.prepend(&1, "config :vbt, :ex_aws_client, VBT.TestAwsClient")
+    )
+    |> update_in(
+      [:test_helper],
+      &SourceFile.append(&1, "Mox.defmock(VBT.TestAwsClient, for: ExAws.Behaviour)")
+    )
+  end
+
   # ------------------------------------------------------------------------
   # Endpoint configuration
   # ------------------------------------------------------------------------
@@ -350,7 +399,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       endpoint: load_web_file("endpoint.ex"),
       repo: load_context_file("repo.ex"),
       app_module:
-        load_context_file("application.ex", output: Path.join("lib", "#{Vbt.otp_app()}_app.ex"))
+        load_context_file("application.ex", output: Path.join("lib", "#{Vbt.otp_app()}_app.ex")),
+      test_helper: SourceFile.load!("test/test_helper.exs")
     }
   end
 

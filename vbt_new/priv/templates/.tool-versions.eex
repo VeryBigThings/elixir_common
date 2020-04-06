@@ -1,0 +1,18 @@
+<%=
+  versions = Mix.Vbt.tool_versions()
+
+  tool_versions =
+    %{
+      elixir: "#{versions.elixir.major}.#{versions.elixir.minor}-otp-#{versions.erlang.major}",
+      erlang: "#{versions.erlang.major}.#{versions.erlang.minor}",
+      nodejs: to_string(versions.nodejs),
+      postgres: "#{versions.postgres.major}.#{versions.postgres.minor}"
+    }
+
+  entries =
+    for {tool, version} <- tool_versions,
+        tool != :nodejs or File.dir?("assets"),
+        do: "#{tool} #{version}"
+
+  Enum.join(entries, "\n")
+%>

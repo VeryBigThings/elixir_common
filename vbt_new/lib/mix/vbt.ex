@@ -27,29 +27,6 @@ defmodule Mix.Vbt do
     end
   end
 
-  @spec generate_file(iodata, Path.t(), Keyword.t()) :: boolean
-  def generate_file(content, file, args) do
-    {opts, _args} = OptionParser.parse!(args, switches: [force: :boolean])
-    Mix.Generator.create_file(file, content, opts)
-  end
-
-  @spec eval_from_templates(String.t(), Keyword.t()) :: iodata
-  def eval_from_templates(source, bindings) do
-    template =
-      Enum.find_value(template_paths(), fn tpath ->
-        file_path = Path.join(tpath, source)
-        File.exists?(file_path) && File.read!(file_path)
-      end) || raise "could not find #{source} in any of the sources"
-
-    EEx.eval_string(template, bindings)
-  end
-
-  @spec template_paths :: [Path.t()]
-  def template_paths do
-    base_path = :code.priv_dir(:vbt_new)
-    [Path.join([base_path, "templates"])]
-  end
-
   @spec random_string(non_neg_integer()) :: String.t()
   def random_string(length) when length > 31 do
     :crypto.strong_rand_bytes(length) |> Base.encode64() |> binary_part(0, length)
