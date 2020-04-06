@@ -1,37 +1,36 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
+# credo:disable-for-this-file VBT.Credo.Check.Readability.MultilineSimpleDo
+
 defmodule VBT.Credo.Check.Readability.MultilineSimpleDo do
   @moduledoc false
 
-  # credo:disable-for-this-file Credo.Check.Readability.Specs
-  # credo:disable-for-this-file VBT.Credo.Check.Readability.MultilineSimpleDo
+  use Credo.Check,
+    category: :warning,
+    base_priority: :high,
+    explanations: [
+      check: """
+      Avoid using multiline simple do expression.
 
-  @checkdoc """
-  Avoid using multiline simple do expression.
+          # preferred
 
-      # preferred
+          defp some_fun() do
+            %{
+              a: 1,
+              b: 2,
+              c: 3
+            }
+          end
 
-      defp some_fun() do
-        %{
-          a: 1,
-          b: 2,
-          c: 3
-        }
-      end
+          # NOT preferred
 
-      # NOT preferred
-
-      defp some_fun(),
-        do: %{
-          a: 1,
-          b: 2,
-          c: 3
-        }
-  """
-  @explanation [check: @checkdoc]
-
-  # `use Credo.Check` required that module attributes are already defined, so we need to place these attributes
-  # before use/alias expressions.
-  # credo:disable-for-next-line VBT.Credo.Check.Consistency.ModuleLayout
-  use Credo.Check, category: :warning, base_priority: :high
+          defp some_fun(),
+            do: %{
+              a: 1,
+              b: 2,
+              c: 3
+            }
+      """
+    ]
 
   def run(source_file, params \\ []) do
     source_file

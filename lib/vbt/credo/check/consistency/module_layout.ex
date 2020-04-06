@@ -1,40 +1,38 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
 defmodule VBT.Credo.Check.Consistency.ModuleLayout do
   @moduledoc false
 
-  # credo:disable-for-this-file Credo.Check.Readability.Specs
+  use Credo.Check,
+    category: :warning,
+    base_priority: :high,
+    explanations: [
+      check: """
+      Module parts should appear in the following order:
 
-  @checkdoc """
-  Module parts should appear in the following order:
+         1. @shortdoc
+         2. @moduledoc
+         3. @behaviour
+         4. use
+         5. import
+         6. alias
+         7. require
+         8. custom module attributes
+         9. defstruct
+        10. @opaque
+        11. @type
+        12. @typep
+        13. @callback
+        14. @macrocallback
+        15. @optional_callbacks
+        16. public guards
+        17. public macros
+        18. public functions
+        19. behaviour callbacks
+        20. private functions
 
-     1. @shortdoc
-     2. @moduledoc
-     3. @behaviour
-     4. use
-     5. import
-     6. alias
-     7. require
-     8. custom module attributes
-     9. defstruct
-    10. @opaque
-    11. @type
-    12. @typep
-    13. @callback
-    14. @macrocallback
-    15. @optional_callbacks
-    16. public guards
-    17. public macros
-    18. public functions
-    19. behaviour callbacks
-    20. private functions
-
-  This order has been adapted from https://github.com/christopheradams/elixir_style_guide#module-attribute-ordering.
-  """
-  @explanation [check: @checkdoc]
-
-  # `use Credo.Check` required that module attributes are already defined, so we need to place these attributes
-  # before use/alias expressions.
-  # credo:disable-for-next-line VBT.Credo.Check.Consistency.ModuleLayout
-  use Credo.Check, category: :warning, base_priority: :high
+      This order has been adapted from https://github.com/christopheradams/elixir_style_guide#module-attribute-ordering.
+      """
+    ]
 
   alias Credo.Code
   alias VBT.Credo.ModulePartExtractor
