@@ -23,8 +23,7 @@ defmodule VBT.AccountsTest do
       },
       login_field: :email,
       password_hash_field: :password_hash,
-      min_password_length: 6,
-      secret_key_base: String.duplicate("A", 64)
+      min_password_length: 6
     }
 
     describe "create for table with #{id_type} id" do
@@ -157,20 +156,9 @@ defmodule VBT.AccountsTest do
         assert reset_password(@config, "invalid email", "new password") == {:error, :invalid}
       end
 
-      test "fails if token is generated for another user" do
-        {:ok, account} = create_account(@config, password: "some password")
-        {:ok, account2} = create_account(@config)
-        token = Accounts.start_password_reset(account2.email, 100, @config)
-
-        assert reset_password(@config, account.email, "new password", token: token) ==
-                 {:error, :invalid}
-
-        assert Accounts.authenticate(account.email, "some password", @config) == {:ok, account}
-      end
-
       test "fails if token is generated for a different purpose" do
         {:ok, account} = create_account(@config, password: "some password")
-        token = Accounts.Token.create!(account, nil, 100, @config)
+        token = Accounts.Token.create!(account, "different purpose", 100, @config)
 
         assert reset_password(@config, account.email, "new password", token: token) ==
                  {:error, :invalid}
@@ -229,7 +217,7 @@ defmodule VBT.AccountsTest do
         end
       )
 
-    Accounts.reset_password(email, token, new_password, config)
+    Accounts.reset_password(token, new_password, config)
   end
 
   defp errors_on(changeset) do
