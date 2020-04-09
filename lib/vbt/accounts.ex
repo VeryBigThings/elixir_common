@@ -159,32 +159,31 @@ defmodule VBT.Accounts do
   def start_password_reset(login, max_age, config),
     # We're always creating the token, even if the account doesn't exist, to prevent a possible
     # enumeration attack (https://www.owasp.org/index.php/Testing_for_User_Enumeration_and_Guessable_User_Account_(OWASP-AT-002)#Description_of_the_Issue).
-    do: login |> get(config) |> Token.create!(%{type: :password_reset}, max_age, config)
+    do: login |> get(config) |> Token.create!("password_reset", max_age, config)
 
   @doc """
   Resets the password for the given login and token.
 
   The password is changed only if the token is valid. The token is valid if:
 
-  - it corresponds to the correct user
+  - it corresponds to an existing user
   - it hasn't expired
   - it is a password reset token
   - it hasn't been used
   """
-  @spec reset_password(String.t(), Token.encoded(), String.t(), config) ::
+  @spec reset_password(Token.encoded(), String.t(), config) ::
           {:ok, Ecto.Schema.t()} | {:error, :invalid | Ecto.Changeset.t()}
-  def reset_password(login, token, new_password, config) do
-    with {:ok, account} <- fetch(login, config),
-         {:ok, %{data: %{type: :password_reset}} = token} <- Token.decode(token, account, config) do
-      Token.use(
-        token,
-        account,
-        fn -> config.repo.update(set_password(account, new_password, config)) end,
-        config
-      )
-    else
-      _ -> {:error, :invalid}
-    end
+  def reset_password(token, new_password, config) do
+    Token.use(
+      token,
+      "password_reset",
+      fn account_id ->
+        config.repo.get!(config.schemas.account, account_id)
+        |> set_password(new_password, config)
+        |> config.repo.update()
+      end,
+      config
+    )
   end
 
   # ------------------------------------------------------------------------
