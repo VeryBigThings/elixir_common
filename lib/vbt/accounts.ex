@@ -21,15 +21,20 @@ defmodule VBT.Accounts do
   the table can be named `users`, and the login field can be named `email`. Finally, this table
   can contain arbitrary additional data (e.g. first and last name)
 
-  The tokens table can bear arbitrary name, but the list of fields and their names is more \
+  The tokens table can bear arbitrary name, but the list of fields and their names is more
   restrictive. You can create this table with the following migration:
 
       create table(:tokens, primary_key: false) do
         add :id, :uuid, primary_key: true
+        add :hash, :binary, null: false
+        add :type, :string, null: false
         add :used_at, :utc_datetime
         add :expires_at, :utc_datetime, null: false
-        add :account_id, references(:accounts, type: :uuid), null: false
+        add :account_id, references(:accounts, type: :uuid), null: true
       end
+
+  Note that `account_id` must be made nullable. The reason is that we're inserting tokens even if
+  the account is not existing, which prevents enumeration attacks.
 
   The Ecto schemas should mirror the database structure of these tables. Most importantly, the
   accounts schema should specify `has_many :tokens`, while the tokens schema should specify
@@ -149,9 +154,9 @@ defmodule VBT.Accounts do
   @doc """
   Creates a one-time password reset token for the given user.
 
-  This function always succeeds. If the account for the given login doesn't exist, the token
-  will still be generated, although it won't be stored in the database, and thus it can't be
-  actually used. This approach is chosen to prevent user enumeration attack.
+  This function always succeeds. If the account for the given login doesn't exist, the token will
+  still be generated. However, this token can't be actually used. This approach is chosen to
+  prevent user enumeration attack.
   """
   @spec start_password_reset(String.t(), Token.max_age(), config) :: Token.encoded()
   def start_password_reset(login, max_age, config),
