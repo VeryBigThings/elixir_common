@@ -23,8 +23,7 @@ defmodule VBT.AccountsTest do
       },
       login_field: :email,
       password_hash_field: :password_hash,
-      min_password_length: 6,
-      secret_key_base: String.duplicate("A", 64)
+      min_password_length: 6
     }
 
     describe "create for table with #{id_type} id" do

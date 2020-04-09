@@ -53,8 +53,7 @@ defmodule VBT.Accounts do
             },
             login_field: :email,
             password_hash_field: :password_hash,
-            min_password_length: 6,
-            secret_key_base: Application.fetch_env!(MyProject, :secret_key_base)
+            min_password_length: 6
           }
         end
       end
@@ -93,8 +92,7 @@ defmodule VBT.Accounts do
           schemas: %{account: module, token: module},
           login_field: atom,
           password_hash_field: atom,
-          min_password_length: pos_integer,
-          secret_key_base: String.t()
+          min_password_length: pos_integer
         }
 
   @type data :: Ecto.Schema.t() | Ecto.Changeset.t()
