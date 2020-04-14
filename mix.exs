@@ -12,7 +12,8 @@ defmodule VBT.MixProject do
       preferred_cli_env: preferred_cli_env(),
       dialyzer: dialyzer(),
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix] ++ Mix.compilers()
+      compilers: [:phoenix] ++ Mix.compilers(),
+      source_url: "https://github.com/VeryBigThings/elixir_common_private/"
     ]
   end
 
