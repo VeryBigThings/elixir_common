@@ -1,6 +1,6 @@
 defmodule VBT.Provider.SystemEnv do
   # credo:disable-for-this-file Credo.Check.Readability.Specs
-  @moduledoc "Provider source which retrieves values from OS env vars."
+  @moduledoc false
 
   @behaviour VBT.Provider.Source
   alias VBT.Provider.Source
