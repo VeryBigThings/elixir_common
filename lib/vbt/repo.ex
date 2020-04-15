@@ -20,6 +20,7 @@ defmodule VBT.Repo do
   - `fetch` - fetch version of `Repo.get`
   - `fetch_by` - fetch version of `Repo.get_by`
   - `fetch_one` - fetch version of `Repo.one`
+  - `delete_one` - helper function for deleting a single row
   - `transact` - a wrapper around `Repo.transaction` which does auto rollback if the passed lambda
     returns `{:error, reason}`
 
@@ -131,6 +132,38 @@ defmodule VBT.Repo do
             {:error, reason} -> rollback(reason)
           end
         end)
+      end
+
+      @doc """
+      Deletes a single database row matching the given query.
+
+      This function allows you to delete a single database row, without needing to load it from the
+      database first.
+
+      The function can optionally return the deleted row if you provide the `:select` clause in the
+      input query. In this case, the function will return `{:ok, selected_term}` on success. If
+      the `:select` clause is not present, the function will return `:ok` on success.
+
+      The function succeeds only if exactly one row is matched by the given query. If there are
+      multiple rows matching the given query, nothing will be deleted, and an error is returned.
+      Likewise, the function returns an error if there are no rows matching the given query.
+      """
+      @spec delete_one(Ecto.Queryable.t()) ::
+              :ok | {:ok, any} | {:error, :not_found | :multiple_rows}
+      def delete_one(query) do
+        with {:ok, result} <-
+               transact(fn ->
+                 case delete_all(query) do
+                   {0, _} -> {:error, :not_found}
+                   {1, result} -> {:ok, result}
+                   _ -> {:error, :multiple_rows}
+                 end
+               end) do
+          case result do
+            nil -> :ok
+            [record] -> {:ok, record}
+          end
+        end
       end
     end
   end
