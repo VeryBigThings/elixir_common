@@ -187,18 +187,19 @@ defmodule VBT.Repo do
   @doc false
   # credo:disable-for-next-line Credo.Check.Readability.Specs
   def delete_one(repo, query) do
-    with {:ok, result} <-
-           transact(repo, fn ->
-             case repo.delete_all(query) do
-               {0, _} -> {:error, :not_found}
-               {1, result} -> {:ok, result}
-               _ -> {:error, :multiple_rows}
-             end
-           end) do
-      case result do
-        nil -> :ok
-        [record] -> {:ok, record}
-      end
+    # deleting in transaction so we can rollback if multiple rows are deleted
+    case transact(repo, fn -> unsafe_delete_one(repo, query) end) do
+      {:ok, nil} -> :ok
+      {:ok, [record]} -> {:ok, record}
+      {:error, _reason} = error -> error
+    end
+  end
+
+  defp unsafe_delete_one(repo, query) do
+    case repo.delete_all(query) do
+      {1, result} -> {:ok, result}
+      {0, _} -> {:error, :not_found}
+      _ -> {:error, :multiple_rows}
     end
   end
 
