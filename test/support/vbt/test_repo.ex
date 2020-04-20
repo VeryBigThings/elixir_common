@@ -5,7 +5,7 @@ defmodule VBT.TestRepo do
 
   use VBT.Repo, otp_app: :vbt, adapter: Ecto.Adapters.Postgres
 
-  @doc false
+  @impl Ecto.Repo
   def init(_type, opts),
     do: {:ok, opts |> Keyword.merge(access_opts()) |> Keyword.merge(common_opts())}
 

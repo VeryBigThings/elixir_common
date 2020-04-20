@@ -116,6 +116,86 @@ defmodule Vbt.RepoTest do
     end
   end
 
+  describe "delete_one" do
+    test "deletes the desired row" do
+      account1 = insert_account!()
+      account2 = insert_account!()
+
+      assert TestRepo.delete_one(from Account, where: [id: ^account1.id]) == :ok
+      assert TestRepo.all(from account in Account, select: account.id) == [account2.id]
+    end
+
+    test "returns the selected expression" do
+      account1 = insert_account!()
+      account2 = insert_account!()
+
+      assert TestRepo.delete_one(
+               from account in Account,
+                 where: [id: ^account1.id],
+                 select: account
+             ) == {:ok, account1}
+
+      assert TestRepo.all(from account in Account, select: account.id) == [account2.id]
+    end
+
+    test "fails if no record is matched" do
+      account1 = insert_account!()
+      account2 = insert_account!()
+
+      assert TestRepo.delete_one(from Account, where: [id: -1]) == {:error, :not_found}
+
+      assert TestRepo.all(from account in Account, select: account.id) == [
+               account1.id,
+               account2.id
+             ]
+    end
+
+    test "fails if multiple records are matched" do
+      account1 = insert_account!()
+      account2 = insert_account!()
+
+      assert TestRepo.delete_one(
+               from account in Account,
+                 where: account.id in [^account1.id, ^account2.id]
+             ) == {:error, :multiple_rows}
+
+      assert TestRepo.all(from account in Account, select: account.id) == [
+               account1.id,
+               account2.id
+             ]
+    end
+
+    test "succeeds inside the transaction desired row" do
+      account1 = insert_account!()
+      account2 = insert_account!()
+
+      assert TestRepo.transact(fn ->
+               TestRepo.delete_one(
+                 from account in Account,
+                   where: [id: ^account1.id],
+                   select: account
+               )
+             end) == {:ok, account1}
+
+      assert TestRepo.all(from account in Account, select: account.id) == [account2.id]
+    end
+
+    test "returns error inside a transaction" do
+      account1 = insert_account!()
+      account2 = insert_account!()
+
+      assert TestRepo.transact(fn ->
+               account3 = insert_account!()
+               with :ok <- TestRepo.delete_one(from Account, where: [id: -1]), do: {:ok, account3}
+             end) == {:error, :not_found}
+
+      assert TestRepo.all(from account in Account, select: account.id) == [
+               account1.id,
+               account2.id
+             ]
+    end
+  end
+
   defp insert_account!(data \\ []) do
     data =
       ~w/name email password_hash/a
