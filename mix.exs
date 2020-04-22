@@ -39,6 +39,7 @@ defmodule VBT.MixProject do
       {:ecto_enum, "~> 1.3"},
       {:ecto, "~> 3.0"},
       {:ex_aws, "~> 2.1"},
+      {:ex_aws_s3, "~> 2.0"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:oban, "~> 1.0"},
       {:parent, "~> 0.8"},
