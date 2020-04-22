@@ -94,6 +94,31 @@ defmodule VBT.AccountsTest do
       end
     end
 
+    describe "set_password for table with #{id_type} id" do
+      test "succeeds with valid input" do
+        {:ok, account} = create_account(@config, email: "email@x.y.z", password: "some password")
+        assert {:ok, changed_account} = Accounts.set_password(account, "new password", @config)
+        assert changed_account.id == account.id
+        assert {:ok, _} = Accounts.authenticate("email@x.y.z", "new password", @config)
+
+        assert {:error, :invalid} = Accounts.authenticate("email@x.y.z", "some password", @config)
+      end
+
+      test "fails if password is empty" do
+        {:ok, account} = create_account(@config, password: "some password")
+        assert {:error, changeset} = Accounts.set_password(account, "", @config)
+        assert "can't be blank" in errors_on(changeset).password
+        assert Accounts.authenticate(account.email, "some password", @config) == {:ok, account}
+      end
+
+      test "fails if password is too short" do
+        {:ok, account} = create_account(@config, password: "some password")
+        assert {:error, changeset} = Accounts.set_password(account, "A", @config)
+        assert "should be at least 6 character(s)" in errors_on(changeset).password
+        assert Accounts.authenticate(account.email, "some password", @config) == {:ok, account}
+      end
+    end
+
     describe "change_password for table with #{id_type} id" do
       test "succeeds with valid input" do
         {:ok, account} = create_account(@config, email: "email@x.y.z", password: "some password")
