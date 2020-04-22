@@ -83,7 +83,7 @@ defmodule SkafolderTesterApp.Release do
 
   defp run_migrations_for(repo, direction, opts) do
     migrations_path = priv_path_for(repo, "migrations")
-    Ecto.Migrator.run(repo, migrations_path, direction, opts)
+    Ecto.Migrator.run(repo, [migrations_path], direction, opts)
   end
 
   defp run_seeds(seed_file), do: Enum.each(repos(), &run_seeds_for(&1, seed_file))
