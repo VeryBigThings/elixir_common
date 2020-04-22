@@ -14,6 +14,7 @@
         {Credo.Check.Readability.AliasAs, []},
         {Credo.Check.Readability.SinglePipe, []},
         {Credo.Check.Readability.Specs, []},
+        {Credo.Check.Readability.WithCustomTaggedTuple, []},
 
         # custom VBT checks
         {VBT.Credo.Check.Consistency.FileLocation,
@@ -23,7 +24,6 @@
          }},
         {VBT.Credo.Check.Consistency.ModuleLayout, []},
         {VBT.Credo.Check.Readability.MultilineSimpleDo, []},
-        {VBT.Credo.Check.Readability.WithPlaceholder, []},
 
         # disabled checks
         {Credo.Check.Design.TagTODO, false},

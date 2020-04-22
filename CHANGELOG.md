@@ -1,3 +1,8 @@
+## 2020-04-22
+
+**[Breaking]** The credo check `VBT.Credo.Check.Readability.WithPlaceholder` has been removed. Use `Credo.Check.Readability.WithCustomTaggedTuple` instead. Adapt `.credo.exs` accordingly.
+
+
 ## 2020-04-09
 
 ###  **[Breaking]** Accounts and Tokens logic
