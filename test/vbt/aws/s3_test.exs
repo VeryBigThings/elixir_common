@@ -21,7 +21,7 @@ defmodule VBT.Aws.S3Test do
     test "makes an S3 get request" do
       response = %{body: "content", headers: [], status_code: 200}
 
-      Mox.expect(VBT.aws_client(), :request, fn req, config ->
+      Mox.expect(VBT.Aws.client(), :request, fn req, config ->
         assert config == config()
 
         assert req.http_method == :get
@@ -37,7 +37,7 @@ defmodule VBT.Aws.S3Test do
     test "accepts a hostable for path" do
       response = %{body: "content", headers: [], status_code: 200}
 
-      Mox.expect(VBT.aws_client(), :request, fn req, _config ->
+      Mox.expect(VBT.Aws.client(), :request, fn req, _config ->
         assert req.path == "/another/path"
         response
       end)
@@ -100,7 +100,7 @@ defmodule VBT.Aws.S3Test do
       target = Keyword.get(opts, :target, "/some/path")
       test_pid = self()
 
-      Mox.expect(VBT.aws_client(), :request, fn req, config ->
+      Mox.expect(VBT.Aws.client(), :request, fn req, config ->
         assert config == config()
 
         assert %ExAws.S3.Upload{} = req

@@ -2,7 +2,7 @@ defmodule VBT.Aws.S3 do
   @moduledoc """
   Helper for performing actions on S3.
 
-  When making requests to S3, the `VBT.aws_client()` function is invoked to determine the actual
+  When making requests to S3, the `VBT.Aws.client/0` function is invoked to determine the actual
   client module. Consequently, you can mock this module in tests with `Mox`.
   """
 
@@ -13,15 +13,6 @@ defmodule VBT.Aws.S3 do
           access_key_id: String.t(),
           secret_access_key: String.t()
         }
-
-  @type aws_response ::
-          {:ok,
-           %{
-             required(:body) => String.t(),
-             required(:headers) => [{String.t(), String.t()}],
-             optional(:status_code) => pos_integer()
-           }}
-          | {:error, reason :: any}
 
   @type upload_source :: binary | {:file, Path.t()} | Enumerable.t()
 
@@ -52,11 +43,11 @@ defmodule VBT.Aws.S3 do
   end
 
   @doc "Downloads the given object from S3."
-  @spec download(config, String.t(), Hostable.t()) :: aws_response
+  @spec download(config, String.t(), Hostable.t()) :: VBT.Aws.response()
   def download(config, bucket, object) do
     bucket
     |> ExAws.S3.get_object(Hostable.path(object))
-    |> VBT.aws_client().request(config)
+    |> VBT.Aws.client().request(config)
   end
 
   @doc """
@@ -71,12 +62,12 @@ defmodule VBT.Aws.S3 do
   The content is uploaded in chunks of 5 MiB. Notice that if you pass an enumerable of binaries,
   the input chunks won't affect the upload chunks.
   """
-  @spec upload(config, String.t(), upload_source, Hostable.t()) :: aws_response
+  @spec upload(config, String.t(), upload_source, Hostable.t()) :: VBT.Aws.response()
   def upload(config, bucket, source, target) do
     source
     |> upload_chunks()
     |> ExAws.S3.upload(bucket, Hostable.path(target))
-    |> VBT.aws_client().request(config)
+    |> VBT.Aws.client().request(config)
   end
 
   defp upload_chunks({:file, path}), do: File.stream!(path, [], chunk_size())
