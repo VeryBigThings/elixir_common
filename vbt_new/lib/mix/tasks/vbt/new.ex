@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Vbt.New do
     project_folder = project_folder!(args)
     if File.exists?(project_folder), do: Mix.raise("folder already exists")
 
-    Mix.Task.run("archive.install", ["hex", "phx_new", "~> 1.4", "--force"])
+    Mix.Task.run("archive.install", ["hex", "phx_new", "~> 1.4.0", "--force"])
 
     current_shell = Mix.shell()
     Mix.shell(Mix.Shell.Process)

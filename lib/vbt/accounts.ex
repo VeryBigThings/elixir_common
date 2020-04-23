@@ -123,7 +123,7 @@ defmodule VBT.Accounts do
           {:ok, Ecto.Schema.t()} | {:error, Ecto.Changeset.t()}
   def create(data, login, password, config) do
     data
-    |> set_password(password, config)
+    |> set_password_changeset(password, config)
     |> set_login(login, config)
     |> config.repo.insert()
   end
@@ -147,9 +147,25 @@ defmodule VBT.Accounts do
           {:ok, Ecto.Schema.t()} | {:error, :invalid | Ecto.Changeset.t()}
   def change_password(account, current_password, new_password, config) do
     if password_ok?(account, current_password),
-      do: config.repo.update(set_password(account, new_password, config)),
+      do: set_password(account, new_password, config),
       else: {:error, :invalid}
   end
+
+  @doc """
+  Changes the account password in the database without checking the current password.
+
+  ## Warning
+
+  Be careful when using this function because you could end up creating security issues, such as
+  allowing attackers to change the password of another user. In almost all cases it's prefered to
+  use `change_password/4` or `start_password_reset/3`. Use this function only when the requirements
+  explicitly state that the user should be able to change their password without providing the
+  current one.
+  """
+  @spec set_password(Ecto.Schema.t(), String.t(), config) ::
+          {:ok, Ecto.Schema.t()} | {:error, Ecto.Changeset.t()}
+  def set_password(account, new_password, config),
+    do: config.repo.update(set_password_changeset(account, new_password, config))
 
   @doc """
   Creates a one-time password reset token for the given user.
@@ -181,9 +197,9 @@ defmodule VBT.Accounts do
       token,
       "password_reset",
       fn account_id ->
-        config.repo.get!(config.schemas.account, account_id)
+        config.schemas.account
+        |> config.repo.get!(account_id)
         |> set_password(new_password, config)
-        |> config.repo.update()
       end,
       config
     )
@@ -216,7 +232,7 @@ defmodule VBT.Accounts do
 
   defp to_changeset(data), do: change(data)
 
-  defp set_password(data, password, config) do
+  defp set_password_changeset(data, password, config) do
     data
     |> to_changeset()
     |> validate_password(password, config.min_password_length)
