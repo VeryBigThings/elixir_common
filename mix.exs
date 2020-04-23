@@ -40,6 +40,7 @@ defmodule VBT.MixProject do
       {:ecto, "~> 3.0"},
       {:ex_aws, "~> 2.1"},
       {:ex_aws_s3, "~> 2.0"},
+      {:ex_crypto, "~> 0.10"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:mox, "~> 0.5", only: :test},
       {:oban, "~> 1.0"},
