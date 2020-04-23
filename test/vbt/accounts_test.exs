@@ -100,7 +100,6 @@ defmodule VBT.AccountsTest do
         assert {:ok, changed_account} = Accounts.set_password(account, "new password", @config)
         assert changed_account.id == account.id
         assert {:ok, _} = Accounts.authenticate("email@x.y.z", "new password", @config)
-
         assert {:error, :invalid} = Accounts.authenticate("email@x.y.z", "some password", @config)
       end
 
