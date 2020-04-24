@@ -17,6 +17,19 @@ defmodule VBT.Aws.S3Test do
     end
   end
 
+  describe "download_url" do
+    test "includes bucket and path in the result" do
+      url = S3.download_url(config(), "some_bucket", "/some/path")
+      assert url =~ "some_bucket"
+      assert url =~ "/some/path"
+    end
+
+    test "accepts a hostable for path" do
+      url = S3.download_url(config(), "some_bucket", TestAsset.new("/another/path"))
+      assert url =~ "/another/path"
+    end
+  end
+
   describe "download" do
     test "makes an S3 get request" do
       response = %{body: "content", headers: [], status_code: 200}

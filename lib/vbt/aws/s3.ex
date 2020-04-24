@@ -35,12 +35,15 @@ defmodule VBT.Aws.S3 do
     def path(_bitstring), do: raise("bitstring isn't a valid path")
   end
 
+  @doc "Returns the presigned download url for the given object."
+  @spec download_url(config, String.t(), Hostable.t()) :: String.t()
+  def download_url(config, bucket, object),
+    do: presigned_url(config, :get, bucket, Hostable.path(object))
+
   @doc "Returns the presigned upload url for the given object."
   @spec upload_url(config, String.t(), Hostable.t()) :: String.t()
-  def upload_url(config, bucket, object) do
-    {:ok, url} = ExAws.S3.presigned_url(config, :put, bucket, Hostable.path(object))
-    url
-  end
+  def upload_url(config, bucket, object),
+    do: presigned_url(config, :put, bucket, Hostable.path(object))
 
   @doc "Downloads the given object from S3."
   @spec download(config, String.t(), Hostable.t()) :: VBT.Aws.response()
@@ -68,6 +71,11 @@ defmodule VBT.Aws.S3 do
     |> upload_chunks()
     |> ExAws.S3.upload(bucket, Hostable.path(target))
     |> VBT.Aws.client().request(config)
+  end
+
+  defp presigned_url(config, method, bucket, object) do
+    {:ok, url} = ExAws.S3.presigned_url(config, method, bucket, object)
+    url
   end
 
   defp upload_chunks({:file, path}), do: File.stream!(path, [], chunk_size())
