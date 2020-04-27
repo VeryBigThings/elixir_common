@@ -46,7 +46,7 @@ defmodule VBT.MixProject do
       {:oban, "~> 1.0"},
       {:parent, "~> 0.8"},
       {:phoenix_html, "~> 2.0"},
-      {:phoenix, "~> 1.4"},
+      {:phoenix, "~> 1.4.0"},
       {:provider, github: "VeryBigThings/provider"},
       {:stream_data, "~> 0.4", only: [:test, :dev]}
     ]
