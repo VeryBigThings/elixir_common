@@ -1,6 +1,7 @@
 use Mix.Config
 
 config :phoenix, :json_library, Jason
+config :ex_aws, json_codec: Jason
 
 if Mix.env() == :test do
   config :logger, level: :warn
@@ -13,6 +14,7 @@ if Mix.env() == :test do
     pubsub: [name: VBT.PubSub, adapter: Phoenix.PubSub.PG2]
 
   config :vbt, ecto_repos: [VBT.TestRepo]
+  config :vbt, :ex_aws_client, VBT.TestAwsClient
 
   config :bcrypt_elixir, :log_rounds, 4
 end

@@ -1,3 +1,7 @@
+## 2020-04-24
+
+**[Breaking]** `VBT.aws_client/0` is deprecated. Use `VBT.Aws.client/0` instead.
+
 ## 2020-04-22
 
 **[Breaking]** The credo check `VBT.Credo.Check.Readability.WithPlaceholder` has been removed. Use `Credo.Check.Readability.WithCustomTaggedTuple` instead. Adapt `.credo.exs` accordingly.
