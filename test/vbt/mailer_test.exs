@@ -21,13 +21,13 @@ defmodule VBT.MailerTest do
 
     test "sets body through phoenix view" do
       send_mail(%{layout: :layout, template: "greetings.text", name: "foo bar"})
-      assert_delivered_email(text_body: "Hello foo bar,\n\nBest regards,\nVBT\n")
+      assert_delivered_email(text_body: "Hello foo bar,\n\n\nBest regards,\nVBT\n")
     end
 
     test "sets text and html body through phoenix view" do
       send_mail(%{layout: :layout, template: :greetings, name: "foo bar"})
       mail = assert_delivered_email()
-      assert mail.text_body == "Hello foo bar,\n\nBest regards,\nVBT\n"
+      assert mail.text_body == "Hello foo bar,\n\n\nBest regards,\nVBT\n"
       assert mail.html_body == "<div>Hello foo bar,</div>\n<div>Best regards, VBT</div>\n"
     end
 

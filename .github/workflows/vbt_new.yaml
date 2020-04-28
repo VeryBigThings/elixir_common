@@ -1,0 +1,123 @@
+name: "vbt_new"
+
+on: push
+
+jobs:
+  vbt_new_test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:11.7
+        env:
+          POSTGRES_USER: "postgres"
+          POSTGRES_PASSWORD: "postgres"
+          POSTGRES_DB: "vbt_test"
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      CACHE_VERSION: v1
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-elixir@v1
+        with:
+          otp-version: 22.2.8
+          elixir-version: 1.10.2
+
+      - name: Restore cached deps
+        uses: actions/cache@v1
+        with:
+          path: vbt_new/deps
+          key: vbt_new_deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/mix.lock')) }}
+          restore-keys: |
+            vbt_new_deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-
+            vbt_new_deps-${{ env.CACHE_VERSION }}-
+
+      - name: Restore cached build
+        uses: actions/cache@v1
+        with:
+          path: vbt_new/_build
+          key: vbt_new_build-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/mix.lock')) }}
+          restore-keys: |
+            vbt_new_build-${{ env.CACHE_VERSION }}-${{ github.ref }}-
+            vbt_new_build-${{ env.CACHE_VERSION }}-
+
+      - name: Restore cached tmp
+        uses: actions/cache@v1
+        with:
+          path: vbt_new/tmp
+          key: vbt_new_tmp-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/test_projects/expected_state/mix.lock')) }}
+          restore-keys: |
+            vbt_new_tmp-${{ env.CACHE_VERSION }}-${{ github.ref }}-
+            vbt_new_tmp-${{ env.CACHE_VERSION }}-
+
+      - name: Fetch deps
+        run: cd vbt_new && mix deps.get
+
+      - name: Compile project
+        run: |
+          cd vbt_new
+          MIX_ENV=test mix compile --warnings-as-errors
+          MIX_ENV=dev mix compile --warnings-as-errors
+          MIX_ENV=prod mix compile --warnings-as-error
+
+      - name: Check code format
+        run: cd vbt_new && mix format --check-formatted
+
+      - name: Run linter checks
+        run: cd vbt_new && mix credo list
+
+      - name: Run tests
+        run: cd vbt_new && mix test
+
+      - name: Run dialyzer
+        run: cd vbt_new && mix dialyzer
+
+  vbt_new_deploy:
+    needs: vbt_new_test
+    if: github.ref == 'refs/heads/master'
+
+    runs-on: ubuntu-latest
+    env:
+      CACHE_VERSION: v1
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-elixir@v1
+        with:
+          otp-version: 22.2.8
+          elixir-version: 1.10.2
+
+      - name: Restore cached deps
+        uses: actions/cache@v1
+        with:
+          path: vbt_new/deps
+          key: vbt_new_deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/mix.lock')) }}
+          restore-keys: |
+            vbt_new_deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-
+            vbt_new_deps-${{ env.CACHE_VERSION }}-
+
+      - name: Restore cached build
+        uses: actions/cache@v1
+        with:
+          path: vbt_new/_build
+          key: vbt_new_build-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/mix.lock')) }}
+          restore-keys: |
+            vbt_new_build-${{ env.CACHE_VERSION }}-${{ github.ref }}-
+            vbt_new_build-${{ env.CACHE_VERSION }}-
+
+      - name: Build archive
+        run: cd vbt_new && mix archive.build
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy archive
+        run: aws s3 cp --acl public-read --region us-east-1 ./vbt_new/vbt_new-0.1.0.ez s3://vbt-common-docs/vbt_new.ez
