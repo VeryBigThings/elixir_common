@@ -3,7 +3,7 @@ name: "vbt_new"
 on: push
 
 jobs:
-  vbt_new_build:
+  vbt_new_test:
     runs-on: ubuntu-latest
 
     services:
@@ -45,6 +45,15 @@ jobs:
             vbt_new_build-${{ env.CACHE_VERSION }}-${{ github.ref }}-
             vbt_new_build-${{ env.CACHE_VERSION }}-
 
+      - name: Restore cached tmp
+        uses: actions/cache@v1
+        with:
+          path: vbt_new/tmp
+          key: vbt_new_tmp-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/test_projects/expected_state/mix.lock')) }}
+          restore-keys: |
+            vbt_new_tmp-${{ env.CACHE_VERSION }}-${{ github.ref }}-
+            vbt_new_tmp-${{ env.CACHE_VERSION }}-
+
       - name: Fetch deps
         run: cd vbt_new && mix deps.get
 
@@ -54,54 +63,6 @@ jobs:
           MIX_ENV=test mix compile --warnings-as-errors
           MIX_ENV=dev mix compile --warnings-as-errors
           MIX_ENV=prod mix compile --warnings-as-error
-
-  vbt_new_test:
-    needs: vbt_new_build
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:11.7
-        env:
-          POSTGRES_USER: "postgres"
-          POSTGRES_PASSWORD: "postgres"
-          POSTGRES_DB: "vbt_test"
-        ports:
-          - 5432:5432
-        # needed because the postgres container does not provide a healthcheck
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-    env:
-      CACHE_VERSION: v1
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-elixir@v1
-        with:
-          otp-version: 22.2.8
-          elixir-version: 1.10.2
-
-      - name: Restore cached deps
-        uses: actions/cache@v1
-        with:
-          path: vbt_new/deps
-          key: vbt_new_deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/mix.lock')) }}
-
-      - name: Restore cached test
-        uses: actions/cache@v1
-        with:
-          path: vbt_new/_build
-          key: vbt_new_test-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/mix.lock')) }}
-          restore-keys: |
-            vbt_new_build-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/mix.lock')) }}
-
-      - name: Restore cached tmp
-        uses: actions/cache@v1
-        with:
-          path: vbt_new/tmp
-          key: vbt_new_tmp-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/test_projects/expected_state/mix.lock')) }}
-          restore-keys: |
-            vbt_new_tmp-${{ env.CACHE_VERSION }}-${{ github.ref }}-
-            vbt_new_tmp-${{ env.CACHE_VERSION }}-
 
       - name: Check code format
         run: cd vbt_new && mix format --check-formatted
