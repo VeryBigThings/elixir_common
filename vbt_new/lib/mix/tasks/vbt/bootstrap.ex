@@ -63,6 +63,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     source_files()
     |> adapt_gitignore()
     |> adapt_mix()
+    |> add_kubernetes_liveness_check()
     |> configure_endpoint()
     |> configure_repo()
     |> adapt_app_module()
@@ -288,6 +289,20 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   # ------------------------------------------------------------------------
   # Endpoint configuration
   # ------------------------------------------------------------------------
+
+  defp add_kubernetes_liveness_check(source_files) do
+    update_in(
+      source_files.endpoint.content,
+      &String.replace(
+        &1,
+        "plug Plug.Head\n",
+        """
+        plug Plug.Head
+        plug VBT.Kubernetes.Probe, "/authz"
+        """
+      )
+    )
+  end
 
   defp configure_endpoint(source_files) do
     source_files
