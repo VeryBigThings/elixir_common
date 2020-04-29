@@ -120,4 +120,4 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy archive
-        run: aws s3 cp --acl public-read --region us-east-1 ./vbt_new/vbt_new-0.1.0.ez s3://vbt-common-docs/vbt_new.ez
+        run: aws s3 cp --acl public-read --region us-east-1 ./vbt_new/vbt_new-0.1.0.ez s3://vbt-common-docs.verybigthings.com/vbt_new.ez
