@@ -9,7 +9,7 @@ defmodule SkafolderTesterWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_skafolder_tester_key",
-    signing_salt: "PAo6kj7/"
+    signing_salt: "lHGqHlwG"
   ]
 
   socket "/socket", SkafolderTesterWeb.UserSocket,
@@ -42,6 +42,7 @@ defmodule SkafolderTesterWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
+  plug VBT.Kubernetes.Probe, "/healthz"
   plug Plug.Session, @session_options
   plug SkafolderTesterWeb.Router
 
