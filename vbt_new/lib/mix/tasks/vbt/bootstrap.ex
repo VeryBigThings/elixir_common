@@ -298,7 +298,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         "plug Plug.Head\n",
         """
         plug Plug.Head
-        plug VBT.Kubernetes.Probe, "/authz"
+        plug VBT.Kubernetes.Probe, "/healthz"
         """
       )
     )

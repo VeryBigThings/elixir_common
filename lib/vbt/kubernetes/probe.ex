@@ -2,7 +2,7 @@ defmodule VBT.Kubernetes.Probe do
   @moduledoc """
   Plug for handling kubernetes liveness probe checks.
 
-  To use it, add `plug VBT.Kubernetes.Probe, "/authz"` in your endpoint.
+  To use it, add `plug VBT.Kubernetes.Probe, "/healthz"` in your endpoint.
   """
 
   @behaviour Plug
