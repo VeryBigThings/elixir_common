@@ -107,7 +107,7 @@ jobs:
 
   vbt_push_docs:
     needs: vbt_build
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' || contains(github.event.head_commit.message, '# push docs')
 
     runs-on: ubuntu-latest
     env:
@@ -143,4 +143,4 @@ jobs:
           aws-region: us-east-1
 
       - name: "Release docs"
-        run: aws s3 sync --acl public-read --delete --region us-east-1 ./doc/ s3://vbt-common-docs.verybigthings.com/
+        run: aws s3 sync --acl public-read --region us-east-1 ./doc/ s3://vbt-common-docs.verybigthings.com/

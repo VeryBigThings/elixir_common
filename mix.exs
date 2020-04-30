@@ -13,7 +13,8 @@ defmodule VBT.MixProject do
       dialyzer: dialyzer(),
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix] ++ Mix.compilers(),
-      source_url: "https://github.com/VeryBigThings/elixir_common_private/"
+      source_url: "https://github.com/VeryBigThings/elixir_common_private/",
+      docs: docs()
     ]
   end
 
@@ -79,4 +80,17 @@ defmodule VBT.MixProject do
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
+
+  defp docs do
+    [
+      main: VBT,
+      groups_for_modules: [
+        "GraphQL & Absinthe": ~r/VBT\.((Absinthe)|(Graphql)).*/,
+        Ecto: ~r/VBT\.((Ecto)|(Repo)).*/,
+        "Auth & accounts": ~r/VBT\.((Auth)|(Accounts)).*/,
+        "External services": ~r/VBT\.((Aws)|(Kubernetes)).*/,
+        Credo: ~r/VBT\.Credo.*/
+      ]
+    ]
+  end
 end
