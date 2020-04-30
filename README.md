@@ -1,3 +1,5 @@
+[![hexdocs.pm](https://img.shields.io/badge/docs-latest-green.svg?style=flat-square)](http://vbt-common-docs.verybigthings.com)
+
 # VBT
 
 A library which contains various utilities used in different VBT projects.
