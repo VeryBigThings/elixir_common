@@ -83,6 +83,7 @@ defmodule VBT.MixProject do
 
   defp docs do
     [
+      main: VBT,
       groups_for_modules: [
         "GraphQL & Absinthe": ~r/VBT\.((Absinthe)|(Graphql)).*/,
         Ecto: ~r/VBT\.((Ecto)|(Repo)).*/,
