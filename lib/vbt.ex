@@ -6,7 +6,7 @@ defmodule VBT do
   # ------------------------------------------------------------------------
 
   # TODO: remove this at some point
-  @deprecated "Use `VBT.Aws.client` instead."
+  @deprecated "Use `VBT.Aws.client` instead"
   defdelegate aws_client, to: VBT.Aws, as: :client
 
   @doc "Converts a boolean into `:ok | {:error, reason}`."
