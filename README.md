@@ -13,7 +13,7 @@ First, make sure that your system-wide Elixir version is 1.10 or higher. If you'
 Next, install the most recent version of the scaffolder:
 
 ```
-wget -q https://vbt-common-docs.s3.amazonaws.com/vbt_new.ez -O /tmp/vbt_new.ez && \
+wget -q http://vbt-common-docs.verybigthings.com/vbt_new.ez -O /tmp/vbt_new.ez && \
   mix archive.install --force /tmp/vbt_new.ez
 ```
 
