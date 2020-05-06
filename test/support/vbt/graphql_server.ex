@@ -4,19 +4,12 @@ defmodule VBT.GraphqlServer do
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   use Phoenix.Endpoint, otp_app: :vbt
-  import Phoenix.Controller, only: [accepts: 2]
   import VBT.Absinthe.ResolverHelper
 
   socket "/socket", __MODULE__.Socket,
     websocket: true,
     longpoll: false
 
-  plug Plug.Parsers,
-    parsers: [:urlencoded, :multipart, :json, Absinthe.Plug.Parser],
-    pass: ["*/*"],
-    json_decoder: Jason
-
-  plug :accepts, ["json"]
   plug VBT.Auth
   plug Absinthe.Plug, schema: __MODULE__.Schema
 
