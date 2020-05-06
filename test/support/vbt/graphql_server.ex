@@ -14,10 +14,7 @@ defmodule VBT.GraphqlServer do
 
   defmodule Schema do
     @moduledoc false
-    use Absinthe.Schema
-    import VBT.Absinthe.ResolverHelper
-
-    import_types VBT.Graphql.Scalars
+    use VBT.Absinthe.Schema
 
     query do
       field :order, :order do
@@ -64,13 +61,13 @@ defmodule VBT.GraphqlServer do
         resolve fn _, _ ->
           types = %{login: :string, password: :string}
 
-          changeset_errors =
+          changeset =
             {%{}, types}
             |> Ecto.Changeset.cast(%{}, Map.keys(types))
             |> Ecto.Changeset.validate_required([:login])
-            |> changeset_errors()
+            |> Ecto.Changeset.add_error(:password, "invalid password")
 
-          {:error, ["invalid login data" | changeset_errors]}
+          {:error, changeset}
         end
       end
     end

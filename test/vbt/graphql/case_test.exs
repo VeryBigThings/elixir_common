@@ -18,8 +18,8 @@ defmodule VBT.Graphql.CaseTest do
       assert {:error, %{data: data, errors: errors}} = call(failing_query())
       assert data == %{register_user: nil}
       assert [%{message: error1}, %{message: error2}] = errors
-      assert error1 == "invalid login data"
-      assert error2 == "can't be blank"
+      assert error1 == "can't be blank"
+      assert error2 == "invalid password"
     end
   end
 
@@ -39,7 +39,7 @@ defmodule VBT.Graphql.CaseTest do
     test "raises on failure" do
       error = assert_raise ExUnit.AssertionError, fn -> call!(failing_query()) end
       assert error.message =~ "GraphQL call failed"
-      assert error.message =~ "invalid login data"
+      assert error.message =~ "invalid password"
       assert error.message =~ "can't be blank"
     end
   end
@@ -47,7 +47,7 @@ defmodule VBT.Graphql.CaseTest do
   describe "errors" do
     test "returns all error messages" do
       {:error, response} = call(failing_query())
-      assert errors(response) == ["invalid login data", "can't be blank"]
+      assert errors(response) == ["can't be blank", "invalid password"]
     end
   end
 
