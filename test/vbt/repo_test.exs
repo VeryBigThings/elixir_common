@@ -144,10 +144,8 @@ defmodule Vbt.RepoTest do
 
       assert TestRepo.delete_one(from Account, where: [id: -1]) == {:error, :not_found}
 
-      assert TestRepo.all(from account in Account, select: account.id) == [
-               account1.id,
-               account2.id
-             ]
+      assert Enum.sort(TestRepo.all(from account in Account, select: account.id)) ==
+               Enum.sort([account1.id, account2.id])
     end
 
     test "fails if multiple records are matched" do
