@@ -4,7 +4,6 @@ defmodule VBT.GraphqlServer do
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   use Phoenix.Endpoint, otp_app: :vbt
-  import VBT.Absinthe.ResolverHelper
 
   socket "/socket", __MODULE__.Socket,
     websocket: true,
@@ -16,6 +15,7 @@ defmodule VBT.GraphqlServer do
   defmodule Schema do
     @moduledoc false
     use Absinthe.Schema
+    import VBT.Absinthe.ResolverHelper
 
     import_types VBT.Graphql.Scalars
 
