@@ -15,6 +15,11 @@ defmodule VBT.Absinthe.Schema do
   defmacro __using__(_opts) do
     quote do
       use Absinthe.Schema
+
+      # Conditionally defining the behaviour to support absinthe 1.4 and 1.5
+      unless Enum.member?(Module.get_attribute(__MODULE__, :behaviour), Absinthe.Schema),
+        do: @behaviour(Absinthe.Schema)
+
       import_types VBT.Graphql.Scalars
 
       @impl Absinthe.Schema

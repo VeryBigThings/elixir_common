@@ -29,18 +29,18 @@ defmodule VBT.MixProject do
 
   defp deps do
     [
-      {:absinthe_phoenix, "~> 1.4"},
-      {:absinthe_plug, "~> 1.4"},
-      {:absinthe_relay, "~> 1.4"},
-      {:absinthe, "~> 1.4"},
+      {:absinthe_phoenix, "~> 1.4 or ~> 1.5-rc"},
+      {:absinthe_plug, "~> 1.4 or ~> 1.5-rc"},
+      {:absinthe_relay, "~> 1.4 or ~> 1.5-rc"},
+      {:absinthe, "~> 1.4 or ~> 1.5-rc"},
       {:bamboo, "~> 1.4"},
       {:bcrypt_elixir, "~> 2.0"},
       {:credo, "~> 1.4", runtime: false},
       {:dialyxir, "~> 0.5 or ~> 1.0", runtime: false},
       {:ecto_enum, "~> 1.3"},
       {:ecto, "~> 3.0"},
-      {:ex_aws, "~> 2.1"},
       {:ex_aws_s3, "~> 2.0"},
+      {:ex_aws, "~> 2.1"},
       {:ex_crypto, "~> 0.10"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:mox, "~> 0.5", only: :test},
