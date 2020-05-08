@@ -6,13 +6,15 @@ defmodule VBT.Application do
   use Application
   alias VBT.Telemetry
 
-  children =
+  test_children =
     if Mix.env() == :test do
       [
         VBT.TestRepo,
         {Oban, repo: VBT.TestRepo, crontab: false, queues: false, prune: :disabled},
         VBT.GraphqlServer
       ]
+    else
+      []
     end
 
   def start(_type, _args) do
@@ -20,7 +22,7 @@ defmodule VBT.Application do
     Telemetry.Oban.install_handler()
 
     Supervisor.start_link(
-      unquote(children || []),
+      [VBT.Absinthe.Instrumentation | unquote(test_children)],
       strategy: :one_for_one,
       name: VBT.Supervisor
     )
