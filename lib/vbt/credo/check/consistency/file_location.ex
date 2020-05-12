@@ -38,7 +38,7 @@ defmodule VBT.Credo.Check.Consistency.FileLocation do
         []
 
       {:error, module, expected_file} ->
-        error(IssueMeta.for(source_file, params), module, expected_file)
+        [error(IssueMeta.for(source_file, params), module, expected_file)]
     end
   end
 
