@@ -143,6 +143,8 @@ defmodule VBT.Mailer do
         end
   """
 
+  alias Bamboo.{Attachment, Email}
+
   @type body ::
           String.t()
           | %{text: String.t(), html: String.t()}
@@ -152,6 +154,8 @@ defmodule VBT.Mailer do
               optional(atom) => any
             }
 
+  @type opts :: [attachments: [Attachment.t()]]
+
   @callback config :: map
 
   # ------------------------------------------------------------------------
@@ -159,14 +163,14 @@ defmodule VBT.Mailer do
   # ------------------------------------------------------------------------
 
   @doc "Composes the email and sends it to the target address."
-  @spec send!(module, Bamboo.Email.address(), Bamboo.Email.address(), String.t(), body) :: :ok
-  def send!(mailer, from, to, subject, body) do
+  @spec send!(module, Email.address(), Email.address(), String.t(), body, opts) :: :ok
+  def send!(mailer, from, to, subject, body, opts \\ []) do
     [adapter] = Keyword.fetch!(mailer.__info__(:attributes), __MODULE__)
     config = mailer.config()
 
     email =
-      [from: from, to: to, subject: subject]
-      |> Bamboo.Email.new_email()
+      [from: from, to: to, subject: subject, attachments: attachments(opts)]
+      |> Email.new_email()
       |> set_body(body, mailer)
 
     Bamboo.Mailer.deliver_now(adapter, email, config, [])
@@ -175,10 +179,12 @@ defmodule VBT.Mailer do
   end
 
   @doc "Enqueues the mail for sending."
-  @spec enqueue(module, Bamboo.Email.address(), Bamboo.Email.address(), String.t(), body) ::
+  @spec enqueue(module, Email.address(), Email.address(), String.t(), body, opts :: opts) ::
           {:ok, Oban.Job.t()} | {:error, Ecto.Changeset.t()}
-  def enqueue(mailer, from, to, subject, body) do
-    %{from: from, to: to, subject: subject, body: body}
+  def enqueue(mailer, from, to, subject, body, opts \\ []) do
+    opts = Keyword.put(opts, :attachments, attachments(opts))
+
+    %{from: from, to: to, subject: subject, body: body, opts: opts}
     |> encode_for_queue()
     |> mailer.new()
     |> Oban.insert()
@@ -188,13 +194,33 @@ defmodule VBT.Mailer do
   # Private
   # ------------------------------------------------------------------------
 
+  defp attachments(opts) do
+    opts
+    |> Keyword.get(:attachments, [])
+    |> Enum.map(&normalize_attachment/1)
+  end
+
+  defp normalize_attachment(%Attachment{data: nil} = attachment) do
+    if is_nil(attachment.path), do: raise("missing file path or attachment data")
+
+    %Attachment{
+      data: File.read!(attachment.path),
+      filename: attachment.filename || Path.basename(attachment.path)
+    }
+  end
+
+  defp normalize_attachment(attachment) do
+    if is_nil(attachment.filename), do: raise("missing filename")
+    attachment
+  end
+
   defp set_body(email, body, _mailer) when is_binary(body),
-    do: Bamboo.Email.text_body(email, body)
+    do: Email.text_body(email, body)
 
   defp set_body(email, %{text: text_body, html: html_body}, _mailer) do
     email
-    |> Bamboo.Email.text_body(text_body)
-    |> Bamboo.Email.html_body(html_body)
+    |> Email.text_body(text_body)
+    |> Email.html_body(html_body)
   end
 
   defp set_body(email, %{layout: layout, template: template} = body, mailer) do
@@ -262,7 +288,7 @@ defmodule VBT.Mailer do
         # credo:disable-for-next-line Credo.Check.Readability.Specs
         def perform(%{"args" => args}, _job) do
           args = args |> Base.decode64!(padding: false) |> :erlang.binary_to_term()
-          VBT.Mailer.send!(__MODULE__, args.from, args.to, args.subject, args.body)
+          VBT.Mailer.send!(__MODULE__, args.from, args.to, args.subject, args.body, args.opts)
         end
 
         @impl Oban.Worker

@@ -43,7 +43,7 @@ defmodule VBT.Graphql.ScalarsTest do
     defp datetime_usec(value) do
       with {:ok, response} <-
              call(
-               "query($value: String) {
+               "query($value: DateTimeUsec) {
                  datetime_usec(value: $value) {decoded encoded encoded_msec encoded_sec}
                 }",
                variables: %{value: value}
