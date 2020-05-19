@@ -1,5 +1,5 @@
 Ecto.Adapters.SQL.Sandbox.mode(VBT.TestRepo, :manual)
-Mox.defmock(VBT.TestAwsClient, for: ExAws.Behaviour)
+VBT.Aws.Test.setup()
 Application.ensure_all_started(:credo)
 ExUnit.start()
 VBT.Absinthe.Instrumentation.set_long_operation_threshold(:infinity)
