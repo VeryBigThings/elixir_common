@@ -3,7 +3,7 @@ defmodule VBT.Aws.S3 do
   Helper for performing actions on S3.
 
   When making requests to S3, the `VBT.Aws.client/0` function is invoked to determine the actual
-  client module. Consequently, you can mock this module in tests with `Mox`.
+  client module. Consequently, you can use `VBT.Aws.Test` to test this module.
   """
 
   @type config :: %{
@@ -64,6 +64,23 @@ defmodule VBT.Aws.S3 do
 
   The content is uploaded in chunks of 5 MiB. Notice that if you pass an enumerable of binaries,
   the input chunks won't affect the upload chunks.
+
+  ## Testing
+
+  To test this function, you can use `VBT.Aws.Test`:
+
+      test "upload" do
+        Aws.Test.stub_request("")
+
+        assert S3.upload(config, bucket, content, target) == {:ok, ""}
+
+        path = S3.Hostable.path(target)
+        assert_received {:aws_request, %ExAws.S3.Upload{bucket: ^bucket, path: ^path} = req, _}
+        chunks = Enum.to_list(req.src)
+        uploaded_content = IO.iodata_to_binary(chunks)
+
+        # make assertions on uploaded_content
+      end
   """
   @spec upload(config, String.t(), upload_source, Hostable.t()) :: VBT.Aws.response()
   def upload(config, bucket, source, target) do
