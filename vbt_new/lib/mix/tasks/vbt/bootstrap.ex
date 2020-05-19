@@ -277,12 +277,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     source_files
     |> update_in([:mix], &MixFile.append_config(&1, :deps, ~s/{:mox, "~> 0.5", only: :test}/))
     |> update_in(
-      [:test_config],
-      &ConfigFile.prepend(&1, "config :vbt, :ex_aws_client, VBT.TestAwsClient")
-    )
-    |> update_in(
       [:test_helper],
-      &SourceFile.append(&1, "Mox.defmock(VBT.TestAwsClient, for: ExAws.Behaviour)")
+      &SourceFile.append(&1, "VBT.Aws.Test.setup()")
     )
   end
 
