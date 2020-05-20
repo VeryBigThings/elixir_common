@@ -1,6 +1,7 @@
 defmodule VBT.Aws.S3Test do
   use ExUnit.Case, async: true
   import VBT.TestHelper
+  alias VBT.Aws
   alias VBT.Aws.S3
   alias VBT.TestAsset
 
@@ -33,29 +34,25 @@ defmodule VBT.Aws.S3Test do
   describe "download" do
     test "makes an S3 get request" do
       response = %{body: "content", headers: [], status_code: 200}
+      Aws.Test.stub_request({:ok, response})
 
-      Mox.expect(VBT.Aws.client(), :request, fn req, config ->
-        assert config == config()
+      assert {:ok, ^response} = S3.download(config(), "some bucket", "/some/path")
 
-        assert req.http_method == :get
-        assert req.bucket == "some bucket"
-        assert req.path == "/some/path"
-
-        response
-      end)
-
-      assert S3.download(config(), "some bucket", "/some/path") == response
+      assert_received {:aws_request, req, config}
+      assert config == config()
+      assert req.http_method == :get
+      assert req.bucket == "some bucket"
+      assert req.path == "/some/path"
     end
 
     test "accepts a hostable for path" do
       response = %{body: "content", headers: [], status_code: 200}
+      Aws.Test.stub_request({:ok, response})
 
-      Mox.expect(VBT.Aws.client(), :request, fn req, _config ->
-        assert req.path == "/another/path"
-        response
-      end)
+      assert {:ok, ^response} = S3.download(config(), "some bucket", TestAsset.new("/some/path"))
 
-      assert S3.download(config(), "some bucket", TestAsset.new("/another/path")) == response
+      assert_received {:aws_request, req, _config}
+      assert req.path == "/some/path"
     end
   end
 
@@ -109,24 +106,15 @@ defmodule VBT.Aws.S3Test do
     end
 
     defp upload(content, opts \\ []) do
+      Aws.Test.stub_request("ok")
+
       bucket = Keyword.get(opts, :bucket, "some bucket")
       target = Keyword.get(opts, :target, "/some/path")
-      test_pid = self()
-
-      Mox.expect(VBT.Aws.client(), :request, fn req, config ->
-        assert config == config()
-
-        assert %ExAws.S3.Upload{} = req
-        assert req.bucket == bucket
-        assert req.path == S3.Hostable.path(target)
-
-        send(test_pid, {:chunks, Enum.to_list(req.src)})
-      end)
-
       S3.upload(config(), bucket, content, target)
 
-      assert_receive {:chunks, chunks}
-      chunks
+      path = S3.Hostable.path(target)
+      assert_received {:aws_request, %ExAws.S3.Upload{bucket: ^bucket, path: ^path} = req, _}
+      Enum.to_list(req.src)
     end
   end
 

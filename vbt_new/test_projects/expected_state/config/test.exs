@@ -2,8 +2,6 @@ use Mix.Config
 
 config :bcrypt_elixir, :log_rounds, 1
 
-config :vbt, :ex_aws_client, VBT.TestAwsClient
-
 # Configure your database
 config :skafolder_tester, SkafolderTester.Repo, pool: Ecto.Adapters.SQL.Sandbox
 
