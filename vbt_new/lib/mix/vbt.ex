@@ -58,7 +58,9 @@ defmodule Mix.Vbt do
 
     Enum.into(get_latest_versions!(), %{}, fn {key, version} -> {key, Version.parse!(version)} end)
   catch
-    _, _ ->
+    kind, payload ->
+      IO.puts(Exception.format(kind, payload, __STACKTRACE__))
+
       Mix.shell().error("""
 
       Error fetching latest tool versions, using default versions instead.
@@ -112,10 +114,11 @@ defmodule Mix.Vbt do
       |> Regex.named_captures(dockerfile("c0b/docker-elixir", elixir_major_minor_version))
       |> Map.fetch!("erlang_major_version")
 
-    ~r/OTP_VERSION="(?<erlang_version>\d+\.\d+(\.\d+)?)"/
+    ~r/OTP_VERSION="(?<erlang_version>\d+\.\d+(\.\d+)*)"/
     |> Regex.named_captures(dockerfile("erlang/docker-erlang-otp", erlang_major_version))
     |> Map.fetch!("erlang_version")
     |> String.split(".")
+    |> Enum.take(3)
     |> case do
       [major, minor] -> [major, minor, 0]
       [_major, _minor, _patch] = version -> version

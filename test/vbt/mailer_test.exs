@@ -14,12 +14,20 @@ defmodule VBT.MailerTest do
 
   describe "send!" do
     test "sends mail with all fields populated" do
-      Mailer.send!(TestMailer, "from@x.y.z", "to@x.y.z", "some subject", "mail body")
+      Mailer.send!(TestMailer, "from@x.y.z", "to@x.y.z", "some subject", "mail body",
+        cc: "cc@x.y.z",
+        bcc: "bcc@x.y.z",
+        headers: %{"Reply-To" => "reply-to@x.y.z"}
+      )
+
       mail = assert_delivered_email()
       assert mail.from == {nil, "from@x.y.z"}
       assert mail.to == [{nil, "to@x.y.z"}]
+      assert mail.cc == [{nil, "cc@x.y.z"}]
+      assert mail.bcc == [{nil, "bcc@x.y.z"}]
       assert mail.subject == "some subject"
       assert mail.text_body == "mail body"
+      assert mail.headers == %{"Reply-To" => "reply-to@x.y.z"}
     end
 
     test "sends an attachment with data" do
@@ -101,27 +109,37 @@ defmodule VBT.MailerTest do
     end
 
     test "sends e-mail" do
-      Mailer.enqueue(TestMailer, "from@x.y.z", "to@x.y.z", "some subject", "mail body")
-      TestMailer.drain_queue()
-
-      mail = assert_delivered_email()
-      assert mail.from == {nil, "from@x.y.z"}
-      assert mail.to == [{nil, "to@x.y.z"}]
-      assert mail.subject == "some subject"
-      assert mail.text_body == "mail body"
-    end
-
-    test "sends attachment if provided" do
       Mailer.enqueue(TestMailer, "from@x.y.z", "to@x.y.z", "some subject", "mail body",
+        cc: "cc@x.y.z",
+        bcc: "bcc@x.y.z",
+        headers: %{"Reply-To" => "reply-to@x.y.z"},
         attachments: [%Bamboo.Attachment{filename: "foo.txt", data: "some content"}]
       )
 
       TestMailer.drain_queue()
 
       mail = assert_delivered_email()
+      assert mail.from == {nil, "from@x.y.z"}
+      assert mail.to == [{nil, "to@x.y.z"}]
+      assert mail.cc == [{nil, "cc@x.y.z"}]
+      assert mail.bcc == [{nil, "bcc@x.y.z"}]
+      assert mail.subject == "some subject"
+      assert mail.text_body == "mail body"
+      assert mail.headers == %{"Reply-To" => "reply-to@x.y.z"}
+
       assert [attachment] = mail.attachments
       assert attachment.filename == "foo.txt"
       assert attachment.data == "some content"
+    end
+
+    test "doesn't send e-mail if transaction is rolled back" do
+      VBT.TestRepo.transact(fn ->
+        Mailer.enqueue(TestMailer, "from@x.y.z", "to@x.y.z", "some subject", "mail body")
+        {:error, "some error"}
+      end)
+
+      TestMailer.drain_queue()
+      refute_delivered_email(from: "from@x.y.z")
     end
   end
 end
