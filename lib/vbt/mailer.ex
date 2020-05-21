@@ -154,7 +154,12 @@ defmodule VBT.Mailer do
               optional(atom) => any
             }
 
-  @type opts :: [attachments: [Attachment.t()]]
+  @type opts :: [
+          attachments: [Attachment.t()],
+          cc: [Email.address_list()],
+          bcc: [Email.address_list()],
+          headers: %{String.t() => String.t()}
+        ]
 
   @callback config :: map
 
@@ -163,13 +168,15 @@ defmodule VBT.Mailer do
   # ------------------------------------------------------------------------
 
   @doc "Composes the email and sends it to the target address."
-  @spec send!(module, Email.address(), Email.address(), String.t(), body, opts) :: :ok
+  @spec send!(module, Email.address_list(), Email.address_list(), String.t(), body, opts) :: :ok
   def send!(mailer, from, to, subject, body, opts \\ []) do
+    opts = Keyword.update(opts, :attachments, [], &normalize_attachments/1)
     [adapter] = Keyword.fetch!(mailer.__info__(:attributes), __MODULE__)
     config = mailer.config()
 
     email =
-      [from: from, to: to, subject: subject, attachments: attachments(opts)]
+      [from: from, to: to, subject: subject]
+      |> Keyword.merge(Keyword.take(opts, ~w/attachments cc bcc headers/a))
       |> Email.new_email()
       |> set_body(body, mailer)
 
@@ -182,7 +189,9 @@ defmodule VBT.Mailer do
   @spec enqueue(module, Email.address(), Email.address(), String.t(), body, opts :: opts) ::
           {:ok, Oban.Job.t()} | {:error, Ecto.Changeset.t()}
   def enqueue(mailer, from, to, subject, body, opts \\ []) do
-    opts = Keyword.put(opts, :attachments, attachments(opts))
+    # Technically it would be enough to do this normalization in `send!`. However, we're also
+    # doing it here to raise early if there are some error in input opts.
+    opts = Keyword.update(opts, :attachments, [], &normalize_attachments/1)
 
     %{from: from, to: to, subject: subject, body: body, opts: opts}
     |> encode_for_queue()
@@ -194,11 +203,8 @@ defmodule VBT.Mailer do
   # Private
   # ------------------------------------------------------------------------
 
-  defp attachments(opts) do
-    opts
-    |> Keyword.get(:attachments, [])
-    |> Enum.map(&normalize_attachment/1)
-  end
+  defp normalize_attachments(attachments),
+    do: Enum.map(attachments, &normalize_attachment/1)
 
   defp normalize_attachment(%Attachment{data: nil} = attachment) do
     if is_nil(attachment.path), do: raise("missing file path or attachment data")
