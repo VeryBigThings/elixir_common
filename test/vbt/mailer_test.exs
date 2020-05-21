@@ -131,5 +131,15 @@ defmodule VBT.MailerTest do
       assert attachment.filename == "foo.txt"
       assert attachment.data == "some content"
     end
+
+    test "doesn't send e-mail if transaction is rolled back" do
+      VBT.TestRepo.transact(fn ->
+        Mailer.enqueue(TestMailer, "from@x.y.z", "to@x.y.z", "some subject", "mail body")
+        {:error, "some error"}
+      end)
+
+      TestMailer.drain_queue()
+      refute_delivered_email(from: "from@x.y.z")
+    end
   end
 end
