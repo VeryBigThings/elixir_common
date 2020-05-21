@@ -73,6 +73,20 @@ defmodule VBT.TestHelper do
   end
 
   @doc """
+  Asserts that an e-mail has not been delivered via Bamboo.
+
+  See `assert_delivered_email/2` for details.
+  """
+  defmacro refute_delivered_email(mail_params \\ [], opts \\ []) do
+    quote do
+      refute_receive(
+        {:delivered_email, %Bamboo.Email{unquote_splicing(mail_params)}},
+        Keyword.get(unquote(opts), :timeout, 100)
+      )
+    end
+  end
+
+  @doc """
   Returns a unique positive integer.
 
   The function is globally monotonically strictly increasing. A returned value is guaranteed to

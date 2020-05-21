@@ -76,15 +76,36 @@ defmodule VBT.TestHelperTest do
         fn -> TestHelper.assert_delivered_email(subject: "another subject") end
       )
     end
+  end
 
-    defp deliver_mail(subject) do
-      VBT.Mailer.send!(
-        VBT.TestMailer,
-        "some_sender@some_host.some.domain",
-        "some_recipient@some_host.some_domain",
-        subject,
-        "mail body"
+  describe "refute_delivered_email" do
+    test "succeeds when mailbox is empty" do
+      TestHelper.refute_delivered_email()
+    end
+
+    test "succeeds when mail is not matched" do
+      deliver_mail("some subject")
+      TestHelper.refute_delivered_email(subject: "another subject")
+    end
+
+    test "fails if the mail is sent" do
+      deliver_mail("some subject")
+      deliver_mail("another subject")
+
+      assert_raise(
+        ExUnit.AssertionError,
+        fn -> TestHelper.refute_delivered_email(subject: "another subject") end
       )
     end
+  end
+
+  defp deliver_mail(subject) do
+    VBT.Mailer.send!(
+      VBT.TestMailer,
+      "some_sender@some_host.some.domain",
+      "some_recipient@some_host.some_domain",
+      subject,
+      "mail body"
+    )
   end
 end
