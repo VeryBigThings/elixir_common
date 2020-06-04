@@ -51,11 +51,7 @@ defmodule VBT.Absinthe.Relay.SchemaTest do
 
             union payload_type(:result) do
               types [payload_type(:success), :business_error]
-
-              resolve_type fn
-                %VBT.BusinessError{}, _ -> :business_error
-                _, _ -> payload_type(:success)
-              end
+              resolve_type fn result, _ -> error_type(result) || payload_type(:success) end
             end
 
             object payload_type(:success) do
