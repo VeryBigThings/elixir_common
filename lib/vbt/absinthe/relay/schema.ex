@@ -18,6 +18,11 @@ defmodule VBT.Absinthe.Relay.Schema do
   be changed.
   """
 
+  @type resolver :: resolver_arity_2 | resolver_arity_3
+  @type resolver_arity_2 :: (any, Absinthe.Resolution.t() -> resolver_result)
+  @type resolver_arity_3 :: (map, any, Absinthe.Resolution.t() -> resolver_result)
+  @type resolver_result :: {:ok, any} | {:error, any}
+
   @doc """
   Defines the output (payload) type for the payload field.
 
@@ -136,6 +141,54 @@ defmodule VBT.Absinthe.Relay.Schema do
       identifier,
       block
     )
+  end
+
+  @doc """
+  Creates a VBT standard resolver of a mutation payload field.
+
+  This function converts a plain absinthe resolver into a VBT standard resolver. The new resolver
+  has the following behaviour:
+
+  1. A successful result (`{:ok, result}`) will be converted into `%{:ok, %{result: result}}`
+  2. A business error (`{:error, business_error}`, where `business_error` is a struct created with
+     `VBT.Error`), will be converted into `{:ok, %{result: business_error}}`.
+  3. All other error are propagated as errors.
+  4. An error is raised for any other kind of result.
+
+  Usage:
+
+      mutation do
+        payload field :some_field do
+          # ...
+
+          output do
+            # ...
+
+            resolve payload_resolver(fn arg, resolution ->
+                              # resolve and return
+                              #   {:ok, result}
+                              #   | {:error, business_error}
+                              #   | {:error, non_business_error}
+                            end)
+          end
+        end
+      end
+
+
+  You can also pass a 3-arity function.
+  """
+  @spec payload_resolver(resolver) :: resolver_arity_3
+  def payload_resolver(resolver) when is_function(resolver, 2),
+    do: payload_resolver(fn _, arg, resolution -> resolver.(arg, resolution) end)
+
+  def payload_resolver(resolver) when is_function(resolver, 3) do
+    fn parent, arg, resolution ->
+      case resolver.(parent, arg, resolution) do
+        {:ok, result} -> {:ok, %{result: result}}
+        {:error, %{__vbt_error__: true} = business_error} -> {:ok, %{result: business_error}}
+        {:error, _} = error -> error
+      end
+    end
   end
 
   @doc false

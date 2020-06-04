@@ -59,14 +59,11 @@ defmodule VBT.Absinthe.Relay.SchemaTest do
             end
           end
 
-          resolve fn input, _ ->
-            response =
-              if input.success,
-                do: %{response: "some success"},
-                else: %VBT.BusinessError{error_code: "some error"}
-
-            {:ok, %{result: response}}
-          end
+          resolve payload_resolver(fn input, _ ->
+                    if input.success,
+                      do: {:ok, %{response: "some success"}},
+                      else: {:error, %VBT.BusinessError{error_code: "some error"}}
+                  end)
         end
       end
     end
