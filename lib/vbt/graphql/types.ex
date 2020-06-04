@@ -1,5 +1,5 @@
-defmodule VBT.Graphql.Scalars do
-  @moduledoc "Custom VBT GraphQL scalars."
+defmodule VBT.Graphql.Types do
+  @moduledoc "Custom VBT GraphQL types."
 
   use Absinthe.Schema.Notation
 

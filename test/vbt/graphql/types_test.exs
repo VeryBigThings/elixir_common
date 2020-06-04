@@ -1,4 +1,4 @@
-defmodule VBT.Graphql.ScalarsTest do
+defmodule VBT.Graphql.TypesTest do
   use VBT.Graphql.Case, async: true, endpoint: VBT.GraphqlServer, api_path: "/"
 
   describe "datetime_usec" do

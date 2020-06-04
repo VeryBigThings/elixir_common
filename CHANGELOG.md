@@ -1,3 +1,7 @@
+## 2020-06-04
+
+**[Breaking]** `VBT.Graphql.Scalars` is renamed to `VBT.Graphql.Types`. This will only break the compilation if you have been using the module directly. However, if you use it through `VBT.Absinthe.Schema`, you don't need to make any changes.
+
 ## 2020-04-24
 
 **[Breaking]** `VBT.aws_client/0` is deprecated. Use `VBT.Aws.client/0` instead.

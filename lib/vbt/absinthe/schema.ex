@@ -6,7 +6,7 @@ defmodule VBT.Absinthe.Schema do
   following extensions are brought to the client module:
 
   1. `use Absinthe.Schema`
-  2. `import_types VBT.Graphql.Scalars`
+  2. `import_types VBT.Graphql.Types`
   3. Installs the `VBT.Absinthe.Schema.NormalizeErrors` middleware to each field with a declared
      resolver.
   """
@@ -20,7 +20,7 @@ defmodule VBT.Absinthe.Schema do
       unless Enum.member?(Module.get_attribute(__MODULE__, :behaviour), Absinthe.Schema),
         do: @behaviour(Absinthe.Schema)
 
-      import_types VBT.Graphql.Scalars
+      import_types VBT.Graphql.Types
 
       @impl Absinthe.Schema
       def middleware(middlewares, _field, _object) do
