@@ -9,7 +9,7 @@ defmodule VBT.Absinthe.Relay.SchemaTest do
 
   test "correctly supplies a union result" do
     assert some_field(true) == {:ok, %{response: "some success"}}
-    assert some_field(false) == {:ok, %{error_code: "some error"}}
+    assert some_field(false) == {:ok, %{error_code: "com.vbt.some_field/some_error"}}
   end
 
   defp some_field(success?) do
@@ -62,7 +62,7 @@ defmodule VBT.Absinthe.Relay.SchemaTest do
           resolve payload_resolver(fn input, _ ->
                     if input.success,
                       do: {:ok, %{response: "some success"}},
-                      else: {:error, %VBT.BusinessError{error_code: "some error"}}
+                      else: {:error, VBT.BusinessError.new("some_field", "some_error")}
                   end)
         end
       end
