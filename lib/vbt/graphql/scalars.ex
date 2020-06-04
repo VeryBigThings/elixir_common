@@ -3,6 +3,11 @@ defmodule VBT.Graphql.Scalars do
 
   use Absinthe.Schema.Notation
 
+  object :business_error do
+    description "VBT business error"
+    field :error_code, non_null(:string)
+  end
+
   scalar :datetime_usec, name: "DateTimeUsec" do
     description """
     Date and time with microseconds precision.

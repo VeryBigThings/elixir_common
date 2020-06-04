@@ -9,7 +9,7 @@ defmodule VBT.Absinthe.Relay.SchemaTest do
 
   test "correctly supplies a union result" do
     assert some_field(true) == {:ok, %{response: "some success"}}
-    assert some_field(false) == {:ok, %{error: "some error"}}
+    assert some_field(false) == {:ok, %{error_code: "some error"}}
   end
 
   defp some_field(success?) do
@@ -18,7 +18,7 @@ defmodule VBT.Absinthe.Relay.SchemaTest do
       some_field(input: {success: #{success?}}) {
         result {
           ... on SomeFieldPayloadSuccess { response }
-          ... on SomeFieldPayloadError { error }
+          ... on BusinessError { error_code }
         }
       }
     }
@@ -50,10 +50,10 @@ defmodule VBT.Absinthe.Relay.SchemaTest do
             field :result, payload_type(:result)
 
             union payload_type(:result) do
-              types [payload_type(:success), payload_type(:error)]
+              types [payload_type(:success), :business_error]
 
               resolve_type fn
-                %{error: _}, _ -> payload_type(:error)
+                %VBT.BusinessError{}, _ -> :business_error
                 _, _ -> payload_type(:success)
               end
             end
@@ -61,17 +61,13 @@ defmodule VBT.Absinthe.Relay.SchemaTest do
             object payload_type(:success) do
               field :response, non_null(:string)
             end
-
-            object payload_type(:error) do
-              field :error, non_null(:string)
-            end
           end
 
           resolve fn input, _ ->
             response =
               if input.success,
                 do: %{response: "some success"},
-                else: %{error: "some error"}
+                else: %VBT.BusinessError{error_code: "some error"}
 
             {:ok, %{result: response}}
           end

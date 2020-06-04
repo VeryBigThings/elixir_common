@@ -89,7 +89,8 @@ defmodule VBT.MixProject do
         Ecto: ~r/VBT\.((Ecto)|(Repo)).*/,
         "Auth & accounts": ~r/VBT\.((Auth)|(Accounts)).*/,
         "External services": ~r/VBT\.((Aws)|(Kubernetes)).*/,
-        Credo: ~r/VBT\.Credo.*/
+        Credo: ~r/VBT\.Credo.*/,
+        "Business errors": ~r/VBT\.[^\.]*Error/
       ]
     ]
   end
