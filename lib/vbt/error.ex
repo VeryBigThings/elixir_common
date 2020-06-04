@@ -1,4 +1,12 @@
 defmodule VBT.Error do
+  @moduledoc """
+  Module for defining a VBT business error.
+
+  Business errors are used to return user-reportable errors to frontend clients. See
+  `VBT.Absinthe.Relay.Schema` for details.
+  """
+
+  @doc false
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
       defstruct [__vbt_error__: true] ++ Keyword.fetch!(opts, :fields)

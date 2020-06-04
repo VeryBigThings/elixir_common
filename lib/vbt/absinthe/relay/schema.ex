@@ -16,6 +16,108 @@ defmodule VBT.Absinthe.Relay.Schema do
 
   You don't need to pass the `:flavor` option. It will be always set to `:modern`, and this can't
   be changed.
+
+  ## Mutation resolvers
+
+  Most of the functionality in this module and a few other supporting modules serves to simplify
+  the implementation of standard VBT mutation resolvers.
+
+  A standard VBT mutation resolver has the following properties:
+
+  1. It is a Relay modern payload field.
+  2. The single field of the output is called `:result`.
+  3. Business errors are returned as success results, using union to distinguish between business
+     success and error.
+
+  ### Business errors
+
+  A business error is any error that should be presented to the user. For example, consider a
+  simple `register` mutation with two input fields, login and password. This operation can result
+  in the following errors:
+
+  1. Login is an empty string
+  2. Password is an empty string
+  3. Login is already taken
+
+  In most scenarios, we'll only consider the 3rd error as a reportable error, leaving it to frontend
+  to detect and report the remaining ones before they make a backend request. We still have to
+  fully validate the data on the backend side, checking for all possible errors, but we'll only
+  return the last one as a business error, while the remaining ones will be returned as standard
+  GraphQL errors.
+
+  Here's the recipe for creating a corresponding mutation:
+
+  1. Create a context function with the following specification:
+
+          defmodule MyContext do
+            # This context function should return `{:error, VBT.BusinessError.t}` only if the login
+            # is already taken. All other errors should be returned through a changeset, or custom
+            # error strings.
+            @spec register(String.t, String.t) ::
+              {:ok, User.t}
+              | {:error, VBT.BusinessError.t}
+              | {:error, Ecto.Changeset.t}
+              | {:error, String.t}
+
+            # ...
+          end
+
+  2. Create a resolver function:
+
+          def register(input, _resolution),
+            do: MyContext.register(input.login, input.password)
+
+  3. Use a union type for the mutation:
+
+          mutation do
+            payload field :register do
+              # ...
+
+              output do
+                field :result, payload_type(:result)
+
+                union payload_type(:result) do
+                  types [:user, :business_error]
+                  resolve_type fn result, _ -> error_type(result) || :user end
+                end
+              end
+
+              resolve payload_resolver(&register/2)
+            end
+          end
+
+    See `output/2` and `payload_resolver/1` docs for more details.
+
+  ### Custom business errors
+
+  Most business errors should be reported as `VBT.BusinessError`, using either an error code as
+  arranged with the frontend team. Occasionally, you might need to add a specific kind of error
+  which contains additional fields. In such situations, you can do the following:
+
+  1. Define a custom error in the context namespace using `VBT.Error`.
+
+  2. Return the custom error from the business operation.
+
+  3. Adapt `resolve_type` as follows:
+
+          resolve_type fn result, _ ->
+            error_type(result) || case do
+              %MyCustomError{} -> :my_custom_error
+              _ -> :my_success_type
+            end
+          end
+
+    If some custom errors are being used in multiple fields, you can reduce the duplication with a
+    following helper private function in the schema module:
+
+          defp business_error_type(result) do
+            error_type(result) || case do
+              %MyCustomError{} -> :my_custom_error
+              _ -> nil
+            end
+          end
+
+    And now `resolve_type` function can be condensed to `business_error_type(result) || :my_success_type`.
   """
 
   @type resolver :: resolver_arity_2 | resolver_arity_3
