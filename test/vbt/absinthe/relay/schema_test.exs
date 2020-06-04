@@ -1,0 +1,82 @@
+defmodule VBT.Absinthe.Relay.SchemaTest do
+  use VBT.Graphql.Case, async: true, endpoint: __MODULE__.TestServer, api_path: "/"
+
+  setup do
+    Application.put_env(:vbt, __MODULE__.TestServer, [])
+    start_supervised(__MODULE__.TestServer)
+    :ok
+  end
+
+  test "correctly supplies a union result" do
+    assert some_field(true) == {:ok, %{response: "some success"}}
+    assert some_field(false) == {:ok, %{error: "some error"}}
+  end
+
+  defp some_field(success?) do
+    query = """
+    mutation {
+      some_field(input: {success: #{success?}}) {
+        result {
+          ... on SomeFieldPayloadSuccess { response }
+          ... on SomeFieldPayloadError { error }
+        }
+      }
+    }
+    """
+
+    with {:ok, response} <- call(query),
+         do: {:ok, response.some_field.result}
+  end
+
+  defmodule TestServer do
+    @moduledoc false
+    use Phoenix.Endpoint, otp_app: :vbt
+    plug Absinthe.Plug, schema: __MODULE__.Schema
+
+    defmodule Schema do
+      @moduledoc false
+      use VBT.Absinthe.Relay.Schema
+
+      query do
+      end
+
+      mutation do
+        payload field :some_field do
+          input do
+            field :success, non_null(:boolean)
+          end
+
+          output do
+            field :result, payload_type(:result)
+
+            union payload_type(:result) do
+              types [payload_type(:success), payload_type(:error)]
+
+              resolve_type fn
+                %{error: _}, _ -> payload_type(:error)
+                _, _ -> payload_type(:success)
+              end
+            end
+
+            object payload_type(:success) do
+              field :response, non_null(:string)
+            end
+
+            object payload_type(:error) do
+              field :error, non_null(:string)
+            end
+          end
+
+          resolve fn input, _ ->
+            response =
+              if input.success,
+                do: %{response: "some success"},
+                else: %{error: "some error"}
+
+            {:ok, %{result: response}}
+          end
+        end
+      end
+    end
+  end
+end
