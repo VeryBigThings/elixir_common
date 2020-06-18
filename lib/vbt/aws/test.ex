@@ -28,7 +28,7 @@ defmodule VBT.Aws.Test do
   @spec setup :: :ok
   def setup do
     Application.put_env(:vbt, :ex_aws_client, VBT.TestAwsClient)
-    Mox.defmock(VBT.TestAwsClient, for: ExAws.Behaviour)
+    mox().defmock(VBT.TestAwsClient, for: ExAws.Behaviour)
     :ok
   end
 
@@ -54,7 +54,7 @@ defmodule VBT.Aws.Test do
   def stub_request(response) do
     test_pid = self()
 
-    Mox.stub(VBT.TestAwsClient, :request, fn req, config ->
+    mox().stub(VBT.TestAwsClient, :request, fn req, config ->
       send(test_pid, {:aws_request, req, config})
 
       case response do
@@ -65,5 +65,13 @@ defmodule VBT.Aws.Test do
     end)
 
     :ok
+  end
+
+  defp mox do
+    # runtime checking the existence of mox to avoid compile-time warnings in dev/prod
+    unless Code.ensure_loaded?(Mox),
+      do: raise("mox library must be included in dependency")
+
+    Mox
   end
 end
