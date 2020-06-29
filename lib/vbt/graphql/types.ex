@@ -1,7 +1,12 @@
-defmodule VBT.Graphql.Scalars do
-  @moduledoc "Custom VBT GraphQL scalars."
+defmodule VBT.Graphql.Types do
+  @moduledoc "Custom VBT GraphQL types."
 
   use Absinthe.Schema.Notation
+
+  object :business_error do
+    description "VBT business error"
+    field :error_code, non_null(:string)
+  end
 
   scalar :datetime_usec, name: "DateTimeUsec" do
     description """

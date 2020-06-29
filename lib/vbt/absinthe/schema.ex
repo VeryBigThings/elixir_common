@@ -6,21 +6,37 @@ defmodule VBT.Absinthe.Schema do
   following extensions are brought to the client module:
 
   1. `use Absinthe.Schema`
-  2. `import_types VBT.Graphql.Scalars`
+  2. `import_types VBT.Graphql.Types`
   3. Installs the `VBT.Absinthe.Schema.NormalizeErrors` middleware to each field with a declared
      resolver.
   """
+
+  @doc """
+  Resolves the GraphQL type of a VBT business error, or returns `nil` if the provided argument is
+  not a known VBT business error.
+
+  This function can be useful when resolving union types. For example:
+
+      union :login_result do
+        types [:login_, :business_error]
+        resolve_type fn result, _ -> error_type(result) || :login end
+      end
+  """
+  @spec error_type(any) :: :business_error | nil
+  def error_type(%VBT.BusinessError{}), do: :business_error
+  def error_type(_unknown), do: nil
 
   @doc false
   defmacro __using__(_opts) do
     quote do
       use Absinthe.Schema
+      import unquote(__MODULE__)
 
       # Conditionally defining the behaviour to support absinthe 1.4 and 1.5
       unless Enum.member?(Module.get_attribute(__MODULE__, :behaviour), Absinthe.Schema),
         do: @behaviour(Absinthe.Schema)
 
-      import_types VBT.Graphql.Scalars
+      import_types VBT.Graphql.Types
 
       @impl Absinthe.Schema
       def middleware(middlewares, _field, _object) do
