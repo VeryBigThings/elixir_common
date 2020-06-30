@@ -10,14 +10,8 @@ defmodule VBT.Aws do
   module to obtain the implementation of `ExAws.Behaviour`. See `VBT.Aws.Test` for details.
   """
 
-  @type response ::
-          {:ok,
-           %{
-             required(:body) => String.t(),
-             required(:headers) => [{String.t(), String.t()}],
-             optional(:status_code) => pos_integer()
-           }}
-          | {:error, reason :: any}
+  @type response :: response(any)
+  @type response(success_type) :: {:ok, success_type} | {:error, reason :: any}
 
   @doc """
   Returns AWS client module.

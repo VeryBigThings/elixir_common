@@ -16,6 +16,12 @@ defmodule VBT.Aws.S3 do
 
   @type upload_source :: binary | {:file, Path.t()} | Enumerable.t()
 
+  @type s3_response :: %{
+          required(:body) => String.t(),
+          required(:headers) => [{String.t(), String.t()}],
+          optional(:status_code) => pos_integer()
+        }
+
   defprotocol Hostable do
     @moduledoc """
     Protocol for objects which can be hosted on S3.
@@ -46,7 +52,7 @@ defmodule VBT.Aws.S3 do
     do: presigned_url(config, :put, bucket, Hostable.path(object))
 
   @doc "Downloads the given object from S3."
-  @spec download(config, String.t(), Hostable.t()) :: VBT.Aws.response()
+  @spec download(config, String.t(), Hostable.t()) :: VBT.Aws.response(s3_response)
   def download(config, bucket, object) do
     bucket
     |> ExAws.S3.get_object(Hostable.path(object))
@@ -82,7 +88,7 @@ defmodule VBT.Aws.S3 do
         # make assertions on uploaded_content
       end
   """
-  @spec upload(config, String.t(), upload_source, Hostable.t()) :: VBT.Aws.response()
+  @spec upload(config, String.t(), upload_source, Hostable.t()) :: VBT.Aws.response(s3_response)
   def upload(config, bucket, source, target) do
     source
     |> upload_chunks()
