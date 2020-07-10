@@ -9,12 +9,14 @@ defmodule SkafolderTesterWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_skafolder_tester_key",
-    signing_salt: "lHGqHlwG"
+    signing_salt: "5xTEXmgB"
   ]
 
   socket "/socket", SkafolderTesterWeb.UserSocket,
     websocket: true,
     longpoll: false
+
+  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -30,7 +32,12 @@ defmodule SkafolderTesterWeb.Endpoint do
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
     plug Phoenix.CodeReloader
+    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :skafolder_tester
   end
+
+  plug Phoenix.LiveDashboard.RequestLogger,
+    param_key: "request_logger",
+    cookie_key: "request_logger"
 
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
