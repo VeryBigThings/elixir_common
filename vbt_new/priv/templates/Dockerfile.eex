@@ -31,7 +31,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR $WORKDIR
 
-ENV PHOENIX_VERSION 1.4.6
+ENV PHOENIX_VERSION 1.5.3
 
 RUN mix local.hex --force && \
   mix local.rebar --force
