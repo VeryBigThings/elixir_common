@@ -29,10 +29,10 @@ defmodule VBT.MixProject do
 
   defp deps do
     [
-      {:absinthe_phoenix, "~> 1.4 or ~> 1.5"},
-      {:absinthe_plug, "~> 1.4 or ~> 1.5"},
-      {:absinthe_relay, "~> 1.4 or ~> 1.5"},
-      {:absinthe, "~> 1.4 or ~> 1.5"},
+      {:absinthe_phoenix, "~> 1.4"},
+      {:absinthe_plug, "~> 1.4"},
+      {:absinthe_relay, "~> 1.4"},
+      {:absinthe, "~> 1.4"},
       {:bamboo, "~> 1.4"},
       {:bcrypt_elixir, "~> 2.0"},
       {:credo, "~> 1.4", runtime: false},
