@@ -5,7 +5,7 @@
 # ===========================================================
 # Used for development purposes and as a base for pre-release
 
-FROM verybigthings/elixir:1.10.3 AS build
+FROM verybigthings/elixir:1.10.4 AS build
 
 ARG WORKDIR=/opt/app
 ARG APP_USER=user

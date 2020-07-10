@@ -13,7 +13,7 @@ services:
     env_file: .env.development
     environment:
       - LOCAL_USER_ID=${LOCAL_USER_ID}
-      - SSH_AUTH_SOCK:${SSH_AUTH_SOCK}
+      - SSH_AUTH_SOCK=${SSH_AUTH_SOCK}
     tty: true
     stdin_open: true
     command: '/bin/bash -c "while true; do sleep 10; done;"'
