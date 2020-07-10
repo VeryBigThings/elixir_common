@@ -18,7 +18,7 @@ jobs:
         # needed because the postgres container does not provide a healthcheck
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     env:
-      CACHE_VERSION: v4
+      CACHE_VERSION: v5
     steps:
       - uses: actions/checkout@v2
 
@@ -70,7 +70,7 @@ jobs:
         # needed because the postgres container does not provide a healthcheck
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     env:
-      CACHE_VERSION: v4
+      CACHE_VERSION: v5
     steps:
       - uses: actions/checkout@v2
 
@@ -111,7 +111,7 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      CACHE_VERSION: v4
+      CACHE_VERSION: v5
     steps:
       - uses: actions/checkout@v2
 
