@@ -11,6 +11,7 @@ defmodule VBT.Application do
       [
         VBT.TestRepo,
         {Oban, repo: VBT.TestRepo, crontab: false, queues: false, prune: :disabled},
+        {Phoenix.PubSub, [name: VBT.GraphqlServer.PubSub, adapter: Phoenix.PubSub.PG2]},
         VBT.GraphqlServer
       ]
     else
