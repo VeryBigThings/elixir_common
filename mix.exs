@@ -29,7 +29,7 @@ defmodule VBT.MixProject do
 
   defp deps do
     [
-      {:absinthe_phoenix, "~> 1.4"},
+      {:absinthe_phoenix, "~> 1.4 or ~> 2.0"},
       {:absinthe_plug, "~> 1.4"},
       {:absinthe_relay, "~> 1.4"},
       {:absinthe, "~> 1.4"},
@@ -47,7 +47,9 @@ defmodule VBT.MixProject do
       {:oban, "~> 1.0"},
       {:parent, "~> 0.8"},
       {:phoenix_html, "~> 2.0"},
-      {:phoenix, "~> 1.4.0"},
+      {:phoenix_pubsub, "~> 1.0 or ~> 2.0"},
+      {:phoenix, "~> 1.4.0 or ~> 1.5.0"},
+      {:plug_cowboy, "~> 2.1"},
       {:provider, github: "VeryBigThings/provider"},
       {:stream_data, "~> 0.4", only: [:test, :dev]}
     ]
