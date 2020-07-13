@@ -51,6 +51,7 @@ defmodule VBT.MixProject do
       {:phoenix, "~> 1.4.0 or ~> 1.5.0"},
       {:plug_cowboy, "~> 2.1"},
       {:provider, github: "VeryBigThings/provider"},
+      {:sentry, "~> 7.2"},
       {:stream_data, "~> 0.4", only: [:test, :dev]}
     ]
   end
