@@ -70,6 +70,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> drop_prod_secret()
     |> adapt_aws_mocks()
     |> config_bcrypt()
+    |> setup_sentry()
     |> store_source_files!()
 
     File.rm(Path.join(~w/config prod.secret.exs/))
@@ -275,6 +276,29 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     update_in(
       source_files.test_config,
       &ConfigFile.prepend(&1, "config :bcrypt_elixir, :log_rounds, 1")
+    )
+  end
+
+  defp setup_sentry(source_files) do
+    source_files
+    |> update_in(
+      [:config],
+      &ConfigFile.prepend(&1, """
+      config :sentry,
+        dsn: {:system, "SENTRY_DSN"},
+        environment_name: {:system, "RELEASE_LEVEL"},
+        enable_source_code_context: true,
+        root_source_code_path: File.cwd!(),
+        included_environments: ~w(prod stage develop preview),
+        release: #{Mix.Vbt.context_module_name()}.MixProject.project()[:version]
+      """)
+    )
+    |> update_in(
+      [:test_config],
+      &ConfigFile.prepend(
+        &1,
+        "config :sentry, client: #{Mix.Vbt.context_module_name()}.SentryTestClient"
+      )
     )
   end
 

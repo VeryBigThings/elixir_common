@@ -7,6 +7,14 @@
 # General application configuration
 use Mix.Config
 
+config :sentry,
+  dsn: {:system, "SENTRY_DSN"},
+  environment_name: {:system, "RELEASE_LEVEL"},
+  enable_source_code_context: true,
+  root_source_code_path: File.cwd!(),
+  included_environments: ~w(prod stage develop preview),
+  release: SkafolderTester.MixProject.project()[:version]
+
 config :skafolder_tester, SkafolderTester.Repo,
   adapter: Ecto.Adapters.Postgres,
   migration_primary_key: [type: :binary_id],
@@ -19,7 +27,7 @@ config :skafolder_tester, ecto_repos: [SkafolderTester.Repo], generators: [binar
 config :skafolder_tester, SkafolderTesterWeb.Endpoint,
   render_errors: [view: SkafolderTesterWeb.ErrorView, accepts: ["json"], layout: false],
   pubsub_server: SkafolderTester.PubSub,
-  live_view: [signing_salt: "Iy6YT7mH"]
+  live_view: [signing_salt: "6vAlZvof"]
 
 # Configures Elixir's Logger
 config :logger, :console,
