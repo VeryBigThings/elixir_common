@@ -1,6 +1,6 @@
 defmodule VBT.AuthTest do
   use VBT.Graphql.Case, async: true, endpoint: VBT.GraphqlServer, api_path: "/"
-  use Phoenix.ChannelTest
+  import Phoenix.ChannelTest
   @endpoint VBT.GraphqlServer
 
   describe "GraphQL authentication" do
@@ -55,7 +55,7 @@ defmodule VBT.AuthTest do
     do: call(~s/query {current_user(max_age: #{opts[:max_age] || "null"})}/, auth: token)
 
   defp connect_to_socket(token, opts \\ []) do
-    Phoenix.ChannelTest.connect(
+    connect(
       VBT.GraphqlServer.Socket,
       Map.merge(%{"authorization" => "Bearer #{token}"}, Map.new(opts))
     )

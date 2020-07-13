@@ -10,14 +10,17 @@ defmodule SkafolderTesterApp do
   def start(_type, _args) do
     SkafolderTester.Config.validate!()
 
-    # List all child processes to be supervised
     children = [
       # Start the Ecto repository
       SkafolderTester.Repo,
-      # Start the endpoint when the application starts
+      # Start the Telemetry supervisor
+      SkafolderTesterWeb.Telemetry,
+      # Start the PubSub system
+      {Phoenix.PubSub, name: SkafolderTester.PubSub},
+      # Start the Endpoint (http/https)
       SkafolderTesterWeb.Endpoint
-      # Starts a worker by calling: SkafolderTester.Worker.start_link(arg)
-      # {SkafolderTester.Worker, arg},
+      # Start a worker by calling: SkafolderTester.Worker.start_link(arg)
+      # {SkafolderTester.Worker, arg}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

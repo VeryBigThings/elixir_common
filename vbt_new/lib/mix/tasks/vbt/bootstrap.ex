@@ -244,6 +244,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       VBT.Credo.Check.Consistency.ModuleLayout
     /)
 
+    disable_credo_checks(
+      "lib/#{Mix.Vbt.otp_app()}_web/telemetry.ex",
+      ~w/VBT.Credo.Check.Consistency.ModuleLayout/
+    )
+
     disable_credo_checks("test/support/conn_case.ex", ~w/
       Credo.Check.Readability.AliasAs
       Credo.Check.Design.AliasUsage
