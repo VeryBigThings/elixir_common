@@ -2,6 +2,7 @@
 
 defmodule SkafolderTesterWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :skafolder_tester
+  use Sentry.Phoenix.Endpoint
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
@@ -9,7 +10,7 @@ defmodule SkafolderTesterWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_skafolder_tester_key",
-    signing_salt: "5xTEXmgB"
+    signing_salt: "tC1QfREy"
   ]
 
   socket "/socket", SkafolderTesterWeb.UserSocket,

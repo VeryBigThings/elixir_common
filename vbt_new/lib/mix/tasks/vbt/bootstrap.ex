@@ -281,6 +281,12 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
   defp setup_sentry(source_files) do
     source_files
+    |> configure_sentry()
+    |> add_sentry_to_endpoint()
+  end
+
+  defp configure_sentry(source_files) do
+    source_files
     |> update_in(
       [:config],
       &ConfigFile.prepend(&1, """
@@ -298,6 +304,17 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       &ConfigFile.prepend(
         &1,
         "config :sentry, client: #{context_module_name()}.SentryTestClient"
+      )
+    )
+  end
+
+  defp add_sentry_to_endpoint(source_files) do
+    update_in(
+      source_files.endpoint.content,
+      &String.replace(
+        &1,
+        ~r/(use Phoenix\.Endpoint.*?)\n/s,
+        "\\1\nuse Sentry.Phoenix.Endpoint\n"
       )
     )
   end
