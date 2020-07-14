@@ -325,10 +325,10 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       source_files.endpoint.content,
       &String.replace(
         &1,
-        ~r/(plug #{web_module()}\.Router)\n/,
+        ~r/(plug #{web_module_name()}\.Router)\n/,
         """
         if Mix.env() == :test do
-          plug #{web_module()}.TestPlug
+          plug #{web_module_name()}.TestPlug
         end
 
         \\1

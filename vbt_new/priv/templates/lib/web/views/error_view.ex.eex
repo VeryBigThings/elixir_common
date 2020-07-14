@@ -1,5 +1,5 @@
-defmodule <%= Mix.Vbt.web_module() %>.ErrorView do
-  use <%= Mix.Vbt.web_module() %>, :view
+defmodule <%= Mix.Vbt.web_module_name() %>.ErrorView do
+  use <%= Mix.Vbt.web_module_name() %>, :view
 
   def render("500.json", %{kind: kind, reason: reason, stack: stack}) do
     # sending formatted exception to frontend on develop, preview, and stage

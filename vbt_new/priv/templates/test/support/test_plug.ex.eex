@@ -1,4 +1,4 @@
-defmodule <%= Mix.Vbt.web_module() %>.TestPlug do
+defmodule <%= Mix.Vbt.web_module_name() %>.TestPlug do
   @behaviour Plug
   import Phoenix.ConnTest
 
@@ -9,7 +9,7 @@ defmodule <%= Mix.Vbt.web_module() %>.TestPlug do
       |> :erlang.term_to_binary()
       |> Base.url_encode64(padding: false)
 
-    dispatch(build_conn(), <%= Mix.Vbt.web_module() %>.Endpoint, :get, "/test_execute/#{code}")
+    dispatch(build_conn(), <%= Mix.Vbt.web_module_name() %>.Endpoint, :get, "/test_execute/#{code}")
   end
 
   @impl Plug

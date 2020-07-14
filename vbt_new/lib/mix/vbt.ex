@@ -7,10 +7,7 @@ defmodule Mix.Vbt do
   def otp_app, do: Keyword.fetch!(Mix.Project.config(), :app)
 
   @spec endpoint_module :: module
-  def endpoint_module, do: Module.concat(web_module(), Endpoint)
-
-  @spec web_module :: module
-  def web_module, do: "#{context_module_name()}Web"
+  def endpoint_module, do: Module.concat(web_module_name(), Endpoint)
 
   @spec repo_module :: module
   def repo_module, do: Module.concat(context_module_name(), Repo)
@@ -20,6 +17,9 @@ defmodule Mix.Vbt do
 
   @spec app_module_name :: String.t()
   def app_module_name, do: "#{context_module_name()}App"
+
+  @spec web_module_name :: String.t()
+  def web_module_name, do: "#{context_module_name()}Web"
 
   @spec tool_versions :: %{tool => Version.t()}
   def tool_versions do
