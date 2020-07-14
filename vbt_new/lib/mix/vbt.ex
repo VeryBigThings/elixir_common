@@ -7,7 +7,10 @@ defmodule Mix.Vbt do
   def otp_app, do: Keyword.fetch!(Mix.Project.config(), :app)
 
   @spec endpoint_module :: module
-  def endpoint_module, do: Module.concat(Macro.camelize("#{otp_app()}_web"), Endpoint)
+  def endpoint_module, do: Module.concat(web_module(), Endpoint)
+
+  @spec web_module :: module
+  def web_module, do: "#{context_module_name()}Web"
 
   @spec repo_module :: module
   def repo_module, do: Module.concat(context_module_name(), Repo)

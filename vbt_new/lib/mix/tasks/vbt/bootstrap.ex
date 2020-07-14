@@ -39,7 +39,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         |> String.replace(~r/\.eex$/, "")
         |> String.replace(~r(lib/context/), "lib/#{otp_app()}/")
         |> String.replace(~r(lib/app/), "lib/#{Macro.underscore(app_module_name())}/")
-        |> String.replace(~r(lib/web/), "lib/#{otp_app()}_web/")
+        |> String.replace(~r[((lib)|(test))/web/], "\\1/#{otp_app()}_web/")
 
       content = EEx.eval_file(template, app: otp_app(), cloud: "heroku", docker: true)
 
