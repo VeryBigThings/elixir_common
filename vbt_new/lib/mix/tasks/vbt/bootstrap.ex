@@ -71,6 +71,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> adapt_aws_mocks()
     |> config_bcrypt()
     |> setup_sentry()
+    |> setup_test_plug()
     |> store_source_files!()
 
     File.rm(Path.join(~w/config prod.secret.exs/))
@@ -315,6 +316,23 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         &1,
         ~r/(use Phoenix\.Endpoint.*?)\n/s,
         "\\1\nuse Sentry.Phoenix.Endpoint\n"
+      )
+    )
+  end
+
+  defp setup_test_plug(source_files) do
+    update_in(
+      source_files.endpoint.content,
+      &String.replace(
+        &1,
+        ~r/(plug #{web_module()}\.Router)\n/,
+        """
+        if Mix.env() == :test do
+          plug #{web_module()}.TestPlug
+        end
+
+        \\1
+        """
       )
     )
   end
