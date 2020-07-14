@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
   # credo:disable-for-this-file Credo.Check.Readability.Specs
   use Mix.Task
-  alias Mix.Vbt
+  import Mix.Vbt
   alias Mix.Vbt.{ConfigFile, MixFile, SourceFile}
 
   def run(args) do
@@ -37,11 +37,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         template
         |> Path.relative_to(templates_path)
         |> String.replace(~r/\.eex$/, "")
-        |> String.replace(~r(lib/context/), "lib/#{Mix.Vbt.otp_app()}/")
-        |> String.replace(~r(lib/app/), "lib/#{Macro.underscore(Mix.Vbt.app_module_name())}/")
-        |> String.replace(~r(lib/web/), "lib/#{Mix.Vbt.otp_app()}_web/")
+        |> String.replace(~r(lib/context/), "lib/#{otp_app()}/")
+        |> String.replace(~r(lib/app/), "lib/#{Macro.underscore(app_module_name())}/")
+        |> String.replace(~r(lib/web/), "lib/#{otp_app()}_web/")
 
-      content = EEx.eval_file(template, app: Mix.Vbt.otp_app(), cloud: "heroku", docker: true)
+      content = EEx.eval_file(template, app: otp_app(), cloud: "heroku", docker: true)
 
       if Mix.Generator.create_file(target_file, content, mix_generator_opts) do
         # If the exec permission bit for the owner in the source template is set, we'll set the
@@ -111,8 +111,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
           :content,
           &String.replace(
             &1,
-            "#{Mix.Vbt.context_module_name()}.Application",
-            "#{Mix.Vbt.app_module_name()}"
+            "#{context_module_name()}.Application",
+            "#{app_module_name()}"
           )
         )
       end
@@ -120,7 +120,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   end
 
   defp adapt_min_elixir_version(mix_file) do
-    elixir = Mix.Vbt.tool_versions().elixir
+    elixir = tool_versions().elixir
 
     Map.update!(
       mix_file,
@@ -160,7 +160,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     defp operator_template(_),
-      do: IO.puts(#{Mix.Vbt.context_module_name()}.Config.template())
+      do: IO.puts(#{context_module_name()}.Config.template())
 
     """)
   end
@@ -171,7 +171,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> SourceFile.add_to_module("""
     defp releases() do
       [
-        #{Mix.Vbt.otp_app()}: [
+        #{otp_app()}: [
           include_executables_for: [:unix],
           steps: [:assemble, &copy_bin_files/1]
         ]
@@ -207,11 +207,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       &(&1
         |> String.replace(
           ~r/(\s*def start\(.*?do)/s,
-          "\\1\n#{Mix.Vbt.context_module_name()}.Config.validate!()\n"
+          "\\1\n#{context_module_name()}.Config.validate!()\n"
         )
         |> String.replace(
-          "defmodule #{Mix.Vbt.context_module_name()}.Application",
-          "defmodule #{Mix.Vbt.app_module_name()}"
+          "defmodule #{context_module_name()}.Application",
+          "defmodule #{app_module_name()}"
         ))
     )
   end
@@ -231,22 +231,22 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     # We don't check for specs in views, controllers, channels, and resolvers, because specs aren't
     # useful there, and they add some noise.
     Enum.each(
-      Path.wildcard("lib/#{Mix.Vbt.otp_app()}_web/**/*.ex"),
+      Path.wildcard("lib/#{otp_app()}_web/**/*.ex"),
       &disable_credo_checks(&1, ["Credo.Check.Readability.Specs"])
     )
 
     # Same reasoning for the app file.
-    disable_credo_checks("lib/#{Mix.Vbt.otp_app()}_app.ex", ~w/Credo.Check.Readability.Specs/)
+    disable_credo_checks("lib/#{otp_app()}_app.ex", ~w/Credo.Check.Readability.Specs/)
 
     # Some helper files created by phx.new violate these checks, so we'll disable them. This is
     # not the code we'll edit, so disabling these checks is fine here.
-    disable_credo_checks("lib/#{Mix.Vbt.otp_app()}_web.ex", ~w/
+    disable_credo_checks("lib/#{otp_app()}_web.ex", ~w/
       Credo.Check.Readability.AliasAs
       VBT.Credo.Check.Consistency.ModuleLayout
     /)
 
     disable_credo_checks(
-      "lib/#{Mix.Vbt.otp_app()}_web/telemetry.ex",
+      "lib/#{otp_app()}_web/telemetry.ex",
       ~w/VBT.Credo.Check.Consistency.ModuleLayout/
     )
 
@@ -290,14 +290,14 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         enable_source_code_context: true,
         root_source_code_path: File.cwd!(),
         included_environments: ~w(prod stage develop preview),
-        release: #{Mix.Vbt.context_module_name()}.MixProject.project()[:version]
+        release: #{context_module_name()}.MixProject.project()[:version]
       """)
     )
     |> update_in(
       [:test_config],
       &ConfigFile.prepend(
         &1,
-        "config :sentry, client: #{Mix.Vbt.context_module_name()}.SentryTestClient"
+        "config :sentry, client: #{context_module_name()}.SentryTestClient"
       )
     )
   end
@@ -360,15 +360,15 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       def init(_type, config) do
         config =
           config
-          |> Keyword.put(:secret_key_base, #{Mix.Vbt.context_module_name()}.Config.secret_key_base())
+          |> Keyword.put(:secret_key_base, #{context_module_name()}.Config.secret_key_base())
           |> Keyword.update(:url, url_config(), &Keyword.merge(&1, url_config()))
           |> Keyword.update(:http, http_config(), &(http_config() ++ (&1 || [])))
 
         {:ok, config}
       end
 
-      defp url_config, do: [host: #{Mix.Vbt.context_module_name()}.Config.host()]
-      defp http_config, do: [:inet6, port: #{Mix.Vbt.context_module_name()}.Config.port()]
+      defp url_config, do: [host: #{context_module_name()}.Config.host()]
+      defp http_config, do: [:inet6, port: #{context_module_name()}.Config.port()]
       """
     )
   end
@@ -389,11 +389,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     config
     |> ConfigFile.update_config(&Keyword.merge(&1, generators: [binary_id: true]))
     |> ConfigFile.prepend("""
-        config #{inspect(Vbt.otp_app())}, #{inspect(Vbt.repo_module())},
+        config #{inspect(otp_app())}, #{inspect(repo_module())},
           adapter: Ecto.Adapters.Postgres,
           migration_primary_key: [type: :binary_id],
           migration_timestamps: [type: :utc_datetime_usec],
-          otp_app: #{inspect(Vbt.otp_app())}
+          otp_app: #{inspect(otp_app())}
     """)
   end
 
@@ -413,9 +413,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         config =
           Keyword.merge(
             config,
-            url: #{Mix.Vbt.context_module_name()}.Config.db_url(),
-            pool_size: #{Mix.Vbt.context_module_name()}.Config.db_pool_size(),
-            ssl: #{Mix.Vbt.context_module_name()}.Config.db_ssl()
+            url: #{context_module_name()}.Config.db_url(),
+            pool_size: #{context_module_name()}.Config.db_pool_size(),
+            ssl: #{context_module_name()}.Config.db_ssl()
           )
 
         {:ok, config}
@@ -439,7 +439,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       endpoint: load_web_file("endpoint.ex"),
       repo: load_context_file("repo.ex"),
       app_module:
-        load_context_file("application.ex", output: Path.join("lib", "#{Vbt.otp_app()}_app.ex")),
+        load_context_file("application.ex", output: Path.join("lib", "#{otp_app()}_app.ex")),
       test_helper: SourceFile.load!("test/test_helper.exs")
     }
   end
@@ -448,10 +448,10 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     do: Enum.reduce(files, source_files, &update_in(&2[&1], updater))
 
   defp load_web_file(location),
-    do: SourceFile.load!(Path.join(["lib", "#{Vbt.otp_app()}_web", location]))
+    do: SourceFile.load!(Path.join(["lib", "#{otp_app()}_web", location]))
 
   defp load_context_file(location, opts \\ []),
-    do: SourceFile.load!(Path.join(["lib", "#{Vbt.otp_app()}", location]), opts)
+    do: SourceFile.load!(Path.join(["lib", "#{otp_app()}", location]), opts)
 
   defp store_source_files!(source_files),
     do: source_files |> Map.values() |> Enum.each(&SourceFile.store!/1)
