@@ -27,7 +27,7 @@ defmodule VBT.Mailer do
 
   Make sure to disable queues in `config/test.exs`:
 
-      config :my_project, Oban, crontab: false, queues: false, prune: :disabled
+      config :my_project, Oban, crontab: false, queues: false, plugins: false
 
   Next, you need to start the oban process tree in your application:
 
@@ -239,7 +239,7 @@ defmodule VBT.Mailer do
     # Before data is sent to Oban queue, it is encoded using `term_to_binary` and `Base.encode64`.
     # This allows us to easily store tuples (needed for senders and recepients), and atoms into
     # the database, and get this data preserved after deserialization.
-    %{"args" => args |> :erlang.term_to_binary() |> Base.encode64(padding: false)}
+    %{"encoded" => args |> :erlang.term_to_binary() |> Base.encode64(padding: false)}
   end
 
   # ------------------------------------------------------------------------
@@ -292,25 +292,30 @@ defmodule VBT.Mailer do
 
         @impl Oban.Worker
         # credo:disable-for-next-line Credo.Check.Readability.Specs
-        def perform(%{"args" => args}, _job) do
-          args = args |> Base.decode64!(padding: false) |> :erlang.binary_to_term()
+        def perform(job) do
+          args =
+            job.args
+            |> Map.fetch!("encoded")
+            |> Base.decode64!(padding: false)
+            |> :erlang.binary_to_term()
+
           VBT.Mailer.send!(__MODULE__, args.from, args.to, args.subject, args.body, args.opts)
         end
 
         @impl Oban.Worker
         # credo:disable-for-next-line Credo.Check.Readability.Specs
-        def backoff(attempt) do
+        def backoff(job) do
           # These delays, together with the default number of attempts (30) will cause
           # the queue to retry sending the mail for at most 24 hours.
           delays = {1, 2, 3, 4, 10, 20, 20, 60}
-          elem(delays, min(attempt - 1, tuple_size(delays) - 1)) * 60
+          elem(delays, min(job.attempt - 1, tuple_size(delays) - 1)) * 60
         end
 
         # Add a helper `drain_queue` function to simplify testing.
         if Mix.env() == :test do
           # credo:disable-for-next-line Credo.Check.Readability.Specs
           def drain_queue,
-            do: Oban.drain_queue(unquote(Keyword.fetch!(oban_opts, :queue)))
+            do: Oban.drain_queue(queue: unquote(Keyword.fetch!(oban_opts, :queue)))
         end
 
         defoverridable Oban.Worker

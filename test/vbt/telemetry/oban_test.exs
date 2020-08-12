@@ -59,10 +59,10 @@ defmodule VBT.Telemetry.ObanTest do
       Oban.insert!(new(%{arg: encoded_fun}))
     end
 
-    def drain_queue, do: Oban.drain_queue("test_queue")
+    def drain_queue, do: Oban.drain_queue(queue: "test_queue")
 
     @impl Oban.Worker
-    def perform(%{"arg" => arg}, _job) do
+    def perform(%Oban.Job{args: %{"arg" => arg}}) do
       fun = arg |> Base.decode64!(padding: false) |> :erlang.binary_to_term()
       fun.()
     end

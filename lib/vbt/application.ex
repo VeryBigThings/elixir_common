@@ -10,7 +10,7 @@ defmodule VBT.Application do
     if Mix.env() == :test do
       [
         VBT.TestRepo,
-        {Oban, repo: VBT.TestRepo, crontab: false, queues: false, prune: :disabled},
+        {Oban, repo: VBT.TestRepo, crontab: false, queues: false, plugins: false},
         {Phoenix.PubSub, [name: VBT.GraphqlServer.PubSub, adapter: Phoenix.PubSub.PG2]},
         VBT.GraphqlServer
       ]
