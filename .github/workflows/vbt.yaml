@@ -54,45 +54,6 @@ jobs:
           MIX_ENV=dev mix compile --warnings-as-errors
           MIX_ENV=prod mix compile --warnings-as-error
 
-  vbt_test:
-    needs: vbt_build
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:11.7
-        env:
-          POSTGRES_USER: "postgres"
-          POSTGRES_PASSWORD: "postgres"
-          POSTGRES_DB: "vbt_test"
-        ports:
-          - 5432:5432
-        # needed because the postgres container does not provide a healthcheck
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-    env:
-      CACHE_VERSION: v6
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-elixir@v1
-        with:
-          otp-version: 22.2.8
-          elixir-version: 1.10.2
-
-      - name: Restore cached deps
-        uses: actions/cache@v1
-        with:
-          path: deps
-          key: vbt-deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-
-      - name: Restore cached test
-        uses: actions/cache@v1
-        with:
-          path: _build
-          key: vbt-test-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-          restore-keys: |
-            vbt-build-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-
       - name: Check code format
         run: mix format --check-formatted
 
@@ -105,33 +66,6 @@ jobs:
       - name: Run dialyzer
         run: mix dialyzer
 
-  vbt_push_docs:
-    needs: vbt_build
-    if: github.ref == 'refs/heads/master' || contains(github.event.head_commit.message, '# push docs')
-
-    runs-on: ubuntu-latest
-    env:
-      CACHE_VERSION: v6
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-elixir@v1
-        with:
-          otp-version: 22.2.8
-          elixir-version: 1.10.2
-
-      - name: Restore cached deps
-        uses: actions/cache@v1
-        with:
-          path: deps
-          key: vbt-deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-
-      - name: Restore cached build
-        uses: actions/cache@v1
-        with:
-          path: _build
-          key: vbt-build-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-
       - name: Build docs
         run: mix docs
 
@@ -143,4 +77,5 @@ jobs:
           aws-region: us-east-1
 
       - name: "Release docs"
+        if: github.ref == 'refs/heads/master' || contains(github.event.head_commit.message, '# push docs')
         run: aws s3 sync --acl public-read --region us-east-1 ./doc/ s3://vbt-common-docs.verybigthings.com/

@@ -3,7 +3,7 @@ name: "vbt_new"
 on: push
 
 jobs:
-  vbt_new_test:
+  vbt_new_build:
     runs-on: ubuntu-latest
 
     services:
@@ -76,39 +76,6 @@ jobs:
       - name: Run dialyzer
         run: cd vbt_new && mix dialyzer
 
-  vbt_new_deploy:
-    needs: vbt_new_test
-    if: github.ref == 'refs/heads/master'
-
-    runs-on: ubuntu-latest
-    env:
-      CACHE_VERSION: v6
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-elixir@v1
-        with:
-          otp-version: 22.2.8
-          elixir-version: 1.10.2
-
-      - name: Restore cached deps
-        uses: actions/cache@v1
-        with:
-          path: vbt_new/deps
-          key: vbt_new_deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/mix.lock')) }}
-          restore-keys: |
-            vbt_new_deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-
-            vbt_new_deps-${{ env.CACHE_VERSION }}-
-
-      - name: Restore cached build
-        uses: actions/cache@v1
-        with:
-          path: vbt_new/_build
-          key: vbt_new_build-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/mix.lock')) }}
-          restore-keys: |
-            vbt_new_build-${{ env.CACHE_VERSION }}-${{ github.ref }}-
-            vbt_new_build-${{ env.CACHE_VERSION }}-
-
       - name: Build archive
         run: cd vbt_new && mix archive.build
 
@@ -120,4 +87,5 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy archive
+        if: github.ref == 'refs/heads/master'
         run: aws s3 cp --acl public-read --region us-east-1 ./vbt_new/vbt_new-0.1.0.ez s3://vbt-common-docs.verybigthings.com/vbt_new.ez
