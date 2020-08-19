@@ -12,7 +12,6 @@ README*
 docker-compose.yml
 .git/
 _docker/
-.circleci/
 _build/
 deps/
 doc/

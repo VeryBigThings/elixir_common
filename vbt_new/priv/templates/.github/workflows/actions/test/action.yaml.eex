@@ -1,0 +1,72 @@
+name: 'Run tests'
+description: 'Run CI tests'
+inputs:
+  ssh-private-key:
+    description: 'SSH private key used to fetch private deps'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - run: echo ::set-env name=SSH_AUTH_SOCK::/tmp/ssh_agent.sock
+      shell: bash
+
+    - name: Setup SSH Keys and known_hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+        ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+        ssh-add - <<< "${{ inputs.ssh-private-key }}"
+      shell: bash
+
+    - name: Fetch deps
+      run: mix deps.get
+      shell: bash
+
+    - name: Compile project
+      run: |
+        MIX_ENV=test mix compile --warnings-as-errors
+        MIX_ENV=dev mix compile --warnings-as-errors
+        MIX_ENV=prod mix compile --warnings-as-errors
+      shell: bash
+
+    - name: Check GraphQL schema for uncommitted changes
+      run: mix compile.export_gql_schema --check-graphql-schema-updated
+      shell: bash
+
+    - name: Run linter checks
+      run: mix credo list
+      shell: bash
+
+    - name: Check code format
+      run: mix format --check-formatted
+      shell: bash
+
+    - name: Run dialyzer
+      run: mix dialyzer
+      shell: bash
+
+    - name: "Reset database"
+      run: MIX_ENV=test mix ecto.reset
+      shell: bash
+
+    - name: Run tests
+      run: make test
+      shell: bash
+
+    - name: Check migrations reversibility
+      run: MIX_ENV=test mix ecto.rollback --all
+      shell: bash
+
+    - name: Check OTP release
+      run: |
+        mix release --overwrite
+
+        # generate config and load to env vars, so release can use the correct database
+        set -a && source <(MIX_ENV=test mix run -e "IO.puts(<%= Mix.Vbt.context_module_name() %>.Config.template())" | egrep "#.*=" | sed "s/# //")
+
+        _build/prod/rel/<%= Mix.Vbt.otp_app() %>/bin/migrate.sh
+        _build/prod/rel/<%= Mix.Vbt.otp_app() %>/bin/seed.sh
+        _build/prod/rel/<%= Mix.Vbt.otp_app() %>/bin/<%= Mix.Vbt.otp_app() %> eval "{:ok, _} = Application.ensure_all_started(:<%= Mix.Vbt.otp_app() %>)"
+        _build/prod/rel/<%= Mix.Vbt.otp_app() %>/bin/rollback.sh --all
+      shell: bash
