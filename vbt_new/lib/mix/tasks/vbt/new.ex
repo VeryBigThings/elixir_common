@@ -98,7 +98,7 @@ defmodule Mix.Tasks.Vbt.New do
 
     try do
       Mix.Project.in_project(String.to_atom(opts.app), project_folder, [], fn _module ->
-        Mix.Task.run("vbt.bootstrap", ~w/--force/)
+        Mix.Task.run("vbt.bootstrap", ~w/#{opts.organization} --force/)
       end)
     after
       with %{name: name, file: file} <- project, do: Mix.Project.push(name, file)

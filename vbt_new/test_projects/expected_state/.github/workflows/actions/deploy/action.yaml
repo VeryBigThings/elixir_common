@@ -36,7 +36,7 @@ inputs:
     required: true
   package-path:
     description: 'Path to published package. Same as repo name'
-    default: 'verybigthings/skafolder_tester_backend'
+    default: 'verybigthings/vbt_skafolder_tester_backend'
   release-level:
     description: 'Application release level'
     required: true
@@ -62,7 +62,7 @@ runs:
       shell: bash
     - run: echo ::set-env name=DOCKER_IMAGE::${{ inputs.docker-registry }}/${{ inputs.package-path }}/${{ inputs.app-name }}:${{ inputs.release-level }}-${GITHUB_SHA::7}
       shell: bash
-    - run: echo ::set-env name=DEPLOYMENT_NAME::skafolder_tester-${{ inputs.release-level }}-backend
+    - run: echo ::set-env name=DEPLOYMENT_NAME::vbt-${{ inputs.release-level }}-skafolder_tester-backend
       shell: bash
 
     - name: Setup SSH Keys and known_hosts

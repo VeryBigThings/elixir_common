@@ -36,7 +36,7 @@ inputs:
     required: true
   package-path:
     description: 'Path to published package. Same as repo name'
-    default: 'verybigthings/<%= Mix.Vbt.otp_app() %>_backend'
+    default: 'verybigthings/<%= "#{organization}_#{Mix.Vbt.otp_app()}_backend" %>'
   release-level:
     description: 'Application release level'
     required: true
@@ -62,7 +62,7 @@ runs:
       shell: bash
     - run: echo ::set-env name=DOCKER_IMAGE::${{ inputs.docker-registry }}/${{ inputs.package-path }}/${{ inputs.app-name }}:${{ inputs.release-level }}-${GITHUB_SHA::7}
       shell: bash
-    - run: echo ::set-env name=DEPLOYMENT_NAME::<%= Mix.Vbt.otp_app() %>-${{ inputs.release-level }}-backend
+    - run: echo ::set-env name=DEPLOYMENT_NAME::<%= "#{organization}-${{ inputs.release-level }}-#{Mix.Vbt.otp_app()}-backend" %>
       shell: bash
 
     - name: Setup SSH Keys and known_hosts
