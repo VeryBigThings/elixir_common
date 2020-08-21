@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         |> String.replace(~r(lib/app/), "lib/#{Macro.underscore(app_module_name())}/")
         |> String.replace(~r[((lib)|(test))/web/], "\\1/#{otp_app()}_web/")
 
-      content = EEx.eval_file(template, app: otp_app(), cloud: "heroku", docker: true)
+      content = EEx.eval_file(template, app: otp_app(), docker: true)
 
       if Mix.Generator.create_file(target_file, content, mix_generator_opts) do
         # If the exec permission bit for the owner in the source template is set, we'll set the
