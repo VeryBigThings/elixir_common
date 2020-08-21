@@ -4,8 +4,16 @@ defmodule Mix.Tasks.Vbt.New do
   @moduledoc """
   #{@shortdoc}
 
-  The task internally invokes `phx.new`, and therefore accepts the same options. However, you must
-  provide the project folder as the first argument to this task, before other switches.
+  ## Usage
+
+      mix vbt.new organization_name app_name phx_new_switches
+
+  Example:
+
+      mix vbt.new banmed telecare --no-html --no-webpack
+
+  The command above will generate the project for the OTP application `:telecare` in the folder
+  `banmed_telecare_backend`.
   """
 
   # credo:disable-for-this-file Credo.Check.Readability.Specs
@@ -17,7 +25,9 @@ defmodule Mix.Tasks.Vbt.New do
     Application.ensure_all_started(:inets)
     Application.ensure_all_started(:ssl)
 
-    project_folder = project_folder!(args)
+    opts = parse_opts!(args)
+
+    project_folder = Path.join([opts.parent_folder, "#{opts.organization}_#{opts.app}_backend"])
     if File.exists?(project_folder), do: Mix.raise("folder already exists")
 
     Mix.Task.run("archive.install", ["hex", "phx_new", "~> 1.5.3", "--force"])
@@ -31,13 +41,16 @@ defmodule Mix.Tasks.Vbt.New do
       # be refetched again, and fetching deps before that happens leads to a dep conflict.
       send(self(), {:mix_shell_input, :yes?, false})
 
-      Mix.Task.run("phx.new", args)
+      Mix.Task.run(
+        "phx.new",
+        ~w/#{project_folder} --app #{opts.app}/ ++ Enum.drop(args, 2)
+      )
     after
       Mix.shell(current_shell)
     end
 
     add_vbt_dep(project_folder)
-    bootstrap_project(project_folder)
+    bootstrap_project(opts, project_folder)
 
     Mix.shell().info("""
 
@@ -49,12 +62,20 @@ defmodule Mix.Tasks.Vbt.New do
     """)
   end
 
-  defp project_folder!(args) do
-    {_known_switches, args, _unknown_switches} = OptionParser.parse(args, strict: [])
+  defp parse_opts!(args) do
+    {_known_switches, args, _unknown_switches} =
+      OptionParser.parse(args, strict: [organization: :string])
 
     case args do
-      [project_folder] -> project_folder
-      _other -> Mix.raise("usage: mix vbt.new project_folder switches")
+      [organization, target] ->
+        %{
+          organization: organization,
+          app: Path.basename(target),
+          parent_folder: Path.dirname(target)
+        }
+
+      _other ->
+        Mix.raise("usage: mix vbt.new organization_name app_name switches")
     end
   end
 
@@ -72,13 +93,11 @@ defmodule Mix.Tasks.Vbt.New do
     |> SourceFile.store!()
   end
 
-  defp bootstrap_project(project_folder) do
+  defp bootstrap_project(opts, project_folder) do
     project = Mix.Project.pop()
 
     try do
-      app = project_folder |> Path.basename() |> String.to_atom()
-
-      Mix.Project.in_project(app, project_folder, [], fn _module ->
+      Mix.Project.in_project(String.to_atom(opts.app), project_folder, [], fn _module ->
         Mix.Task.run("vbt.bootstrap", ~w/--force/)
       end)
     after
