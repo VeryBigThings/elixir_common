@@ -30,7 +30,7 @@ inputs:
     required: true
   keybase-repo:
     description: 'Keybase repository with project secrets'
-    default: 'keybase://team/verybigthings.banyanmed/k8s-secrets'
+    default: 'keybase://team/verybigthings.<%= organization %>/k8s-secrets'
   keybase-username:
     description: 'Keybase username'
     required: true
@@ -92,7 +92,7 @@ runs:
       shell: bash
 
     - name: Copy secrets to k8s folder
-      run: mv ${GITHUB_WORKSPACE}/keybase_secrets/wfm/${{ inputs.release-level }}.env ${GITHUB_WORKSPACE}/config/k8s/overlays/${{ inputs.release-level }}/secrets.env
+      run: mv ${GITHUB_WORKSPACE}/keybase_secrets/${{ inputs.app-name }}/${{ inputs.release-level }}.env ${GITHUB_WORKSPACE}/config/k8s/overlays/${{ inputs.release-level }}/secrets.env
       shell: bash
 
     - name: Create kubeconfig
