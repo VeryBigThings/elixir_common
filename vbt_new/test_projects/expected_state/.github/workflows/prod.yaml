@@ -60,7 +60,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
-        cluster-name: vbt-prod-cluster
+        cluster-name: vbt-cluster
         github-token: ${{ secrets.GITHUB_TOKEN }}
         keybase-paperkey: ${{ secrets.KEYBASE_PAPERKEY }}
         keybase-username: ${{ secrets.KEYBASE_USERNAME }}
