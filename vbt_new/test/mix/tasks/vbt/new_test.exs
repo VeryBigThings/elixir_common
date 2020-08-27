@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
 
       # capturing stderr to suppress mix warning when this project's mix module is reloaded
       ExUnit.CaptureIO.capture_io(:stderr, fn ->
-        New.run(~w/#{build_path()} --no-html --no-webpack/)
+        New.run(~w(vbt tmp/skafolder_tester --no-html --no-webpack))
       end)
 
       # Naive caching continued: copy deps & _build from the previous build
@@ -177,7 +177,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
     File.cp!(source, destination)
   end
 
-  defp build_path, do: Path.join(~w/tmp skafolder_tester/)
+  defp build_path, do: Path.join(~w/tmp vbt_skafolder_tester_backend/)
   defp tmp_path, do: Path.join(~w/tmp skafolder_tester_tmp/)
   defp expected_path, do: Path.join(~w/test_projects expected_state/)
 end

@@ -1,0 +1,134 @@
+name: 'Deploy'
+description: 'Deploy app'
+inputs:
+  app-name:
+    description: 'App name. Has to match app name in mix.exs'
+    default: 'skafolder_tester'
+  aws-access-key-id:
+    description: 'Aws access key id'
+    required: true
+  aws-region:
+    description: 'Aws region'
+    default: 'us-east-1'
+  aws-secret-access-key:
+    description: 'Aws secret access key'
+    required: true
+  cluster-name:
+    description: 'K8s cluster name'
+    required: true
+  docker-registry:
+    description: 'Docker image name'
+    default: 'docker.pkg.github.com'
+  github-username:
+    description: 'Github user for login to docker registry'
+    default: 'deploy-vbt'
+  github-token:
+    description: 'Github token for login to docker registry'
+    required: true
+  keybase-paperkey:
+    description: 'Keybase paperkey'
+    required: true
+  keybase-repo:
+    description: 'Keybase repository with project secrets'
+    default: 'keybase://team/verybigthings.vbt/k8s-secrets'
+  keybase-username:
+    description: 'Keybase username'
+    required: true
+  package-path:
+    description: 'Path to published package. Same as repo name'
+    default: 'verybigthings/vbt_skafolder_tester_backend'
+  release-level:
+    description: 'Application release level'
+    required: true
+  ssh-private-key:
+    description: 'SSH private key used to fetch private deps'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+     # Set env vars
+    - run: echo ::set-env name=AWS_ACCESS_KEY_ID::${{ inputs.aws-access-key-id }}
+      shell: bash
+    - run: echo ::set-env name=AWS_SECRET_ACCESS_KEY::${{ inputs.aws-secret-access-key }}
+      shell: bash
+    - run: echo ::set-env name=AWS_REGION::${{ inputs.aws-region }}
+      shell: bash
+    - run: echo ::set-env name=KEYBASE_PAPERKEY::${{ inputs.keybase-paperkey }}
+      shell: bash
+    - run: echo ::set-env name=KEYBASE_USERNAME::${{ inputs.keybase-username }}
+      shell: bash
+    - run: echo ::set-env name=SSH_AUTH_SOCK::/tmp/ssh_agent.sock
+      shell: bash
+    - run: echo ::set-env name=DOCKER_IMAGE::${{ inputs.docker-registry }}/${{ inputs.package-path }}/${{ inputs.app-name }}:${{ inputs.release-level }}-${GITHUB_SHA::7}
+      shell: bash
+    - run: echo ::set-env name=DEPLOYMENT_NAME::vbt-${{ inputs.release-level }}-skafolder_tester-backend
+      shell: bash
+
+    - name: Setup SSH Keys and known_hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+        ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+        ssh-add - <<< "${{ inputs.ssh-private-key }}"
+      shell: bash
+
+    - name: Login to Github docker registry
+      run: echo ${{ inputs.github-token }} | docker login ${{ inputs.docker-registry }} -u ${{ inputs.github-username }} --password-stdin
+      shell: bash
+
+    - name: Install keybase
+      run: |
+        curl --remote-name https://prerelease.keybase.io/keybase_amd64.deb
+        sudo apt install ./keybase_amd64.deb
+        run_keybase
+      shell: bash
+
+    - name: Fetch keybase secrets
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/keybase_secrets
+        keybase oneshot
+        git clone ${{ inputs.keybase-repo }} ${GITHUB_WORKSPACE}/keybase_secrets
+      shell: bash
+
+    - name: Copy secrets to k8s folder
+      run: mv ${GITHUB_WORKSPACE}/keybase_secrets/${{ inputs.app-name }}/${{ inputs.release-level }}.env ${GITHUB_WORKSPACE}/config/k8s/overlays/${{ inputs.release-level }}/secrets.env
+      shell: bash
+
+    - name: Create kubeconfig
+      run: aws eks --region us-east-1 update-kubeconfig --name ${{ inputs.cluster-name }}
+      shell: bash
+
+    - name: Build docker image
+      run: |
+        docker build . \
+        --tag ${DOCKER_IMAGE} \
+        --target release \
+        --build-arg MIX_ENV=prod \
+        --build-arg APP_NAME=${{ inputs.app-name }} \
+        --ssh default
+      shell: bash
+      env:
+        DOCKER_BUILDKIT: 1
+
+    - name: Push image to Docker registry
+      run: docker push ${DOCKER_IMAGE}
+      shell: bash
+
+    - name: Apply overlay
+      run: kubectl apply -k ${GITHUB_WORKSPACE}/config/k8s/overlays/${{ inputs.release-level }}
+      shell: bash
+
+    - name: Update image
+      run: |
+        kubectl --namespace ${{ inputs.release-level }} \
+        set image deployment ${DEPLOYMENT_NAME} \
+        web-server=${DOCKER_IMAGE} \
+        migration-runner=${DOCKER_IMAGE}
+      shell: bash
+
+    - name: Verify deployment success
+      run: |
+        kubectl --namespace ${{ inputs.release-level }} \
+        rollout status deployment ${DEPLOYMENT_NAME}
+      shell: bash
