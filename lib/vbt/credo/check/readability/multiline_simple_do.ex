@@ -63,12 +63,12 @@ defmodule VBT.Credo.Check.Readability.MultilineSimpleDo do
       # Recognition algorithm:
       #   1. Previous line ends with `,`
       #   2. This line starts with `do:`
-      #   3. Next line is not empty, `end`, `)`, or `else:`
+      #   3. Next line is not empty, `end`, `)`, or `else`
       if previous_line.content =~ ~r/^.*,$/ and
            String.starts_with?(this_line.content, "do:") and
            not (next_line.content == "" or
                   next_line.content in ~w/end ) end) " """/ or
-                  String.starts_with?(next_line.content, "else:")),
+                  String.starts_with?(next_line.content, "else")),
          do: this_line
     end)
     |> Stream.reject(&is_nil/1)

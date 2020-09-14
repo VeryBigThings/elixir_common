@@ -18,6 +18,15 @@ defmodule VBT.Credo.Check.Readability.MultilineSimpleDoTest do
           do: :ok,
           else: :error
       end
+
+      def fun5 do
+        if true do
+          with :ok <- :ok,
+              do: :ok
+        else
+          :ok
+        end
+      end
     end
     """
     |> to_source_file()
