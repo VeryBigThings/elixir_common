@@ -214,6 +214,9 @@ defmodule VBT.Absinthe.SchemaTest do
       @moduledoc false
       use VBT.Absinthe.Schema
 
+      # verifies middleware overriding
+      def middleware(middlewares, field, object), do: super(middlewares, field, object)
+
       query do
         field :resolver_2, :result do
           arg :fun, non_null(:string)

@@ -9,6 +9,19 @@ defmodule VBT.Absinthe.Schema do
   2. `import_types VBT.Graphql.Types`
   3. Installs the `VBT.Absinthe.Schema.NormalizeErrors` middleware to each field with a declared
      resolver.
+
+  This module sets up a middleware by default. You can add your own middlewares as follows:
+
+      defmodule MySchema do
+        use VBT.Absinthe.Schema
+
+        def middleware(middlewares, field, object) do
+          middleware = [MyMiddleware1, MyMiddleware2 | middlewares]
+          super(middlewares, field, object)
+        end
+
+        # ...
+      end
   """
 
   @doc """
@@ -47,7 +60,7 @@ defmodule VBT.Absinthe.Schema do
       end
 
       # allows clients to override the global schema middleware setup
-      @defoverridable [middleware: 3]
+      defoverridable middleware: 3
     end
   end
 end
