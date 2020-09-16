@@ -4,7 +4,7 @@ defmodule VBT.Application do
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   use Application
-  alias VBT.Telemetry
+  alias VBT.{Absinthe, Telemetry}
 
   test_children =
     if Mix.env() == :test do
@@ -22,10 +22,7 @@ defmodule VBT.Application do
     VBT.FixedJob.init_time_provider()
     Telemetry.Oban.install_handler()
 
-    Supervisor.start_link(
-      [VBT.Absinthe.Instrumentation | unquote(test_children)],
-      strategy: :one_for_one,
-      name: VBT.Supervisor
-    )
+    Absinthe.Instrumentation.configure()
+    Supervisor.start_link(unquote(test_children), strategy: :one_for_one, name: VBT.Supervisor)
   end
 end
