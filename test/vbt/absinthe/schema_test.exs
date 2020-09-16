@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
+
 defmodule VBT.Absinthe.SchemaTest do
   use VBT.Graphql.Case, async: true, endpoint: __MODULE__.TestServer, api_path: "/"
   alias VBT.Absinthe.Schema.NormalizeErrors
