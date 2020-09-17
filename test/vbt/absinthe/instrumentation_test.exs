@@ -18,17 +18,17 @@ defmodule VBT.Absinthe.InstrumentationTest do
         )
       end)
 
-    assert String.replace(log, ~r/\d+ms/, "0ms") =~
-             """
-             [warn]  spent 0ms in query { object1: object(id: 1) {id children {id children {id}}} object2: object(id: 2) {id children {id children {id}}} }
-               -> 0ms in object1
-               -> 0ms in object1.children
-               -> 0ms in object1.children.0.children
-               -> 0ms in object2
-               -> 0ms in object2.children
-               -> 0ms in object2.children.0.children
-               -> 0ms in object2.children.1.children
-             """
+    log = String.replace(log, ~r/\d+ms/, "0ms")
+
+    assert log =~
+             "[warn]  spent 0ms in query { object1: object(id: 1) {id children {id children {id}}} object2: object(id: 2) {id children {id children {id}}} }"
+
+    assert log =~ "0ms (1 calls) in object1"
+    assert log =~ "0ms (1 calls) in object1.children"
+    assert log =~ "0ms (1 calls) in object1.children.[i].children"
+    assert log =~ "0ms (1 calls) in object2"
+    assert log =~ "0ms (1 calls) in object2.children"
+    assert log =~ "0ms (2 calls) in object2.children.[i].children"
   end
 
   test "doesn't log an operation if its duration is below the given threshold" do
