@@ -160,6 +160,7 @@ defmodule VBT.Accounts.Token do
             retention: pos_integer,
             config: VBT.Accounts.config(),
             telemetry_id: any,
+            resolve_pid: (() -> pid),
             mode: :auto | :manual
           ]
 
@@ -168,14 +169,19 @@ defmodule VBT.Accounts.Token do
       config = Keyword.fetch!(opts, :config)
       retention = Keyword.get(opts, :retention, 7 * :timer.hours(24))
       now_fun = Keyword.get(opts, :now_fun, &DateTime.utc_now/0)
+      resolve_pid = Keyword.get(opts, :resolve_pid)
 
       [id: __MODULE__, every: :timer.minutes(10), timeout: :timer.minutes(1)]
       |> Keyword.merge(Keyword.take(opts, ~w/id name every timeout telemetry_id mode/a))
-      |> Keyword.merge(on_overlap: :ignore, run: fn -> cleanup(config, now_fun, retention) end)
+      |> Keyword.merge(
+        on_overlap: :ignore,
+        run: fn -> cleanup(config, now_fun, retention, resolve_pid) end
+      )
       |> Periodic.child_spec()
     end
 
-    defp cleanup(config, now_fun, retention) do
+    defp cleanup(config, now_fun, retention, resolve_pid) do
+      unless is_nil(resolve_pid), do: config.repo.put_dynamic_repo(resolve_pid.())
       date = DateTime.add(now_fun.(), -retention, :millisecond)
 
       config.repo.delete_all(
