@@ -8,12 +8,21 @@ defmodule Mix.Tasks.Vbt.New do
 
       mix vbt.new organization_name app_name phx_new_switches
 
+  Arguments:
+
+    - `organization_name` - the name or abbreviation of the client company (e.g. banmed)
+    - `app_name` - the name of the OTP application
+    - `phx_new_switches` - all switches accepted by the `phx.new` mix task
+
+  **Important** - provide `--no-html --no-webpack` switches if you don't need HTML views and JS files
+
   Example:
 
       mix vbt.new banmed telecare --no-html --no-webpack
 
-  The command above will generate the project for the OTP application `:telecare` in the folder
-  `banmed_telecare_backend`.
+  The project will be generated in the `<organization_name>_<app_name>_backend` folder (in the
+  example above `banmed_telecare_backend`). You should use the same name for the GitHub repository,
+  because generated GitHub Actions yaml files assume this convention.
   """
 
   # credo:disable-for-this-file Credo.Check.Readability.Specs
