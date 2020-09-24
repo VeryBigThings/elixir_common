@@ -19,6 +19,6 @@ wget -q http://vbt-common-docs.verybigthings.com/vbt_new.ez -O /tmp/vbt_new.ez &
 
 Run the previous command even if the scaffolder is already installed, because its code changes frequently.
 
-Now you can create the project with `mix vbt.new organization_name app_name --no-webpack --no-html`
+After the scaffolder is installed, invoke `mix help vbt.new` for usage instructions.
 
 The source code of the scaffolder is in the `vbt_new` folder.
