@@ -20,6 +20,19 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   # File generation
   # ------------------------------------------------------------------------
 
+  # Collecting template files which have user's executable permission set.
+  # This information is needed so we can make corresponding generated files executable. We need
+  # to collect such files during compilation, because vbt.new is distributed as an Elixir archive
+  # (https://hexdocs.pm/mix/Mix.Tasks.Archive.Build.html#content), and executable mode is not
+  # preserved in an archive.
+  local_templates_folder = Path.join(~w(priv templates))
+
+  executable_templates =
+    Path.join(~w(#{local_templates_folder} ** *.eex))
+    |> Path.wildcard()
+    |> Stream.filter(&match?(<<1::1, _rest::6>>, <<File.stat!(&1).mode::7>>))
+    |> Enum.map(&Path.relative_to(&1, local_templates_folder))
+
   defp generate_files(args) do
     # This function will load all .eex which reside under priv/templates, and generate
     # corresponding files in the client project. The folder structure of the generated files will
@@ -33,9 +46,10 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     {mix_generator_opts, [organization]} = OptionParser.parse!(args, switches: [force: :boolean])
 
     for template <- Path.wildcard(Path.join(templates_path, "**/*.eex"), match_dot: true) do
+      relative_path = Path.relative_to(template, templates_path)
+
       target_file =
-        template
-        |> Path.relative_to(templates_path)
+        relative_path
         |> String.replace(~r/\.eex$/, "")
         |> String.replace(~r(lib/context/), "lib/#{otp_app()}/")
         |> String.replace(~r(lib/app/), "lib/#{Macro.underscore(app_module_name())}/")
@@ -44,10 +58,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       content = EEx.eval_file(template, app: otp_app(), docker: true, organization: organization)
 
       if Mix.Generator.create_file(target_file, content, mix_generator_opts) do
-        # If the exec permission bit for the owner in the source template is set, we'll set the
-        # same bit in the destination. In doing so we're preserving the exec permission. Note that
-        # we're only doing this for the owner, because that's the only bit preserved by git.
-        if match?(<<1::1, _rest::6>>, <<File.stat!(template).mode::7>>) do
+        if Enum.member?(unquote(executable_templates), relative_path) do
           new_mode = Bitwise.bor(File.stat!(target_file).mode, 0b1_000_000)
           File.chmod!(target_file, new_mode)
         end
