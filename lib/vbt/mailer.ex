@@ -141,6 +141,11 @@ defmodule VBT.Mailer do
           mail = assert_delivered_email(to: [{_, ^email}])
           assert mail.text_body =~ reset_link
         end
+
+  ## Dynamic repos
+
+  If you need to run multiple instances of mailer, pass the `:name` option to Oban instance. Then
+  you need to pass the same name as an option to `enqueue/6` and `drain_queue/0`.
   """
 
   alias Bamboo.{Attachment, Email}
@@ -158,7 +163,8 @@ defmodule VBT.Mailer do
           attachments: [Attachment.t()],
           cc: [Email.address_list()],
           bcc: [Email.address_list()],
-          headers: %{String.t() => String.t()}
+          headers: %{String.t() => String.t()},
+          name: GenServer.server()
         ]
 
   @callback config :: map
@@ -189,14 +195,18 @@ defmodule VBT.Mailer do
   @spec enqueue(module, Email.address(), Email.address(), String.t(), body, opts :: opts) ::
           {:ok, Oban.Job.t()} | {:error, Ecto.Changeset.t()}
   def enqueue(mailer, from, to, subject, body, opts \\ []) do
+    {name, opts} = Keyword.pop(opts, :name, Oban)
+
     # Technically it would be enough to do this normalization in `send!`. However, we're also
     # doing it here to raise early if there are some error in input opts.
     opts = Keyword.update(opts, :attachments, [], &normalize_attachments/1)
 
-    %{from: from, to: to, subject: subject, body: body, opts: opts}
-    |> encode_for_queue()
-    |> mailer.new()
-    |> Oban.insert()
+    changeset =
+      %{from: from, to: to, subject: subject, body: body, opts: opts}
+      |> encode_for_queue()
+      |> mailer.new()
+
+    Oban.insert(name, changeset)
   end
 
   # ------------------------------------------------------------------------
@@ -313,9 +323,13 @@ defmodule VBT.Mailer do
 
         # Add a helper `drain_queue` function to simplify testing.
         if Mix.env() == :test do
-          # credo:disable-for-next-line Credo.Check.Readability.Specs
-          def drain_queue,
-            do: Oban.drain_queue(queue: unquote(Keyword.fetch!(oban_opts, :queue)))
+          @spec drain_queue(name: GenServer.server()) :: Oban.Queue.Drainer.drain_result()
+          def drain_queue(opts \\ []) do
+            Oban.drain_queue(
+              Keyword.get(opts, :name, Oban),
+              unquote(queue: Keyword.fetch!(oban_opts, :queue))
+            )
+          end
         end
 
         defoverridable Oban.Worker
