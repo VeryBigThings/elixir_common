@@ -45,7 +45,7 @@ defmodule VBT.MixProject do
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:mox, "~> 0.5", only: :test},
       {:oban, "~> 2.2.0"},
-      {:parent, "~> 0.8"},
+      {:parent, "~> 0.11"},
       {:phoenix_html, "~> 2.0"},
       {:phoenix_pubsub, "~> 1.0 or ~> 2.0"},
       {:phoenix, "~> 1.4.0 or ~> 1.5.0"},
