@@ -63,7 +63,7 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayout do
         callback_impl
         private_fun
       /a,
-      ignore: [:private_macro]
+      ignore: [:private_macro, :private_guard]
     )
     |> Enum.map(&%Credo.Issue{&1 | check: __MODULE__})
   end
