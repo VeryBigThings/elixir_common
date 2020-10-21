@@ -80,65 +80,51 @@ defmodule Mix.Vbt do
   end
 
   defp get_latest_versions! do
-    elixir_major_minor_version = elixir_major_minor_version()
+    dockerfile = most_recent_dockerfile()
 
-    %{
-      elixir: elixir_version(elixir_major_minor_version),
-      erlang: erlang_version(elixir_major_minor_version),
-      nodejs: nodejs_version(elixir_major_minor_version)
-    }
+    %{"elixir" => elixir_version, "erlang" => erlang_version} =
+      Regex.named_captures(
+        ~r/^FROM hexpm\/elixir:(?<elixir>(\d+\.)*(\d+))-erlang-(?<erlang>\d+\.\d+)-*/m,
+        dockerfile
+      )
+
+    %{"node" => node_version} =
+      Regex.named_captures(
+        ~r/^ENV NODE_VERSION (?<node>(\d+\.)*(\d+))/m,
+        dockerfile
+      )
+
+    [elixir_version, erlang_version, node_version]
+    |> Stream.map(&String.split(&1, "."))
+    |> Stream.map(fn
+      [major] -> "#{major}.0.0"
+      [major, minor] -> "#{major}.#{minor}.0"
+      [major, minor, patch | _] -> "#{major}.#{minor}.#{patch}"
+    end)
+    |> Stream.zip(~w/elixir erlang nodejs/a)
+    |> Enum.into(%{}, fn {version, label} -> {label, version} end)
   end
 
-  defp elixir_major_minor_version do
+  defp most_recent_dockerfile do
     dockerfiles_content =
       http_get!("https://api.github.com/repos/verybigthings/dockerfiles/contents/elixir")
 
     # need to manually parse the json because archive can't depend on 3rd party apps
-    Regex.scan(~r/"name":"(.+?)"/, dockerfiles_content)
-    |> Enum.map(fn [_, version] -> version end)
-    |> Enum.sort_by(
-      &(&1
-        |> String.split(".")
-        |> Enum.map(fn part -> String.to_integer(part) end)),
-      :desc
+    latest_version =
+      Regex.scan(~r/"name":"(.+?)"/, dockerfiles_content)
+      |> Enum.map(fn [_, version] -> version end)
+      |> Enum.sort_by(
+        &(&1
+          |> String.split(".")
+          |> Enum.map(fn part -> String.to_integer(part) end)),
+        :desc
+      )
+      |> hd()
+
+    http_get!(
+      "https://raw.githubusercontent.com/VeryBigThings/dockerfiles/master/elixir/#{latest_version}/Dockerfile"
     )
-    |> hd()
   end
-
-  defp elixir_version(elixir_major_minor_version) do
-    ~r/ELIXIR_VERSION=\"v(?<elixir_version>\d+\.\d+\.\d+)\"/
-    |> Regex.named_captures(dockerfile("c0b/docker-elixir", elixir_major_minor_version))
-    |> Map.fetch!("elixir_version")
-  end
-
-  defp erlang_version(elixir_major_minor_version) do
-    erlang_major_version =
-      ~r/FROM\s+erlang:(?<erlang_major_version>\d+)/
-      |> Regex.named_captures(dockerfile("c0b/docker-elixir", elixir_major_minor_version))
-      |> Map.fetch!("erlang_major_version")
-
-    ~r/OTP_VERSION="(?<erlang_version>\d+\.\d+(\.\d+)*)"/
-    |> Regex.named_captures(dockerfile("erlang/docker-erlang-otp", erlang_major_version))
-    |> Map.fetch!("erlang_version")
-    |> String.split(".")
-    |> Enum.take(3)
-    |> case do
-      [major, minor] -> [major, minor, 0]
-      [_major, _minor, _patch] = version -> version
-    end
-    |> Enum.join(".")
-  end
-
-  defp nodejs_version(elixir_major_minor_version) do
-    ~r/NODE_VERSION\s+(?<nodejs_version>\d+\.\d+\.\d+)/
-    |> Regex.named_captures(
-      dockerfile("VeryBigThings/dockerfiles", "elixir/#{elixir_major_minor_version}")
-    )
-    |> Map.fetch!("nodejs_version")
-  end
-
-  defp dockerfile(repo, path),
-    do: http_get!("https://raw.githubusercontent.com/#{repo}/master/#{path}/Dockerfile")
 
   defp http_get!(url) do
     {:ok, {{_, 200, _}, _headers, response}} =
