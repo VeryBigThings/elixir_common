@@ -96,7 +96,7 @@ defmodule VBT.MailerTest do
       send_mail(%{layout: :layout, template: :greetings, name: "foo bar"})
       mail = assert_delivered_email()
       assert mail.text_body == "Hello foo bar,\n\n\nBest regards,\nVBT\n"
-      assert mail.html_body == "<div>Hello foo bar,</div>\n<div>Best regards, VBT</div>\n"
+      assert mail.html_body == "<div>Hello foo bar,</div>\n\n<div>Best regards, VBT</div>\n"
     end
 
     defp send_mail(body),

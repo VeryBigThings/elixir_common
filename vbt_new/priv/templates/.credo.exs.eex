@@ -26,6 +26,7 @@
         {VBT.Credo.Check.Readability.MultilineSimpleDo, []},
 
         # disabled checks
+        {Credo.Check.Consistency.SpaceAroundOperators, false},
         {Credo.Check.Design.TagTODO, false},
         {Credo.Check.Readability.ModuleDoc, false},
 
