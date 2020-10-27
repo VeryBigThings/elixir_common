@@ -79,7 +79,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> configure_repo()
     |> adapt_app_module()
     |> drop_prod_secret()
-    |> adapt_aws_mocks()
+    |> setup_test_mocks()
     |> config_bcrypt()
     |> setup_sentry()
     |> setup_test_plug()
@@ -119,6 +119,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         |> setup_dialyzer()
         |> setup_release()
         |> MixFile.append_config(:project, ~s|build_path: System.get_env("BUILD_PATH", "_build")|)
+        |> MixFile.append_config(:deps, ~s/{:boundary, "~> 0.6"}/)
+        |> MixFile.append_config(:deps, ~s/{:mox, "~> 0.5", only: :test}/)
         |> Map.update!(
           :content,
           &String.replace(
@@ -348,14 +350,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     )
   end
 
-  defp adapt_aws_mocks(source_files) do
-    source_files
-    |> update_in([:mix], &MixFile.append_config(&1, :deps, ~s/{:mox, "~> 0.5", only: :test}/))
-    |> update_in(
-      [:test_helper],
-      &SourceFile.append(&1, "VBT.Aws.Test.setup()")
-    )
-  end
+  defp setup_test_mocks(source_files),
+    do: update_in(source_files.test_helper, &SourceFile.append(&1, "VBT.Aws.Test.setup()"))
 
   # ------------------------------------------------------------------------
   # Endpoint configuration
