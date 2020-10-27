@@ -119,8 +119,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         |> setup_dialyzer()
         |> setup_release()
         |> MixFile.append_config(:project, ~s|build_path: System.get_env("BUILD_PATH", "_build")|)
-        |> MixFile.append_config(:deps, ~s/{:boundary, "~> 0.6"}/)
-        |> MixFile.append_config(:deps, ~s/{:mox, "~> 0.5", only: :test}/)
+        |> adapt_deps()
         |> Map.update!(
           :content,
           &String.replace(
@@ -131,6 +130,27 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         )
       end
     )
+  end
+
+  defp adapt_deps(mix_file) do
+    mix_file
+    |> MixFile.append_config(:deps, ~s/\n{:boundary, "~> 0.6"}/)
+    |> MixFile.append_config(:deps, ~s/\n{:mox, "~> 0.5", only: :test}/)
+    |> sort_deps()
+  end
+
+  defp sort_deps(mix_file) do
+    deps_regex = ~r/\n\s*defp deps do\s+\[(?<deps>.*?)\]\s+end/s
+
+    deps =
+      Regex.named_captures(deps_regex, mix_file.content)
+      |> Map.fetch!("deps")
+      |> String.split(~r/\n\s*/, trim: true)
+      |> Enum.sort()
+      |> Enum.map(&String.replace(&1, ~r/,\s*$/, ""))
+      |> Enum.join(",\n")
+
+    update_in(mix_file.content, &String.replace(&1, deps_regex, "\ndefp deps do [#{deps}] end"))
   end
 
   defp adapt_min_elixir_version(mix_file) do
