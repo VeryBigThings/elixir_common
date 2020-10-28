@@ -134,6 +134,14 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
             "#{app_module_name()}"
           )
         )
+        |> Map.update!(
+          :content,
+          &String.replace(
+            &1,
+            "compilers: [:phoenix",
+            "compilers: [:boundary, :phoenix"
+          )
+        )
       end
     )
   end
