@@ -12,6 +12,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       Mix.raise("mix vbt.bootstrap can only be run inside an application directory")
     end
 
+    # we'll generate our own app module
+    File.rm!("lib/#{otp_app()}/application.ex")
+
     generate_files(args)
     adapt_code!()
   end
@@ -53,7 +56,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         |> String.replace(~r/\.eex$/, "")
         |> String.replace(~r[lib/config(/|\.ex)], "lib/#{otp_app()}_config\\1")
         |> String.replace(~r[lib/context(/|\.ex)], "lib/#{otp_app()}\\1")
-        |> String.replace(~r(lib/app/), "lib/#{Macro.underscore(app_module_name())}/")
+        |> String.replace(~r[lib/app(/|\.ex)], "lib/#{Macro.underscore(app_module_name())}\\1")
         |> String.replace(~r[((lib)|(test))/web/], "\\1/#{otp_app()}_web/")
 
       content = EEx.eval_file(template, app: otp_app(), docker: true, organization: organization)
@@ -79,7 +82,6 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> adapt_web_root_module()
     |> configure_endpoint()
     |> configure_repo()
-    |> adapt_app_module()
     |> drop_prod_secret()
     |> setup_test_mocks()
     |> config_bcrypt()
@@ -237,21 +239,6 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     """)
   end
 
-  defp adapt_app_module(source_files) do
-    update_in(
-      source_files.app_module.content,
-      &(&1
-        |> String.replace(
-          ~r/(\s*def start\(.*?do)/s,
-          "\\1\n#{config_module_name()}.validate!()\n"
-        )
-        |> String.replace(
-          "defmodule #{context_module_name()}.Application",
-          "defmodule #{app_module_name()}"
-        ))
-    )
-  end
-
   defp drop_prod_secret(source_files) do
     update_in(
       source_files.prod_config.content,
@@ -270,9 +257,6 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       Path.wildcard("lib/#{otp_app()}_web/**/*.ex"),
       &disable_credo_checks(&1, ["Credo.Check.Readability.Specs"])
     )
-
-    # Same reasoning for the app file.
-    disable_credo_checks("lib/#{otp_app()}_app.ex", ~w/Credo.Check.Readability.Specs/)
 
     # Some helper files created by phx.new violate these checks, so we'll disable them. This is
     # not the code we'll edit, so disabling these checks is fine here.
@@ -517,8 +501,6 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       prod_config: SourceFile.load!("config/prod.exs"),
       endpoint: load_web_file("endpoint.ex"),
       repo: load_context_file("repo.ex"),
-      app_module:
-        load_context_file("application.ex", output: Path.join("lib", "#{otp_app()}_app.ex")),
       test_helper: SourceFile.load!("test/test_helper.exs"),
       web: SourceFile.load!("lib/#{otp_app()}_web.ex")
     }
