@@ -1,5 +1,5 @@
 defmodule <%= Mix.Vbt.context_module_name() %> do
-  use Boundary, deps: [<%= Mix.Vbt.config_module_name() %>]
+  use Boundary, deps: [<%= Mix.Vbt.config_module_name() %>, <%= Mix.Vbt.schemas_module_name() %>]
 
   @spec start_link :: Supervisor.on_start()
   def start_link do

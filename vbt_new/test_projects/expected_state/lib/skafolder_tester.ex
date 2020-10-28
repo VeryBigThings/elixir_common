@@ -1,5 +1,5 @@
 defmodule SkafolderTester do
-  use Boundary, deps: [SkafolderTesterConfig]
+  use Boundary, deps: [SkafolderTesterConfig, SkafolderTesterSchemas]
 
   @spec start_link :: Supervisor.on_start()
   def start_link do

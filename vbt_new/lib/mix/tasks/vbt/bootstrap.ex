@@ -431,7 +431,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         """
         \\0
 
-        use Boundary, deps: [#{context_module_name()}, #{config_module_name()}]
+        use Boundary, deps: [#{context_module_name()}, #{config_module_name()}, #{
+          schemas_module_name()
+        }]
 
         @spec start_link :: Supervisor.on_start()
         def start_link do
