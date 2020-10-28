@@ -54,10 +54,10 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       target_file =
         relative_path
         |> String.replace(~r/\.eex$/, "")
-        |> String.replace(~r[lib/config(/|\.ex)], "lib/#{otp_app()}_config\\1")
-        |> String.replace(~r[lib/context(/|\.ex)], "lib/#{otp_app()}\\1")
-        |> String.replace(~r[lib/app(/|\.ex)], "lib/#{Macro.underscore(app_module_name())}\\1")
-        |> String.replace(~r[test/support/main(/|\.ex)], "test/support/#{otp_app()}_test\\1")
+        |> String.replace(
+          ~r[^((?:lib)|(?:test/support))/otp_app(_|/|\.ex)],
+          "\\1/#{otp_app()}\\2"
+        )
         |> String.replace(~r[^((lib)|(test))/web/], "\\1/#{otp_app()}_web/")
 
       content = EEx.eval_file(template, app: otp_app(), docker: true, organization: organization)
