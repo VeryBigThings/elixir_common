@@ -27,6 +27,9 @@ defmodule Mix.Vbt do
   @spec test_module_name :: String.t()
   def test_module_name, do: "#{context_module_name()}Test"
 
+  @spec schemas_module_name :: String.t()
+  def schemas_module_name, do: "#{context_module_name()}Schemas"
+
   @spec tool_versions :: %{tool => Version.t()}
   def tool_versions do
     with nil <- :persistent_term.get({__MODULE__, :tool_versions}, nil) do

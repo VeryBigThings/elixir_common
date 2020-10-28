@@ -1,0 +1,3 @@
+defmodule <%= Mix.Vbt.schemas_module_name %> do
+  use Boundary, exports: {:all, except: [Base]}
+end
