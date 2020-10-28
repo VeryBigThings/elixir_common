@@ -51,6 +51,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       target_file =
         relative_path
         |> String.replace(~r/\.eex$/, "")
+        |> String.replace(~r[lib/config(/|\.ex)], "lib/#{otp_app()}_config\\1")
         |> String.replace(~r[lib/context(/|\.ex)], "lib/#{otp_app()}\\1")
         |> String.replace(~r(lib/app/), "lib/#{Macro.underscore(app_module_name())}/")
         |> String.replace(~r[((lib)|(test))/web/], "\\1/#{otp_app()}_web/")
@@ -194,7 +195,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     defp operator_template(_),
-      do: IO.puts(#{context_module_name()}.Config.template())
+      do: IO.puts(#{config_module_name()}.template())
 
     """)
   end
@@ -241,7 +242,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       &(&1
         |> String.replace(
           ~r/(\s*def start\(.*?do)/s,
-          "\\1\n#{context_module_name()}.Config.validate!()\n"
+          "\\1\n#{config_module_name()}.validate!()\n"
         )
         |> String.replace(
           "defmodule #{context_module_name()}.Application",
@@ -422,15 +423,15 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       def init(_type, config) do
         config =
           config
-          |> Keyword.put(:secret_key_base, #{context_module_name()}.Config.secret_key_base())
+          |> Keyword.put(:secret_key_base, #{config_module_name()}.secret_key_base())
           |> Keyword.update(:url, url_config(), &Keyword.merge(&1, url_config()))
           |> Keyword.update(:http, http_config(), &(http_config() ++ (&1 || [])))
 
         {:ok, config}
       end
 
-      defp url_config, do: [host: #{context_module_name()}.Config.host()]
-      defp http_config, do: [:inet6, port: #{context_module_name()}.Config.port()]
+      defp url_config, do: [host: #{config_module_name()}.host()]
+      defp http_config, do: [:inet6, port: #{config_module_name()}.port()]
       """
     )
   end
@@ -475,9 +476,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         config =
           Keyword.merge(
             config,
-            url: #{context_module_name()}.Config.db_url(),
-            pool_size: #{context_module_name()}.Config.db_pool_size(),
-            ssl: #{context_module_name()}.Config.db_ssl()
+            url: #{config_module_name()}.db_url(),
+            pool_size: #{config_module_name()}.db_pool_size(),
+            ssl: #{config_module_name()}.db_ssl()
           )
 
         {:ok, config}

@@ -63,7 +63,7 @@ runs:
         mix release --overwrite
 
         # generate config and load to env vars, so release can use the correct database
-        set -a && source <(MIX_ENV=test mix run -e "IO.puts(SkafolderTester.Config.template())" | egrep "#.*=" | sed "s/# //")
+        set -a && source <(MIX_ENV=test mix run -e "IO.puts(SkafolderTesterConfig.template())" | egrep "#.*=" | sed "s/# //")
 
         _build/prod/rel/skafolder_tester/bin/migrate.sh
         _build/prod/rel/skafolder_tester/bin/seed.sh

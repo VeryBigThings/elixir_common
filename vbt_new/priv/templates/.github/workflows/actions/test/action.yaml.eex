@@ -63,7 +63,7 @@ runs:
         mix release --overwrite
 
         # generate config and load to env vars, so release can use the correct database
-        set -a && source <(MIX_ENV=test mix run -e "IO.puts(<%= Mix.Vbt.context_module_name() %>.Config.template())" | egrep "#.*=" | sed "s/# //")
+        set -a && source <(MIX_ENV=test mix run -e "IO.puts(<%= Mix.Vbt.config_module_name() %>.template())" | egrep "#.*=" | sed "s/# //")
 
         _build/prod/rel/<%= Mix.Vbt.otp_app() %>/bin/migrate.sh
         _build/prod/rel/<%= Mix.Vbt.otp_app() %>/bin/seed.sh

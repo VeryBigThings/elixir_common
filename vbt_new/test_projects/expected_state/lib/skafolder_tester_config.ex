@@ -1,4 +1,4 @@
-defmodule SkafolderTester.Config do
+defmodule SkafolderTesterConfig do
   use Provider,
     source: Provider.SystemEnv,
     params: [

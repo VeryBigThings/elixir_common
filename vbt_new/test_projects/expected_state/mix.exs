@@ -82,7 +82,7 @@ defmodule SkafolderTester.MixProject do
   end
 
   defp operator_template(_),
-    do: IO.puts(SkafolderTester.Config.template())
+    do: IO.puts(SkafolderTesterConfig.template())
 
   defp releases() do
     [

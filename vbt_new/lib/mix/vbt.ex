@@ -15,6 +15,9 @@ defmodule Mix.Vbt do
   @spec context_module_name :: String.t()
   def context_module_name, do: Macro.camelize("#{otp_app()}")
 
+  @spec config_module_name :: String.t()
+  def config_module_name, do: "#{context_module_name()}Config"
+
   @spec app_module_name :: String.t()
   def app_module_name, do: "#{context_module_name()}App"
 

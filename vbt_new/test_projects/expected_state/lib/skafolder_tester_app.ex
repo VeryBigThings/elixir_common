@@ -8,7 +8,7 @@ defmodule SkafolderTesterApp do
   use Application
 
   def start(_type, _args) do
-    SkafolderTester.Config.validate!()
+    SkafolderTesterConfig.validate!()
 
     children = [
       # Start the Ecto repository

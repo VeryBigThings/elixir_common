@@ -13,7 +13,7 @@ defmodule <%= Mix.Vbt.app_module_name() %>.Release do
 
   @app Keyword.fetch!(Mix.Project.config(), :app)
 
-  def check_config, do: <%= Mix.Vbt.context_module_name() %>.Config.validate!()
+  def check_config, do: <%= Mix.Vbt.config_module_name() %>.validate!()
 
   def migrate(args \\ []) do
     start_services()
