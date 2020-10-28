@@ -124,6 +124,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         |> setup_preferred_cli_env()
         |> setup_dialyzer()
         |> setup_release()
+        |> setup_boundary()
         |> MixFile.append_config(:project, ~s|build_path: System.get_env("BUILD_PATH", "_build")|)
         |> adapt_deps()
         |> Map.update!(
@@ -246,6 +247,22 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         end
         |> Enum.concat(["release"])
       end
+    """)
+  end
+
+  defp setup_boundary(mix_file) do
+    mix_file
+    |> MixFile.append_config(:project, "boundary: boundary()")
+    |> SourceFile.add_to_module("""
+    defp boundary do
+      [
+        default: [
+          check: [
+            apps: [{:mix, :runtime}]
+          ]
+        ]
+      ]
+    end
     """)
   end
 

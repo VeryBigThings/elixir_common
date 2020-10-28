@@ -14,6 +14,7 @@ defmodule SkafolderTester.MixProject do
       preferred_cli_env: preferred_cli_env(),
       dialyzer: dialyzer(),
       releases: releases(),
+      boundary: boundary(),
       build_path: System.get_env("BUILD_PATH", "_build")
     ]
   end
@@ -109,5 +110,15 @@ defmodule SkafolderTester.MixProject do
       ]
     end
     |> Enum.concat(["release"])
+  end
+
+  defp boundary do
+    [
+      default: [
+        check: [
+          apps: [{:mix, :runtime}]
+        ]
+      ]
+    ]
   end
 end
