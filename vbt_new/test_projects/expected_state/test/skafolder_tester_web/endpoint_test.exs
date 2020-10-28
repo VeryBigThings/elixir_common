@@ -1,5 +1,6 @@
 defmodule SkafolderTesterWeb.EndpointTest do
-  use SkafolderTesterWeb.ConnCase, async: false
+  use SkafolderTesterTest.Web.ConnCase, async: false
+  alias SkafolderTesterTest.Web.TestPlug
 
   describe "alive" do
     test "returns a 200 status code in response" do
@@ -53,7 +54,7 @@ defmodule SkafolderTesterWeb.EndpointTest do
   end
 
   defp dispatch(opts),
-    do: SkafolderTesterWeb.TestPlug.dispatch(fn _conn -> raise Keyword.fetch!(opts, :message) end)
+    do: TestPlug.dispatch(fn _conn -> raise Keyword.fetch!(opts, :message) end)
 
   defp set_release_level(value) do
     current_release_level = System.get_env("RELEASE_LEVEL")

@@ -1,4 +1,4 @@
-defmodule <%= Mix.Vbt.context_module_name() %>.SentryTestClient do
+defmodule <%= Mix.Vbt.test_module_name() %>.SentryClient do
   @moduledoc false
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 

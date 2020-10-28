@@ -10,7 +10,7 @@ defmodule SkafolderTesterWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_skafolder_tester_key",
-    signing_salt: "7/rzi21N"
+    signing_salt: "kpwcpEkp"
   ]
 
   socket "/socket", SkafolderTesterWeb.UserSocket,
@@ -54,7 +54,7 @@ defmodule SkafolderTesterWeb.Endpoint do
   plug Plug.Session, @session_options
 
   if Mix.env() == :test do
-    plug SkafolderTesterWeb.TestPlug
+    plug SkafolderTesterTest.Web.TestPlug
   end
 
   plug SkafolderTesterWeb.Router

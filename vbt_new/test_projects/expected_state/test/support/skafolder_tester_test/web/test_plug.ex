@@ -1,4 +1,4 @@
-defmodule SkafolderTesterWeb.TestPlug do
+defmodule SkafolderTesterTest.Web.TestPlug do
   @behaviour Plug
   import Phoenix.ConnTest
 

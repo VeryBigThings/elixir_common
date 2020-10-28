@@ -57,7 +57,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         |> String.replace(~r[lib/config(/|\.ex)], "lib/#{otp_app()}_config\\1")
         |> String.replace(~r[lib/context(/|\.ex)], "lib/#{otp_app()}\\1")
         |> String.replace(~r[lib/app(/|\.ex)], "lib/#{Macro.underscore(app_module_name())}\\1")
-        |> String.replace(~r[((lib)|(test))/web/], "\\1/#{otp_app()}_web/")
+        |> String.replace(~r[test/support/main(/|\.ex)], "test/support/#{otp_app()}_test\\1")
+        |> String.replace(~r[^((lib)|(test))/web/], "\\1/#{otp_app()}_web/")
 
       content = EEx.eval_file(template, app: otp_app(), docker: true, organization: organization)
 
@@ -87,6 +88,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> config_bcrypt()
     |> setup_sentry()
     |> setup_test_plug()
+    |> adapt_test_support_modules()
     |> store_source_files!()
 
     File.rm(Path.join(~w/config prod.secret.exs/))
@@ -270,17 +272,20 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       ~w/VBT.Credo.Check.Consistency.ModuleLayout/
     )
 
-    disable_credo_checks("test/support/conn_case.ex", ~w/
+    disable_credo_checks("test/support/#{otp_app()}_test/web/conn_case.ex", ~w/
       Credo.Check.Readability.AliasAs
       Credo.Check.Design.AliasUsage
     /)
 
-    disable_credo_checks("test/support/data_case.ex", ~w/
+    disable_credo_checks("test/support/#{otp_app()}_test/data_case.ex", ~w/
       Credo.Check.Design.AliasUsage
       Credo.Check.Readability.Specs
     /)
 
-    disable_credo_checks("test/support/channel_case.ex", ~w/Credo.Check.Design.AliasUsage/)
+    disable_credo_checks(
+      "test/support/#{otp_app()}_test/web/channel_case.ex",
+      ~w/Credo.Check.Design.AliasUsage/
+    )
   end
 
   defp disable_credo_checks(file, checks) do
@@ -323,7 +328,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       [:test_config],
       &ConfigFile.prepend(
         &1,
-        "config :sentry, client: #{context_module_name()}.SentryTestClient"
+        "config :sentry, client: #{test_module_name()}.SentryClient"
       )
     )
   end
@@ -347,13 +352,53 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         ~r/(plug #{web_module_name()}\.Router)\n/,
         """
         if Mix.env() == :test do
-          plug #{web_module_name()}.TestPlug
+          plug #{test_module_name()}.Web.TestPlug
         end
 
         \\1
         """
       )
     )
+  end
+
+  defp adapt_test_support_modules(source_files) do
+    for file_name <- ~w/channel_case conn_case/ do
+      source = Path.join(~w/test support #{file_name}.ex/)
+      destination = Path.join(~w/test support #{otp_app()}_test web #{file_name}.ex/)
+      File.mkdir_p!(Path.dirname(destination))
+      File.rename!(source, destination)
+
+      destination
+      |> SourceFile.load!()
+      |> update_in(
+        [:content],
+        &String.replace(
+          &1,
+          "defmodule #{web_module_name()}.",
+          "defmodule #{test_module_name()}.Web."
+        )
+      )
+      |> SourceFile.store!()
+    end
+
+    source = Path.join(~w/test support data_case.ex/)
+    destination = Path.join(~w/test support #{otp_app()}_test data_case.ex/)
+    File.mkdir_p!(Path.dirname(destination))
+    File.rename!(source, destination)
+
+    destination
+    |> SourceFile.load!()
+    |> update_in(
+      [:content],
+      &String.replace(
+        &1,
+        "defmodule #{context_module_name()}.",
+        "defmodule #{test_module_name()}."
+      )
+    )
+    |> SourceFile.store!()
+
+    source_files
   end
 
   defp setup_test_mocks(source_files),
