@@ -51,7 +51,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       target_file =
         relative_path
         |> String.replace(~r/\.eex$/, "")
-        |> String.replace(~r(lib/context/), "lib/#{otp_app()}/")
+        |> String.replace(~r[lib/context(/|\.ex)], "lib/#{otp_app()}\\1")
         |> String.replace(~r(lib/app/), "lib/#{Macro.underscore(app_module_name())}/")
         |> String.replace(~r[((lib)|(test))/web/], "\\1/#{otp_app()}_web/")
 

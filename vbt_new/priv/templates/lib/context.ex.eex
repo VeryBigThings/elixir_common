@@ -1,0 +1,3 @@
+defmodule <%= Mix.Vbt.context_module_name() %> do
+  use Boundary
+end
