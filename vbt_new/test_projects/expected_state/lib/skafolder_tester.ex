@@ -1,3 +1,3 @@
 defmodule SkafolderTester do
-  use Boundary
+  use Boundary, deps: [SkafolderTesterConfig]
 end
