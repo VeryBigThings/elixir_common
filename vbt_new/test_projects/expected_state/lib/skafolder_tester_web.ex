@@ -20,6 +20,8 @@ defmodule SkafolderTesterWeb do
   and import those modules here.
   """
 
+  use Boundary, deps: [SkafolderTester, SkafolderTesterConfig]
+
   def controller do
     quote do
       use Phoenix.Controller, namespace: SkafolderTesterWeb

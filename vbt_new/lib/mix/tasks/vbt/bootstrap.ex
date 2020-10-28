@@ -76,6 +76,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> adapt_gitignore()
     |> adapt_mix()
     |> add_kubernetes_liveness_check()
+    |> adapt_web_root_module()
     |> configure_endpoint()
     |> configure_repo()
     |> adapt_app_module()
@@ -392,6 +393,21 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     )
   end
 
+  defp adapt_web_root_module(source_files) do
+    update_in(
+      source_files.web.content,
+      &String.replace(
+        &1,
+        ~r/@moduledoc """.*?"""/s,
+        """
+        \\0
+
+        use Boundary, deps: [#{context_module_name()}, #{config_module_name()}]
+        """
+      )
+    )
+  end
+
   defp configure_endpoint(source_files) do
     source_files
     |> update_files(~w/config dev_config test_config prod_config/a, &remove_endpoint_settings/1)
@@ -503,7 +519,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       repo: load_context_file("repo.ex"),
       app_module:
         load_context_file("application.ex", output: Path.join("lib", "#{otp_app()}_app.ex")),
-      test_helper: SourceFile.load!("test/test_helper.exs")
+      test_helper: SourceFile.load!("test/test_helper.exs"),
+      web: SourceFile.load!("lib/#{otp_app()}_web.ex")
     }
   end
 
