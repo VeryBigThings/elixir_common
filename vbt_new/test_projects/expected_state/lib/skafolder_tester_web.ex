@@ -22,6 +22,27 @@ defmodule SkafolderTesterWeb do
 
   use Boundary, deps: [SkafolderTester, SkafolderTesterConfig]
 
+  @spec start_link :: Supervisor.on_start()
+  def start_link do
+    Supervisor.start_link(
+      [
+        SkafolderTesterWeb.Telemetry,
+        SkafolderTesterWeb.Endpoint
+      ],
+      strategy: :one_for_one,
+      name: __MODULE__
+    )
+  end
+
+  @spec child_spec(any) :: Supervisor.child_spec()
+  def child_spec(_arg) do
+    %{
+      id: __MODULE__,
+      type: :supervisor,
+      start: {__MODULE__, :start_link, []}
+    }
+  end
+
   def controller do
     quote do
       use Phoenix.Controller, namespace: SkafolderTesterWeb

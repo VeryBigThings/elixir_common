@@ -7,15 +7,14 @@ defmodule SkafolderTesterApp do
   def start(_type, _args) do
     SkafolderTesterConfig.validate!()
 
-    children = [
-      SkafolderTester.Repo,
-      SkafolderTesterWeb.Telemetry,
-      {Phoenix.PubSub, name: SkafolderTester.PubSub},
-      SkafolderTesterWeb.Endpoint
-    ]
-
-    opts = [strategy: :one_for_one, name: __MODULE__]
-    Supervisor.start_link(children, opts)
+    Supervisor.start_link(
+      [
+        SkafolderTester,
+        SkafolderTesterWeb
+      ],
+      strategy: :one_for_one,
+      name: __MODULE__
+    )
   end
 
   def config_change(changed, _new, removed) do

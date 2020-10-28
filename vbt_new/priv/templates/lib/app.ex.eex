@@ -7,15 +7,14 @@ defmodule <%= Mix.Vbt.app_module_name() %> do
   def start(_type, _args) do
     <%= Mix.Vbt.config_module_name() %>.validate!()
 
-    children = [
-      <%= Mix.Vbt.context_module_name() %>.Repo,
-      <%= Mix.Vbt.web_module_name() %>.Telemetry,
-      {Phoenix.PubSub, name: <%= Mix.Vbt.context_module_name() %>.PubSub},
-      <%= Mix.Vbt.web_module_name() %>.Endpoint
-    ]
-
-    opts = [strategy: :one_for_one, name: __MODULE__]
-    Supervisor.start_link(children, opts)
+    Supervisor.start_link(
+      [
+        <%= Mix.Vbt.context_module_name() %>,
+        <%= Mix.Vbt.web_module_name() %>
+      ],
+      strategy: :one_for_one,
+      name: __MODULE__
+    )
   end
 
   def config_change(changed, _new, removed) do

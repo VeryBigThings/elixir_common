@@ -387,6 +387,27 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         \\0
 
         use Boundary, deps: [#{context_module_name()}, #{config_module_name()}]
+
+        @spec start_link :: Supervisor.on_start()
+        def start_link do
+          Supervisor.start_link(
+            [
+              #{web_module_name()}.Telemetry,
+              #{web_module_name()}.Endpoint
+            ],
+            strategy: :one_for_one,
+            name: __MODULE__
+          )
+        end
+
+        @spec child_spec(any) :: Supervisor.child_spec()
+        def child_spec(_arg) do
+          %{
+            id: __MODULE__,
+            type: :supervisor,
+            start: {__MODULE__, :start_link, []}
+          }
+        end
         """
       )
     )
