@@ -1,7 +1,7 @@
 # credo:disable-for-this-file Credo.Check.Readability.Specs
 
 defmodule SkafolderTesterApp do
-  use Boundary, deps: [SkafolderTester, SkafolderTesterWeb]
+  use Boundary, deps: [SkafolderTester, SkafolderTesterConfig, SkafolderTesterWeb]
   use Application
 
   def start(_type, _args) do

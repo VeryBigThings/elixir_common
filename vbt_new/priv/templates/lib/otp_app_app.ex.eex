@@ -1,7 +1,7 @@
 # credo:disable-for-this-file Credo.Check.Readability.Specs
 
 defmodule <%= Mix.Vbt.app_module_name() %> do
-  use Boundary, deps: [<%= Mix.Vbt.context_module_name() %>, <%= Mix.Vbt.web_module_name() %>]
+  use Boundary, deps: [<%= Mix.Vbt.context_module_name() %>, <%= Mix.Vbt.config_module_name() %>, <%= Mix.Vbt.web_module_name() %>]
   use Application
 
   def start(_type, _args) do
