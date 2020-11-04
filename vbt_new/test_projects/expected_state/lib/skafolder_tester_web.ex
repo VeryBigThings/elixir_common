@@ -20,7 +20,9 @@ defmodule SkafolderTesterWeb do
   and import those modules here.
   """
 
-  use Boundary, deps: [SkafolderTester, SkafolderTesterConfig, SkafolderTesterSchemas]
+  use Boundary,
+    deps: [SkafolderTester, SkafolderTesterConfig, SkafolderTesterSchemas],
+    exports: [Endpoint]
 
   @spec start_link :: Supervisor.on_start()
   def start_link do
