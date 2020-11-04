@@ -12,6 +12,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       Mix.raise("mix vbt.bootstrap can only be run inside an application directory")
     end
 
+    # we'll generate our own app module
+    File.rm!("lib/#{otp_app()}/application.ex")
+
     generate_files(args)
     adapt_code!()
   end
@@ -51,9 +54,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       target_file =
         relative_path
         |> String.replace(~r/\.eex$/, "")
-        |> String.replace(~r(lib/context/), "lib/#{otp_app()}/")
-        |> String.replace(~r(lib/app/), "lib/#{Macro.underscore(app_module_name())}/")
-        |> String.replace(~r[((lib)|(test))/web/], "\\1/#{otp_app()}_web/")
+        |> String.replace(
+          ~r[^((?:lib)|(?:test/support))/otp_app(_|/|\.ex)],
+          "\\1/#{otp_app()}\\2"
+        )
+        |> String.replace(~r[^((lib)|(test))/web/], "\\1/#{otp_app()}_web/")
 
       content = EEx.eval_file(template, app: otp_app(), docker: true, organization: organization)
 
@@ -75,14 +80,15 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> adapt_gitignore()
     |> adapt_mix()
     |> add_kubernetes_liveness_check()
+    |> adapt_web_root_module()
     |> configure_endpoint()
     |> configure_repo()
-    |> adapt_app_module()
     |> drop_prod_secret()
-    |> adapt_aws_mocks()
+    |> setup_test_mocks()
     |> config_bcrypt()
     |> setup_sentry()
     |> setup_test_plug()
+    |> adapt_test_support_modules()
     |> store_source_files!()
 
     File.rm(Path.join(~w/config prod.secret.exs/))
@@ -118,7 +124,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         |> setup_preferred_cli_env()
         |> setup_dialyzer()
         |> setup_release()
+        |> setup_boundary()
         |> MixFile.append_config(:project, ~s|build_path: System.get_env("BUILD_PATH", "_build")|)
+        |> adapt_deps()
         |> Map.update!(
           :content,
           &String.replace(
@@ -127,8 +135,37 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
             "#{app_module_name()}"
           )
         )
+        |> Map.update!(
+          :content,
+          &String.replace(
+            &1,
+            "compilers: [:phoenix",
+            "compilers: [:boundary, :phoenix"
+          )
+        )
       end
     )
+  end
+
+  defp adapt_deps(mix_file) do
+    mix_file
+    |> MixFile.append_config(:deps, ~s/\n{:boundary, "~> 0.6"}/)
+    |> MixFile.append_config(:deps, ~s/\n{:mox, "~> 0.5", only: :test}/)
+    |> sort_deps()
+  end
+
+  defp sort_deps(mix_file) do
+    deps_regex = ~r/\n\s*defp deps do\s+\[(?<deps>.*?)\]\s+end/s
+
+    deps =
+      Regex.named_captures(deps_regex, mix_file.content)
+      |> Map.fetch!("deps")
+      |> String.split(~r/\n\s*/, trim: true)
+      |> Enum.sort()
+      |> Enum.map(&String.replace(&1, ~r/,\s*$/, ""))
+      |> Enum.join(",\n")
+
+    update_in(mix_file.content, &String.replace(&1, deps_regex, "\ndefp deps do [#{deps}] end"))
   end
 
   defp adapt_min_elixir_version(mix_file) do
@@ -172,7 +209,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     end
 
     defp operator_template(_),
-      do: IO.puts(#{context_module_name()}.Config.template())
+      do: IO.puts(#{config_module_name()}.template())
 
     """)
   end
@@ -213,19 +250,20 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     """)
   end
 
-  defp adapt_app_module(source_files) do
-    update_in(
-      source_files.app_module.content,
-      &(&1
-        |> String.replace(
-          ~r/(\s*def start\(.*?do)/s,
-          "\\1\n#{context_module_name()}.Config.validate!()\n"
-        )
-        |> String.replace(
-          "defmodule #{context_module_name()}.Application",
-          "defmodule #{app_module_name()}"
-        ))
-    )
+  defp setup_boundary(mix_file) do
+    mix_file
+    |> MixFile.append_config(:project, "boundary: boundary()")
+    |> SourceFile.add_to_module("""
+    defp boundary do
+      [
+        default: [
+          check: [
+            apps: [{:mix, :runtime}]
+          ]
+        ]
+      ]
+    end
+    """)
   end
 
   defp drop_prod_secret(source_files) do
@@ -247,13 +285,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       &disable_credo_checks(&1, ["Credo.Check.Readability.Specs"])
     )
 
-    # Same reasoning for the app file.
-    disable_credo_checks("lib/#{otp_app()}_app.ex", ~w/Credo.Check.Readability.Specs/)
-
     # Some helper files created by phx.new violate these checks, so we'll disable them. This is
     # not the code we'll edit, so disabling these checks is fine here.
     disable_credo_checks("lib/#{otp_app()}_web.ex", ~w/
       Credo.Check.Readability.AliasAs
+      Credo.Check.Readability.Specs
       VBT.Credo.Check.Consistency.ModuleLayout
     /)
 
@@ -262,17 +298,20 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       ~w/VBT.Credo.Check.Consistency.ModuleLayout/
     )
 
-    disable_credo_checks("test/support/conn_case.ex", ~w/
+    disable_credo_checks("test/support/#{otp_app()}_test/web/conn_case.ex", ~w/
       Credo.Check.Readability.AliasAs
       Credo.Check.Design.AliasUsage
     /)
 
-    disable_credo_checks("test/support/data_case.ex", ~w/
+    disable_credo_checks("test/support/#{otp_app()}_test/data_case.ex", ~w/
       Credo.Check.Design.AliasUsage
       Credo.Check.Readability.Specs
     /)
 
-    disable_credo_checks("test/support/channel_case.ex", ~w/Credo.Check.Design.AliasUsage/)
+    disable_credo_checks(
+      "test/support/#{otp_app()}_test/web/channel_case.ex",
+      ~w/Credo.Check.Design.AliasUsage/
+    )
   end
 
   defp disable_credo_checks(file, checks) do
@@ -315,7 +354,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       [:test_config],
       &ConfigFile.prepend(
         &1,
-        "config :sentry, client: #{context_module_name()}.SentryTestClient"
+        "config :sentry, client: #{test_module_name()}.SentryClient"
       )
     )
   end
@@ -339,7 +378,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         ~r/(plug #{web_module_name()}\.Router)\n/,
         """
         if Mix.env() == :test do
-          plug #{web_module_name()}.TestPlug
+          plug #{test_module_name()}.Web.TestPlug
         end
 
         \\1
@@ -348,14 +387,48 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     )
   end
 
-  defp adapt_aws_mocks(source_files) do
-    source_files
-    |> update_in([:mix], &MixFile.append_config(&1, :deps, ~s/{:mox, "~> 0.5", only: :test}/))
+  defp adapt_test_support_modules(source_files) do
+    for file_name <- ~w/channel_case conn_case/ do
+      source = Path.join(~w/test support #{file_name}.ex/)
+      destination = Path.join(~w/test support #{otp_app()}_test web #{file_name}.ex/)
+      File.mkdir_p!(Path.dirname(destination))
+      File.rename!(source, destination)
+
+      destination
+      |> SourceFile.load!()
+      |> update_in(
+        [:content],
+        &String.replace(
+          &1,
+          "defmodule #{web_module_name()}.",
+          "defmodule #{test_module_name()}.Web."
+        )
+      )
+      |> SourceFile.store!()
+    end
+
+    source = Path.join(~w/test support data_case.ex/)
+    destination = Path.join(~w/test support #{otp_app()}_test data_case.ex/)
+    File.mkdir_p!(Path.dirname(destination))
+    File.rename!(source, destination)
+
+    destination
+    |> SourceFile.load!()
     |> update_in(
-      [:test_helper],
-      &SourceFile.append(&1, "VBT.Aws.Test.setup()")
+      [:content],
+      &String.replace(
+        &1,
+        "defmodule #{context_module_name()}.",
+        "defmodule #{test_module_name()}."
+      )
     )
+    |> SourceFile.store!()
+
+    source_files
   end
+
+  defp setup_test_mocks(source_files),
+    do: update_in(source_files.test_helper, &SourceFile.append(&1, "VBT.Aws.Test.setup()"))
 
   # ------------------------------------------------------------------------
   # Endpoint configuration
@@ -370,6 +443,44 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         """
         plug Plug.Head
         plug VBT.Kubernetes.Probe, "/healthz"
+        """
+      )
+    )
+  end
+
+  defp adapt_web_root_module(source_files) do
+    update_in(
+      source_files.web.content,
+      &String.replace(
+        &1,
+        ~r/@moduledoc """.*?"""/s,
+        """
+        \\0
+
+        use Boundary,
+          deps: [#{context_module_name()}, #{config_module_name()}, #{schemas_module_name()}],
+          exports: [Endpoint]
+
+        @spec start_link :: Supervisor.on_start()
+        def start_link do
+          Supervisor.start_link(
+            [
+              #{web_module_name()}.Telemetry,
+              #{web_module_name()}.Endpoint
+            ],
+            strategy: :one_for_one,
+            name: __MODULE__
+          )
+        end
+
+        @spec child_spec(any) :: Supervisor.child_spec()
+        def child_spec(_arg) do
+          %{
+            id: __MODULE__,
+            type: :supervisor,
+            start: {__MODULE__, :start_link, []}
+          }
+        end
         """
       )
     )
@@ -406,15 +517,15 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       def init(_type, config) do
         config =
           config
-          |> Keyword.put(:secret_key_base, #{context_module_name()}.Config.secret_key_base())
+          |> Keyword.put(:secret_key_base, #{config_module_name()}.secret_key_base())
           |> Keyword.update(:url, url_config(), &Keyword.merge(&1, url_config()))
           |> Keyword.update(:http, http_config(), &(http_config() ++ (&1 || [])))
 
         {:ok, config}
       end
 
-      defp url_config, do: [host: #{context_module_name()}.Config.host()]
-      defp http_config, do: [:inet6, port: #{context_module_name()}.Config.port()]
+      defp url_config, do: [host: #{config_module_name()}.host()]
+      defp http_config, do: [:inet6, port: #{config_module_name()}.port()]
       """
     )
   end
@@ -459,9 +570,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         config =
           Keyword.merge(
             config,
-            url: #{context_module_name()}.Config.db_url(),
-            pool_size: #{context_module_name()}.Config.db_pool_size(),
-            ssl: #{context_module_name()}.Config.db_ssl()
+            url: #{config_module_name()}.db_url(),
+            pool_size: #{config_module_name()}.db_pool_size(),
+            ssl: #{config_module_name()}.db_ssl()
           )
 
         {:ok, config}
@@ -484,9 +595,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       prod_config: SourceFile.load!("config/prod.exs"),
       endpoint: load_web_file("endpoint.ex"),
       repo: load_context_file("repo.ex"),
-      app_module:
-        load_context_file("application.ex", output: Path.join("lib", "#{otp_app()}_app.ex")),
-      test_helper: SourceFile.load!("test/test_helper.exs")
+      test_helper: SourceFile.load!("test/test_helper.exs"),
+      web: SourceFile.load!("lib/#{otp_app()}_web.ex")
     }
   end
 

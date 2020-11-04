@@ -15,11 +15,20 @@ defmodule Mix.Vbt do
   @spec context_module_name :: String.t()
   def context_module_name, do: Macro.camelize("#{otp_app()}")
 
+  @spec config_module_name :: String.t()
+  def config_module_name, do: "#{context_module_name()}Config"
+
   @spec app_module_name :: String.t()
   def app_module_name, do: "#{context_module_name()}App"
 
   @spec web_module_name :: String.t()
   def web_module_name, do: "#{context_module_name()}Web"
+
+  @spec test_module_name :: String.t()
+  def test_module_name, do: "#{context_module_name()}Test"
+
+  @spec schemas_module_name :: String.t()
+  def schemas_module_name, do: "#{context_module_name()}Schemas"
 
   @spec tool_versions :: %{tool => Version.t()}
   def tool_versions do

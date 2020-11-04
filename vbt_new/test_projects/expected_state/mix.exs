@@ -7,13 +7,14 @@ defmodule SkafolderTester.MixProject do
       version: "0.1.0",
       elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      compilers: [:boundary, :phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
       preferred_cli_env: preferred_cli_env(),
       dialyzer: dialyzer(),
       releases: releases(),
+      boundary: boundary(),
       build_path: System.get_env("BUILD_PATH", "_build")
     ]
   end
@@ -37,18 +38,19 @@ defmodule SkafolderTester.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.5.6"},
-      {:phoenix_ecto, "~> 4.1"},
+      {:boundary, "~> 0.6"},
       {:ecto_sql, "~> 3.4"},
-      {:postgrex, ">= 0.0.0"},
-      {:phoenix_live_dashboard, "~> 0.3 or ~> 0.2.9"},
-      {:telemetry_metrics, "~> 0.4"},
-      {:telemetry_poller, "~> 0.4"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
+      {:mox, "~> 0.5", only: :test},
+      {:phoenix, "~> 1.5.6"},
+      {:phoenix_ecto, "~> 4.1"},
+      {:phoenix_live_dashboard, "~> 0.3 or ~> 0.2.9"},
       {:plug_cowboy, "~> 2.0"},
-      {:vbt, path: "../../.."},
-      {:mox, "~> 0.5", only: :test}
+      {:postgrex, ">= 0.0.0"},
+      {:telemetry_metrics, "~> 0.4"},
+      {:telemetry_poller, "~> 0.4"},
+      {:vbt, path: "../../.."}
     ]
   end
 
@@ -81,7 +83,7 @@ defmodule SkafolderTester.MixProject do
   end
 
   defp operator_template(_),
-    do: IO.puts(SkafolderTester.Config.template())
+    do: IO.puts(SkafolderTesterConfig.template())
 
   defp releases() do
     [
@@ -108,5 +110,15 @@ defmodule SkafolderTester.MixProject do
       ]
     end
     |> Enum.concat(["release"])
+  end
+
+  defp boundary do
+    [
+      default: [
+        check: [
+          apps: [{:mix, :runtime}]
+        ]
+      ]
+    ]
   end
 end

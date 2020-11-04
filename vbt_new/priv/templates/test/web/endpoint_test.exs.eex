@@ -1,5 +1,6 @@
 defmodule <%= Mix.Vbt.web_module_name() %>.EndpointTest do
-  use <%= Mix.Vbt.web_module_name() %>.ConnCase, async: false
+  use <%= Mix.Vbt.test_module_name() %>.Web.ConnCase, async: false
+  alias <%= Mix.Vbt.test_module_name() %>.Web.TestPlug
 
   describe "alive" do
     test "returns a 200 status code in response" do
@@ -53,7 +54,7 @@ defmodule <%= Mix.Vbt.web_module_name() %>.EndpointTest do
   end
 
   defp dispatch(opts),
-    do: <%= Mix.Vbt.web_module_name() %>.TestPlug.dispatch(fn _conn -> raise Keyword.fetch!(opts, :message) end)
+    do: TestPlug.dispatch(fn _conn -> raise Keyword.fetch!(opts, :message) end)
 
   defp set_release_level(value) do
     current_release_level = System.get_env("RELEASE_LEVEL")

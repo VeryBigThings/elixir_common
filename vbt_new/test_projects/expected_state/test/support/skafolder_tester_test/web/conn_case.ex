@@ -1,11 +1,12 @@
 # credo:disable-for-this-file Credo.Check.Design.AliasUsage
+# credo:disable-for-this-file Credo.Check.Readability.AliasAs
 
-defmodule SkafolderTesterWeb.ChannelCase do
+defmodule SkafolderTesterTest.Web.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
-  channel tests.
+  tests that require setting up a connection.
 
-  Such tests rely on `Phoenix.ChannelTest` and also
+  Such tests rely on `Phoenix.ConnTest` and also
   import other functionality to make it easier
   to build common data structures and query the data layer.
 
@@ -13,7 +14,7 @@ defmodule SkafolderTesterWeb.ChannelCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use SkafolderTesterWeb.ChannelCase, async: true`, although
+  by setting `use SkafolderTesterWeb.ConnCase, async: true`, although
   this option is not recommended for other databases.
   """
 
@@ -21,9 +22,12 @@ defmodule SkafolderTesterWeb.ChannelCase do
 
   using do
     quote do
-      # Import conveniences for testing with channels
-      import Phoenix.ChannelTest
-      import SkafolderTesterWeb.ChannelCase
+      # Import conveniences for testing with connections
+      import Plug.Conn
+      import Phoenix.ConnTest
+      import SkafolderTesterWeb.ConnCase
+
+      alias SkafolderTesterWeb.Router.Helpers, as: Routes
 
       # The default endpoint for testing
       @endpoint SkafolderTesterWeb.Endpoint
@@ -37,6 +41,6 @@ defmodule SkafolderTesterWeb.ChannelCase do
       Ecto.Adapters.SQL.Sandbox.mode(SkafolderTester.Repo, {:shared, self()})
     end
 
-    :ok
+    {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end

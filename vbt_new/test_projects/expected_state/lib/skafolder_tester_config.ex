@@ -1,4 +1,6 @@
-defmodule SkafolderTester.Config do
+defmodule SkafolderTesterConfig do
+  use Boundary
+
   use Provider,
     source: Provider.SystemEnv,
     params: [

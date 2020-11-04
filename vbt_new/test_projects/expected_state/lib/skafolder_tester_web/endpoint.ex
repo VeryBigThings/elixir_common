@@ -10,7 +10,7 @@ defmodule SkafolderTesterWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_skafolder_tester_key",
-    signing_salt: "BJYTM2x/"
+    signing_salt: "kpwcpEkp"
   ]
 
   socket "/socket", SkafolderTesterWeb.UserSocket,
@@ -54,7 +54,7 @@ defmodule SkafolderTesterWeb.Endpoint do
   plug Plug.Session, @session_options
 
   if Mix.env() == :test do
-    plug SkafolderTesterWeb.TestPlug
+    plug SkafolderTesterTest.Web.TestPlug
   end
 
   plug SkafolderTesterWeb.Router
@@ -63,13 +63,13 @@ defmodule SkafolderTesterWeb.Endpoint do
   def init(_type, config) do
     config =
       config
-      |> Keyword.put(:secret_key_base, SkafolderTester.Config.secret_key_base())
+      |> Keyword.put(:secret_key_base, SkafolderTesterConfig.secret_key_base())
       |> Keyword.update(:url, url_config(), &Keyword.merge(&1, url_config()))
       |> Keyword.update(:http, http_config(), &(http_config() ++ (&1 || [])))
 
     {:ok, config}
   end
 
-  defp url_config, do: [host: SkafolderTester.Config.host()]
-  defp http_config, do: [:inet6, port: SkafolderTester.Config.port()]
+  defp url_config, do: [host: SkafolderTesterConfig.host()]
+  defp http_config, do: [:inet6, port: SkafolderTesterConfig.port()]
 end

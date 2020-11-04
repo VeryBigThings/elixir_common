@@ -1,4 +1,5 @@
 # credo:disable-for-this-file VBT.Credo.Check.Consistency.ModuleLayout
+# credo:disable-for-this-file Credo.Check.Readability.Specs
 # credo:disable-for-this-file Credo.Check.Readability.AliasAs
 
 defmodule SkafolderTesterWeb do
@@ -19,6 +20,31 @@ defmodule SkafolderTesterWeb do
   below. Instead, define any helper function in modules
   and import those modules here.
   """
+
+  use Boundary,
+    deps: [SkafolderTester, SkafolderTesterConfig, SkafolderTesterSchemas],
+    exports: [Endpoint]
+
+  @spec start_link :: Supervisor.on_start()
+  def start_link do
+    Supervisor.start_link(
+      [
+        SkafolderTesterWeb.Telemetry,
+        SkafolderTesterWeb.Endpoint
+      ],
+      strategy: :one_for_one,
+      name: __MODULE__
+    )
+  end
+
+  @spec child_spec(any) :: Supervisor.child_spec()
+  def child_spec(_arg) do
+    %{
+      id: __MODULE__,
+      type: :supervisor,
+      start: {__MODULE__, :start_link, []}
+    }
+  end
 
   def controller do
     quote do
