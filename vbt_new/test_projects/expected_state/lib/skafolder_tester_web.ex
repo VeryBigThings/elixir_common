@@ -1,4 +1,5 @@
 # credo:disable-for-this-file VBT.Credo.Check.Consistency.ModuleLayout
+# credo:disable-for-this-file Credo.Check.Readability.Specs
 # credo:disable-for-this-file Credo.Check.Readability.AliasAs
 
 defmodule SkafolderTesterWeb do

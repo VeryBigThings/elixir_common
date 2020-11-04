@@ -289,6 +289,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     # not the code we'll edit, so disabling these checks is fine here.
     disable_credo_checks("lib/#{otp_app()}_web.ex", ~w/
       Credo.Check.Readability.AliasAs
+      Credo.Check.Readability.Specs
       VBT.Credo.Check.Consistency.ModuleLayout
     /)
 
