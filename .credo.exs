@@ -21,6 +21,7 @@
            "test/<%= app %>_web" => ~w/channels controllers views/
          }},
         {VBT.Credo.Check.Consistency.ModuleLayout, []},
+        {VBT.Credo.Check.Graphql.MutationField, []},
         {VBT.Credo.Check.Readability.MultilineSimpleDo, []},
 
         # disabled checks
