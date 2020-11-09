@@ -178,6 +178,7 @@ defmodule VBT.FixedJob do
   |> Enum.each(fn {name, index} -> defp day_name(unquote(index)), do: unquote(name) end)
 
   @doc false
+  # credo:disable-for-next-line Credo.Check.Readability.Specs
   def init_time_provider do
     :ets.new(
       __MODULE__.TimeProvider,

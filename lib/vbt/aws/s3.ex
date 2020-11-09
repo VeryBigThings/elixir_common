@@ -112,6 +112,7 @@ defmodule VBT.Aws.S3 do
   end
 
   @doc false
+  # credo:disable-for-next-line Credo.Check.Readability.Specs
   def chunk_size,
     # The required chunk size for S3 upload is 5 MiB.
     # We're using a smaller chunk in test to reduce the test time.
