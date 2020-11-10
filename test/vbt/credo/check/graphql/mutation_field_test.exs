@@ -3,7 +3,7 @@ defmodule VBT.Credo.Check.Graphql.MutationFieldTest do
 
   alias VBT.Credo.Check.Graphql.MutationField
 
-  test "reports error on non-payload fields" do
+  test "reports error on non-payload mutation fields" do
     [issue] =
       """
       defmodule Test do
@@ -17,6 +17,11 @@ defmodule VBT.Credo.Check.Graphql.MutationFieldTest do
           end
 
           payload field :baz do
+          end
+        end
+
+        query do
+          field :qux do
           end
         end
       end
