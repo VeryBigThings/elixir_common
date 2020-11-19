@@ -17,6 +17,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
     generate_files(args)
     adapt_code!()
+    setup_git!()
   end
 
   # ------------------------------------------------------------------------
@@ -580,6 +581,19 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       """
     )
   end
+
+  # ------------------------------------------------------------------------
+  # GitHub configuration
+  # ------------------------------------------------------------------------
+
+  defp setup_git do
+    git!(~w/checkout -b develop/)
+    git!(~w/branch -d master/)
+    git!(~w/commit -m "Kick off"/)
+    git!(~w/branch prod/)
+  end
+
+  defp git!(args), do: System.cmd("git", args)
 
   # ------------------------------------------------------------------------
   # Common functions

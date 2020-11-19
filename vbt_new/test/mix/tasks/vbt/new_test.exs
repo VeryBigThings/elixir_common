@@ -24,6 +24,11 @@ defmodule Mix.Tasks.Vbt.NewTest do
       end
     end
 
+    assert current_branch() == {"develop", _}
+    assert all_branches() == ["*develop", "master"]
+    assert get_commits() == 1
+    assert check_git_status() == true
+
     System.put_env("MIX_ENV", "test")
 
     Mix.shell().info("Testing the generated project, this may take awhile...")
@@ -133,6 +138,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
     Path.wildcard("#{folder}/**", match_dot: true)
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/_build"))
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/deps"))
+    |> Stream.reject(&String.starts_with?(&1, "#{folder}/.github"))
     |> Stream.reject(&File.dir?/1)
     |> Stream.map(&Path.relative_to(&1, folder))
     # ignoring files whose content may change unpredictably
@@ -180,4 +186,28 @@ defmodule Mix.Tasks.Vbt.NewTest do
   defp build_path, do: Path.join(~w/tmp vbt_skafolder_tester_backend/)
   defp tmp_path, do: Path.join(~w/tmp skafolder_tester_tmp/)
   defp expected_path, do: Path.join(~w/test_projects expected_state/)
+
+  defp current_branch,  do: System.cmd("git", ~w/rev-parse --abbrev-ref HEAD/)
+  defp all_branches do
+    {result, _} = System.cmd("git", ~w/branch/)
+    result
+    |> String.split("\n")
+    |> Enum.map(&(Regex.replace(~r/ /, &1, "")))
+    |> Enum.reject(&(&1 == ""))
+  end
+
+  defp get_commits do
+    System.cmd("git", ~w/log/)
+    |> elem(0)
+    |> String.split("commit")
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.count()
+  end
+
+  defp check_git_status do
+    System.cmd("git", ~w/status/)
+    |> elem(0)
+    |> String.split("\n")
+    |> Enum.member?("nothing to commit, working tree clean")
+  end
 end
