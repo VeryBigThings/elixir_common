@@ -597,7 +597,6 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
   defp git!(args) do
     {result, 0} = System.cmd("git", args, stderr_to_stdout: true)
-
     result
   end
 

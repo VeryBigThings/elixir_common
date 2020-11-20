@@ -214,14 +214,11 @@ defmodule Mix.Tasks.Vbt.NewTest do
   end
 
   defp everything_committed? do
-    result = git!(~w/status/)
-
-    String.contains?(result, "nothing to commit, working tree clean")
+    String.contains?(git!(~w/status/), "nothing to commit, working tree clean")
   end
 
   defp git!(args) do
     {result, 0} = System.cmd("git", args, cd: build_path(), stderr_to_stdout: true)
-
     result
   end
 end
