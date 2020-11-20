@@ -8,6 +8,11 @@ defmodule Mix.Tasks.Vbt.NewTest do
     # hardcoding the generated secret key to ensure reproducible output
     System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
 
+    if System.get_env("CI") == "true" do
+      System.cmd("git", ~w/config --global user.mail "test@vbt.com"/)
+      System.cmd("git", ~w/config --global user.name "TestVBT"/)
+    end
+
     output = bootstrap_project()
     refute output.error =~ "Error fetching latest tool versions"
 
@@ -23,6 +28,11 @@ defmodule Mix.Tasks.Vbt.NewTest do
         """)
       end
     end
+
+    assert current_branch() == "develop"
+    assert all_branches() == ["*develop", "prod"]
+    assert commits_count() == 1
+    assert everything_committed?() == true
 
     System.put_env("MIX_ENV", "test")
 
@@ -133,6 +143,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
     Path.wildcard("#{folder}/**", match_dot: true)
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/_build"))
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/deps"))
+    |> Stream.reject(&String.starts_with?(&1, "#{folder}/.git"))
     |> Stream.reject(&File.dir?/1)
     |> Stream.map(&Path.relative_to(&1, folder))
     # ignoring files whose content may change unpredictably
@@ -180,4 +191,34 @@ defmodule Mix.Tasks.Vbt.NewTest do
   defp build_path, do: Path.join(~w/tmp vbt_skafolder_tester_backend/)
   defp tmp_path, do: Path.join(~w/tmp skafolder_tester_tmp/)
   defp expected_path, do: Path.join(~w/test_projects expected_state/)
+
+  defp current_branch do
+    git!(~w/branch/)
+    |> String.split("\n")
+    |> Enum.find(&String.starts_with?(&1, "*"))
+    |> String.replace_prefix("* ", "")
+  end
+
+  defp all_branches do
+    git!(~w/branch/)
+    |> String.split("\n")
+    |> Enum.map(&String.replace(&1, " ", ""))
+    |> Enum.reject(&(&1 == ""))
+  end
+
+  defp commits_count do
+    git!(~w/log/)
+    |> String.split("commit")
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.count()
+  end
+
+  defp everything_committed? do
+    String.contains?(git!(~w/status/), "nothing to commit, working tree clean")
+  end
+
+  defp git!(args) do
+    {result, 0} = System.cmd("git", args, cd: build_path(), stderr_to_stdout: true)
+    result
+  end
 end
