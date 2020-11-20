@@ -8,6 +8,11 @@ defmodule Mix.Tasks.Vbt.NewTest do
     # hardcoding the generated secret key to ensure reproducible output
     System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
 
+    if System.get_env("CI") == "true" do
+      System.cmd("git", ~w/config --global user.mail "test@vbt.com"/)
+      System.cmd("git", ~w/config --global user.name "TestVBT"/)
+    end
+
     output = bootstrap_project()
     refute output.error =~ "Error fetching latest tool versions"
 
@@ -24,8 +29,8 @@ defmodule Mix.Tasks.Vbt.NewTest do
       end
     end
 
-    assert current_branch() == {"develop", _}
-    assert all_branches() == ["*develop", "master"]
+    assert current_branch() == "* develop"
+    assert all_branches() == ["*develop", "prod"]
     assert get_commits() == 1
     assert check_git_status() == true
 
@@ -138,7 +143,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
     Path.wildcard("#{folder}/**", match_dot: true)
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/_build"))
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/deps"))
-    |> Stream.reject(&String.starts_with?(&1, "#{folder}/.github"))
+    |> Stream.reject(&String.starts_with?(&1, "#{folder}/.git"))
     |> Stream.reject(&File.dir?/1)
     |> Stream.map(&Path.relative_to(&1, folder))
     # ignoring files whose content may change unpredictably
@@ -187,17 +192,25 @@ defmodule Mix.Tasks.Vbt.NewTest do
   defp tmp_path, do: Path.join(~w/tmp skafolder_tester_tmp/)
   defp expected_path, do: Path.join(~w/test_projects expected_state/)
 
-  defp current_branch,  do: System.cmd("git", ~w/rev-parse --abbrev-ref HEAD/)
-  defp all_branches do
-    {result, _} = System.cmd("git", ~w/branch/)
+  defp current_branch do
+    {result, _} = System.cmd("git", ~w/branch/, cd: build_path())
+
     result
     |> String.split("\n")
-    |> Enum.map(&(Regex.replace(~r/ /, &1, "")))
+    |> Enum.find(&String.starts_with?(&1, "*"))
+  end
+
+  defp all_branches do
+    {result, _} = System.cmd("git", ~w/branch/, cd: build_path())
+
+    result
+    |> String.split("\n")
+    |> Enum.map(&Regex.replace(~r/ /, &1, ""))
     |> Enum.reject(&(&1 == ""))
   end
 
   defp get_commits do
-    System.cmd("git", ~w/log/)
+    System.cmd("git", ~w/log/, cd: build_path())
     |> elem(0)
     |> String.split("commit")
     |> Enum.reject(&(&1 == ""))
@@ -205,7 +218,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
   end
 
   defp check_git_status do
-    System.cmd("git", ~w/status/)
+    System.cmd("git", ~w/status/, cd: build_path())
     |> elem(0)
     |> String.split("\n")
     |> Enum.member?("nothing to commit, working tree clean")

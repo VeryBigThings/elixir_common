@@ -586,10 +586,12 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   # GitHub configuration
   # ------------------------------------------------------------------------
 
-  defp setup_git do
+  defp setup_git! do
+    git!(~w/init/)
+    git!(~w/add ./)
+    git!(~w/commit -m "Kickoff"/)
     git!(~w/checkout -b develop/)
     git!(~w/branch -d master/)
-    git!(~w/commit -m "Kick off"/)
     git!(~w/branch prod/)
   end
 
