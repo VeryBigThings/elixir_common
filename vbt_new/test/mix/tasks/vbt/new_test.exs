@@ -29,10 +29,10 @@ defmodule Mix.Tasks.Vbt.NewTest do
       end
     end
 
-    assert current_branch() == "* develop"
+    assert current_branch() == "develop"
     assert all_branches() == ["*develop", "prod"]
-    assert get_commits() == 1
-    assert check_git_status() == true
+    assert commits_count() == 1
+    assert everything_committed?() == true
 
     System.put_env("MIX_ENV", "test")
 
@@ -193,34 +193,35 @@ defmodule Mix.Tasks.Vbt.NewTest do
   defp expected_path, do: Path.join(~w/test_projects expected_state/)
 
   defp current_branch do
-    {result, _} = System.cmd("git", ~w/branch/, cd: build_path())
-
-    result
+    git!(~w/branch/)
     |> String.split("\n")
     |> Enum.find(&String.starts_with?(&1, "*"))
+    |> String.replace_prefix("* ", "")
   end
 
   defp all_branches do
-    {result, _} = System.cmd("git", ~w/branch/, cd: build_path())
-
-    result
+    git!(~w/branch/)
     |> String.split("\n")
-    |> Enum.map(&Regex.replace(~r/ /, &1, ""))
+    |> Enum.map(&String.replace(&1, " ", ""))
     |> Enum.reject(&(&1 == ""))
   end
 
-  defp get_commits do
-    System.cmd("git", ~w/log/, cd: build_path())
-    |> elem(0)
+  defp commits_count do
+    git!(~w/log/)
     |> String.split("commit")
     |> Enum.reject(&(&1 == ""))
     |> Enum.count()
   end
 
-  defp check_git_status do
-    System.cmd("git", ~w/status/, cd: build_path())
-    |> elem(0)
-    |> String.split("\n")
-    |> Enum.member?("nothing to commit, working tree clean")
+  defp everything_committed? do
+    result = git!(~w/status/)
+
+    String.contains?(result, "nothing to commit, working tree clean")
+  end
+
+  defp git!(args) do
+    {result, 0} = System.cmd("git", args, cd: build_path(), stderr_to_stdout: true)
+
+    result
   end
 end

@@ -595,7 +595,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     git!(~w/branch prod/)
   end
 
-  defp git!(args), do: System.cmd("git", args)
+  defp git!(args) do
+    {result, 0} = System.cmd("git", args, stderr_to_stdout: true)
+
+    result
+  end
 
   # ------------------------------------------------------------------------
   # Common functions
