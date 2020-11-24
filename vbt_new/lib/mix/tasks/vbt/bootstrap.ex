@@ -63,6 +63,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
       content = EEx.eval_file(template, app: otp_app(), docker: true, organization: organization)
 
+      content =
+        if Path.extname(target_file) in ~w/.ex .eex/,
+          do: SourceFile.format_code(content),
+          else: content
+
       if Mix.Generator.create_file(target_file, content, mix_generator_opts) do
         if Enum.member?(unquote(executable_templates), relative_path) do
           new_mode = Bitwise.bor(File.stat!(target_file).mode, 0b1_000_000)

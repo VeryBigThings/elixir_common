@@ -42,14 +42,16 @@ defmodule Mix.Vbt.SourceFile do
   @spec prepend(t, String.t()) :: t
   def prepend(file, extra_content), do: update_in(file.content, &(extra_content <> &1))
 
-  defp format(%{format?: false} = file), do: file.content
-
-  defp format(file) do
+  @spec format_code(String.t()) :: String.t()
+  def format_code(content) do
     code =
-      file.content
+      content
       |> Code.format_string!(locals_without_parens: [plug: :*, socket: :*])
       |> to_string()
 
     if String.ends_with?(code, "\n"), do: code, else: code <> "\n"
   end
+
+  defp format(%{format?: false} = file), do: file.content
+  defp format(file), do: format_code(file.content)
 end
