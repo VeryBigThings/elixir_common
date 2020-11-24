@@ -92,21 +92,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> adapt_test_support_modules()
     |> store_source_files!()
 
-    for file <- Path.wildcard(Path.join(~w/test **/)),
-        not File.dir?(file),
-        String.ends_with?(file, ".ex") or String.ends_with?(file, ".exs") do
-      file
-      |> SourceFile.load!()
-      |> update_in(
-        [:content],
-        &String.replace(
-          &1,
-          ~r/SkafolderTesterWeb\.(ConnCase|ChannelCase)/,
-          "#{test_module_name()}.Web.\\1"
-        )
-      )
-      |> SourceFile.store!()
-    end
+    adapt_test_references!()
 
     File.rm(Path.join(~w/config prod.secret.exs/))
     File.rm_rf("priv/repo/migrations/.formatter.exs")
@@ -446,6 +432,24 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
   defp setup_test_mocks(source_files),
     do: update_in(source_files.test_helper, &SourceFile.append(&1, "VBT.Aws.Test.setup()"))
+
+  defp adapt_test_references! do
+    for file <- Path.wildcard(Path.join(~w/test **/)),
+        not File.dir?(file),
+        String.ends_with?(file, ".ex") or String.ends_with?(file, ".exs") do
+      file
+      |> SourceFile.load!()
+      |> update_in(
+        [:content],
+        &String.replace(
+          &1,
+          ~r/SkafolderTesterWeb\.(ConnCase|ChannelCase)/,
+          "#{test_module_name()}.Web.\\1"
+        )
+      )
+      |> SourceFile.store!()
+    end
+  end
 
   # ------------------------------------------------------------------------
   # Endpoint configuration
