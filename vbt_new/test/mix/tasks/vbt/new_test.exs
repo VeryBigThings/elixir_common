@@ -36,24 +36,28 @@ defmodule Mix.Tasks.Vbt.NewTest do
     assert commits_count(folder) == 1
     assert everything_committed?(folder) == true
 
-    System.put_env("MIX_ENV", "test")
-
     Mix.shell().info("Testing the generated project, this may take awhile...")
 
-    case System.cmd("mix", ~w/do
-             deps.get,
-             compile,
-             format --check-formatted,
-             credo --strict,
-             test,
-             dialyzer
-           /,
-           cd: build_path(folder),
-           stderr_to_stdout: true
-         ) do
-      {_output, 0} -> :ok
-      {output, _error} -> flunk("Error running standard checks. Output:\n\n#{output}")
-    end
+    Enum.each(
+      [
+        "deps.get",
+        "compile --warnings-as-errors",
+        "format --check-formatted",
+        "credo --strict",
+        "test",
+        "dialyzer"
+      ],
+      fn mix_task ->
+        case System.cmd("mix", String.split(mix_task),
+               cd: build_path(folder),
+               stderr_to_stdout: true,
+               env: [{"MIX_ENV", "test"}]
+             ) do
+          {_output, 0} -> :ok
+          {output, _error} -> flunk("Error running #{mix_task}. Output:\n\n#{output}")
+        end
+      end
+    )
   end
 
   defp bootstrap_project(folder, args) do
