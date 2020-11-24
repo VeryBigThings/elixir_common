@@ -50,7 +50,7 @@ defmodule SkafolderTester.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},
-      {:vbt, path: "../../.."}
+      {:vbt, path: "../../../.."}
     ]
   end
 
