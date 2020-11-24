@@ -92,6 +92,22 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> adapt_test_support_modules()
     |> store_source_files!()
 
+    for file <- Path.wildcard(Path.join(~w/test **/)),
+        not File.dir?(file),
+        String.ends_with?(file, ".ex") or String.ends_with?(file, ".exs") do
+      file
+      |> SourceFile.load!()
+      |> update_in(
+        [:content],
+        &String.replace(
+          &1,
+          ~r/SkafolderTesterWeb\.(ConnCase|ChannelCase)/,
+          "#{test_module_name()}.Web.\\1"
+        )
+      )
+      |> SourceFile.store!()
+    end
+
     File.rm(Path.join(~w/config prod.secret.exs/))
     File.rm_rf("priv/repo/migrations/.formatter.exs")
 
