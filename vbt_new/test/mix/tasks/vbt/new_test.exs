@@ -3,19 +3,10 @@ defmodule Mix.Tasks.Vbt.NewTest do
 
   alias Mix.Tasks.Vbt.New
 
-  @tag timeout: :timer.minutes(20)
-  test "mix.vbt.new --no-html --no-webpack" do
-    folder = "no_html"
+  test "project generation" do
+    folder = "project_generation"
 
-    # hardcoding the generated secret key to ensure reproducible output
-    System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
-
-    if System.get_env("CI") == "true" do
-      System.cmd("git", ~w/config --global user.mail "test@vbt.com"/)
-      System.cmd("git", ~w/config --global user.name "TestVBT"/)
-    end
-
-    output = bootstrap_project(folder, "--no-html --no-webpack")
+    output = bootstrap_project(folder, "--no-webpack")
     refute output.error =~ "Error fetching latest tool versions"
 
     with {:error, differences} <- differences(folder) do
@@ -31,60 +22,47 @@ defmodule Mix.Tasks.Vbt.NewTest do
       end
     end
 
-    assert current_branch(folder) == "develop"
     assert all_branches(folder) == ["*develop", "prod"]
     assert commits_count(folder) == 1
     assert everything_committed?(folder) == true
-
-    Mix.shell().info("Testing the generated project, this may take awhile...")
-
-    Enum.each(
-      [
-        "deps.get",
-        "compile --warnings-as-errors",
-        "format --check-formatted",
-        "credo --strict",
-        "test",
-        "dialyzer"
-      ],
-      fn mix_task ->
-        case System.cmd("mix", String.split(mix_task),
-               cd: build_path(folder),
-               stderr_to_stdout: true,
-               env: [{"MIX_ENV", "test"}]
-             ) do
-          {_output, 0} -> :ok
-          {output, _error} -> flunk("Error running #{mix_task}. Output:\n\n#{output}")
-        end
-      end
-    )
   end
 
   @tag timeout: :timer.minutes(20)
-  test "mix.vbt.new --no-webpack" do
-    folder = "html"
+  test "checks in mix.vbt.new --no-webpack" do
+    folder = "check_html"
+    bootstrap_project(folder, "--no-webpack")
 
-    # hardcoding the generated secret key to ensure reproducible output
-    System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
+    run_mix_tasks(folder, [
+      "deps.get",
+      "compile --warnings-as-errors",
+      "format --check-formatted",
+      "credo --strict",
+      "test",
+      "dialyzer"
+    ])
+  end
 
-    if System.get_env("CI") == "true" do
-      System.cmd("git", ~w/config --global user.mail "test@vbt.com"/)
-      System.cmd("git", ~w/config --global user.name "TestVBT"/)
-    end
+  @tag timeout: :timer.minutes(20)
+  test "mix.vbt.new --no-html --no-webpack" do
+    folder = "check_no_html"
 
-    output = bootstrap_project(folder, "--no-webpack")
-    refute output.error =~ "Error fetching latest tool versions"
+    bootstrap_project(folder, "--no-html --no-webpack")
 
+    # not checking the dialyzer here since it's already checked in the previous test
+    run_mix_tasks(folder, [
+      "deps.get",
+      "compile --warnings-as-errors",
+      "format --check-formatted",
+      "credo --strict",
+      "test"
+    ])
+  end
+
+  defp run_mix_tasks(folder, mix_tasks) do
     Mix.shell().info("Testing the generated project, this may take awhile...")
 
     Enum.each(
-      [
-        "deps.get",
-        "compile --warnings-as-errors",
-        "format --check-formatted",
-        "credo --strict",
-        "test"
-      ],
+      mix_tasks,
       fn mix_task ->
         case System.cmd("mix", String.split(mix_task),
                cd: build_path(folder),
@@ -99,6 +77,14 @@ defmodule Mix.Tasks.Vbt.NewTest do
   end
 
   defp bootstrap_project(folder, args) do
+    # hardcoding the generated secret key to ensure reproducible output
+    System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
+
+    if System.get_env("CI") == "true" do
+      System.cmd("git", ~w/config --global user.mail "test@vbt.com"/)
+      System.cmd("git", ~w/config --global user.name "TestVBT"/)
+    end
+
     instrument_mix_shell(fn ->
       # Response to fetch deps question by phx.new. We won't fetch deps immediately, since this is
       # done automatically by the `vbt.new` task.
@@ -198,6 +184,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/_build"))
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/deps"))
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/.git"))
+    |> Stream.reject(&String.starts_with?(&1, "#{folder}/priv/static"))
     |> Stream.reject(&File.dir?/1)
     |> Stream.map(&Path.relative_to(&1, folder))
     # ignoring files whose content may change unpredictably
@@ -245,13 +232,6 @@ defmodule Mix.Tasks.Vbt.NewTest do
   defp build_path(folder), do: Path.join(~w/tmp #{folder} vbt_skafolder_tester_backend/)
   defp tmp_path(folder), do: Path.join(~w/tmp #{folder} skafolder_tester_tmp/)
   defp expected_path, do: Path.join(~w/test_projects expected_state/)
-
-  defp current_branch(folder) do
-    git!(folder, ~w/branch/)
-    |> String.split("\n")
-    |> Enum.find(&String.starts_with?(&1, "*"))
-    |> String.replace_prefix("* ", "")
-  end
 
   defp all_branches(folder) do
     git!(folder, ~w/branch/)

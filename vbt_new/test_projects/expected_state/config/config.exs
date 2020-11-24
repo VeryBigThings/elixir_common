@@ -25,9 +25,9 @@ config :skafolder_tester, ecto_repos: [SkafolderTester.Repo], generators: [binar
 
 # Configures the endpoint
 config :skafolder_tester, SkafolderTesterWeb.Endpoint,
-  render_errors: [view: SkafolderTesterWeb.ErrorView, accepts: ["json"], layout: false],
+  render_errors: [view: SkafolderTesterWeb.ErrorView, accepts: ["html", "json"], layout: false],
   pubsub_server: SkafolderTester.PubSub,
-  live_view: [signing_salt: "6vAlZvof"]
+  live_view: [signing_salt: "J3NfltcO"]
 
 # Configures Elixir's Logger
 config :logger, :console,

@@ -50,6 +50,8 @@ defmodule Mix.Tasks.Vbt.New do
       # be refetched again, and fetching deps before that happens leads to a dep conflict.
       send(self(), {:mix_shell_input, :yes?, false})
 
+      Mix.Task.reenable("phx.new")
+
       Mix.Task.run(
         "phx.new",
         ~w/#{project_folder} --app #{opts.app}/ ++ Enum.drop(args, 2)
@@ -107,6 +109,7 @@ defmodule Mix.Tasks.Vbt.New do
 
     try do
       Mix.Project.in_project(String.to_atom(opts.app), project_folder, [], fn _module ->
+        Mix.Task.reenable("vbt.bootstrap")
         Mix.Task.run("vbt.bootstrap", ~w/#{opts.organization} --force/)
       end)
     after
