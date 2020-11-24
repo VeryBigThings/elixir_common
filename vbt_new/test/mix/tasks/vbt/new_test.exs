@@ -60,6 +60,44 @@ defmodule Mix.Tasks.Vbt.NewTest do
     )
   end
 
+  @tag timeout: :timer.minutes(20)
+  test "mix.vbt.new --no-webpack" do
+    folder = "html"
+
+    # hardcoding the generated secret key to ensure reproducible output
+    System.put_env("SECRET_KEY_BASE", "test_only_secret_key_base")
+
+    if System.get_env("CI") == "true" do
+      System.cmd("git", ~w/config --global user.mail "test@vbt.com"/)
+      System.cmd("git", ~w/config --global user.name "TestVBT"/)
+    end
+
+    output = bootstrap_project(folder, "--no-webpack")
+    refute output.error =~ "Error fetching latest tool versions"
+
+    Mix.shell().info("Testing the generated project, this may take awhile...")
+
+    Enum.each(
+      [
+        "deps.get",
+        "compile --warnings-as-errors",
+        "format --check-formatted",
+        "credo --strict",
+        "test"
+      ],
+      fn mix_task ->
+        case System.cmd("mix", String.split(mix_task),
+               cd: build_path(folder),
+               stderr_to_stdout: true,
+               env: [{"MIX_ENV", "test"}]
+             ) do
+          {_output, 0} -> :ok
+          {output, _error} -> flunk("Error running #{mix_task}. Output:\n\n#{output}")
+        end
+      end
+    )
+  end
+
   defp bootstrap_project(folder, args) do
     instrument_mix_shell(fn ->
       # Response to fetch deps question by phx.new. We won't fetch deps immediately, since this is
