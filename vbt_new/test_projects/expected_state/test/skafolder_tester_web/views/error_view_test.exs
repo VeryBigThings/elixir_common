@@ -5,7 +5,9 @@ defmodule SkafolderTesterWeb.ErrorViewTest do
   import Phoenix.View
 
   test "renders 404.json" do
-    assert render(SkafolderTesterWeb.ErrorView, "404.json", []) == %{errors: [%{message: "Not Found"}]}
+    assert render(SkafolderTesterWeb.ErrorView, "404.json", []) == %{
+             errors: [%{message: "Not Found"}]
+           }
   end
 
   test "renders 500.json" do

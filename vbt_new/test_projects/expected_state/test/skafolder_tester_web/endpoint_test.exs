@@ -41,7 +41,7 @@ defmodule SkafolderTesterWeb.EndpointTest do
     prev_release_level = set_release_level(Keyword.get(opts, :release_level))
 
     try do
-      {500, _headers, body} = assert_error_sent 500, fn -> dispatch(opts) end
+      {500, _headers, body} = assert_error_sent(500, fn -> dispatch(opts) end)
 
       body
       |> Jason.decode!()

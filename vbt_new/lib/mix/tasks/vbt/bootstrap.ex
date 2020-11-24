@@ -63,6 +63,11 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
       content = EEx.eval_file(template, app: otp_app(), docker: true, organization: organization)
 
+      content =
+        if Path.extname(target_file) in ~w/.ex .eex/,
+          do: SourceFile.format_code(content),
+          else: content
+
       if Mix.Generator.create_file(target_file, content, mix_generator_opts) do
         if Enum.member?(unquote(executable_templates), relative_path) do
           new_mode = Bitwise.bor(File.stat!(target_file).mode, 0b1_000_000)
@@ -91,6 +96,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> setup_test_plug()
     |> adapt_test_support_modules()
     |> store_source_files!()
+
+    adapt_test_references!()
 
     File.rm(Path.join(~w/config prod.secret.exs/))
     File.rm_rf("priv/repo/migrations/.formatter.exs")
@@ -430,6 +437,24 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
   defp setup_test_mocks(source_files),
     do: update_in(source_files.test_helper, &SourceFile.append(&1, "VBT.Aws.Test.setup()"))
+
+  defp adapt_test_references! do
+    for file <- Path.wildcard(Path.join(~w/test **/)),
+        not File.dir?(file),
+        String.ends_with?(file, ".ex") or String.ends_with?(file, ".exs") do
+      file
+      |> SourceFile.load!()
+      |> update_in(
+        [:content],
+        &String.replace(
+          &1,
+          ~r/SkafolderTesterWeb\.(ConnCase|ChannelCase)/,
+          "#{test_module_name()}.Web.\\1"
+        )
+      )
+      |> SourceFile.store!()
+    end
+  end
 
   # ------------------------------------------------------------------------
   # Endpoint configuration

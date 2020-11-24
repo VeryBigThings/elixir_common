@@ -20,7 +20,10 @@ defmodule SkafolderTesterConfig do
   if Mix.env() in ~w/dev test/a do
     defp dev_db_url do
       db_host = System.get_env("PGHOST", "localhost")
-      db_name = if ci?(), do: "skafolder_tester_test", else: "skafolder_tester_#{unquote(Mix.env())}"
+
+      db_name =
+        if ci?(), do: "skafolder_tester_test", else: "skafolder_tester_#{unquote(Mix.env())}"
+
       "postgresql://postgres:postgres@#{db_host}/#{db_name}"
     end
 

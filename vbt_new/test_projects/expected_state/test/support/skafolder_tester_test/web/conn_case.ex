@@ -14,7 +14,7 @@ defmodule SkafolderTesterTest.Web.ConnCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use SkafolderTesterWeb.ConnCase, async: true`, although
+  by setting `use SkafolderTesterTest.Web.ConnCase, async: true`, although
   this option is not recommended for other databases.
   """
 
@@ -25,7 +25,7 @@ defmodule SkafolderTesterTest.Web.ConnCase do
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
-      import SkafolderTesterWeb.ConnCase
+      import SkafolderTesterTest.Web.ConnCase
 
       alias SkafolderTesterWeb.Router.Helpers, as: Routes
 

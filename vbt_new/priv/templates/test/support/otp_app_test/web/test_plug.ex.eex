@@ -9,7 +9,10 @@ defmodule <%= Mix.Vbt.test_module_name() %>.Web.TestPlug do
       |> :erlang.term_to_binary()
       |> Base.url_encode64(padding: false)
 
-    dispatch(build_conn(), <%= Mix.Vbt.web_module_name() %>.Endpoint, :get, "/test_execute/#{code}")
+    build_conn()
+    |> Plug.Conn.put_req_header("content-type", "application/json")
+    |> Plug.Conn.put_req_header("accept", "application/json")
+    |> dispatch(<%= Mix.Vbt.web_module_name() %>.Endpoint, :get, "/test_execute/#{code}")
   end
 
   @impl Plug

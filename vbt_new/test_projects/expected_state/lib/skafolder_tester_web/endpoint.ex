@@ -10,7 +10,7 @@ defmodule SkafolderTesterWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_skafolder_tester_key",
-    signing_salt: "kpwcpEkp"
+    signing_salt: "8ZpxzLRT"
   ]
 
   socket "/socket", SkafolderTesterWeb.UserSocket,
@@ -32,6 +32,8 @@ defmodule SkafolderTesterWeb.Endpoint do
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
+    socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
+    plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
     plug Phoenix.Ecto.CheckRepoStatus, otp_app: :skafolder_tester
   end

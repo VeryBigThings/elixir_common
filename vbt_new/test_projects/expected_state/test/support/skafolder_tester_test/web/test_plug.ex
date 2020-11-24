@@ -9,7 +9,10 @@ defmodule SkafolderTesterTest.Web.TestPlug do
       |> :erlang.term_to_binary()
       |> Base.url_encode64(padding: false)
 
-    dispatch(build_conn(), SkafolderTesterWeb.Endpoint, :get, "/test_execute/#{code}")
+    build_conn()
+    |> Plug.Conn.put_req_header("content-type", "application/json")
+    |> Plug.Conn.put_req_header("accept", "application/json")
+    |> dispatch(SkafolderTesterWeb.Endpoint, :get, "/test_execute/#{code}")
   end
 
   @impl Plug
