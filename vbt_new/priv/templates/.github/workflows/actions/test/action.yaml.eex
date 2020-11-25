@@ -11,6 +11,10 @@ runs:
     - run: echo ::set-env name=SSH_AUTH_SOCK::/tmp/ssh_agent.sock
       shell: bash
 
+    # ensuring the migrations folder in case no migration exists
+    - run: mkdir -p priv/repo/migrations/
+      shell: bash
+
     - name: Setup SSH Keys and known_hosts
       run: |
         mkdir -p ~/.ssh
