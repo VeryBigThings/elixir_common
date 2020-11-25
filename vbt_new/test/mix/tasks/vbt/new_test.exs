@@ -181,11 +181,11 @@ defmodule Mix.Tasks.Vbt.NewTest do
 
   defp source_files(folder) do
     Path.wildcard("#{folder}/**", match_dot: true)
+    |> Stream.reject(&File.dir?/1)
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/_build"))
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/deps"))
-    |> Stream.reject(&String.starts_with?(&1, "#{folder}/.git"))
+    |> Stream.reject(&String.starts_with?(&1, "#{folder}/.git/"))
     |> Stream.reject(&String.starts_with?(&1, "#{folder}/priv/static"))
-    |> Stream.reject(&File.dir?/1)
     |> Stream.map(&Path.relative_to(&1, folder))
     # ignoring files whose content may change unpredictably
     |> Stream.reject(&(&1 == "mix.lock"))
