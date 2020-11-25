@@ -448,7 +448,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         [:content],
         &String.replace(
           &1,
-          ~r/SkafolderTesterWeb\.(ConnCase|ChannelCase)/,
+          ~r/#{web_module_name()}\.(ConnCase|ChannelCase)/,
           "#{test_module_name()}.Web.\\1"
         )
       )
