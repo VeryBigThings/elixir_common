@@ -8,9 +8,9 @@ defmodule SkafolderTester.Repo do
     config =
       Keyword.merge(
         config,
-        url: SkafolderTesterConfig.db_url(),
-        pool_size: SkafolderTesterConfig.db_pool_size(),
-        ssl: SkafolderTesterConfig.db_ssl()
+        url: SkafolderTesterConfig.database_url(),
+        pool_size: SkafolderTesterConfig.database_pool_size(),
+        ssl: SkafolderTesterConfig.database_ssl()
       )
 
     {:ok, config}

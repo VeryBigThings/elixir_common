@@ -596,9 +596,9 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         config =
           Keyword.merge(
             config,
-            url: #{config_module_name()}.db_url(),
-            pool_size: #{config_module_name()}.db_pool_size(),
-            ssl: #{config_module_name()}.db_ssl()
+            url: #{config_module_name()}.database_url(),
+            pool_size: #{config_module_name()}.database_pool_size(),
+            ssl: #{config_module_name()}.database_ssl()
           )
 
         {:ok, config}
