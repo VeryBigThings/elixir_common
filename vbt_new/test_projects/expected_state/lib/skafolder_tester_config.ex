@@ -7,9 +7,9 @@ defmodule SkafolderTesterConfig do
       {:release_level, dev: "dev"},
 
       # database
-      {:db_url, dev: dev_db_url()},
-      {:db_pool_size, type: :integer, default: 10},
-      {:db_ssl, type: :boolean, default: false},
+      {:database_url, dev: dev_database_url()},
+      {:database_pool_size, type: :integer, default: 10},
+      {:database_ssl, type: :boolean, default: false},
 
       # endpoint
       {:host, dev: "localhost"},
@@ -18,13 +18,13 @@ defmodule SkafolderTesterConfig do
     ]
 
   if Mix.env() in ~w/dev test/a do
-    defp dev_db_url do
-      db_host = System.get_env("PGHOST", "localhost")
+    defp dev_database_url do
+      database_host = System.get_env("PGHOST", "localhost")
 
-      db_name =
+      database_name =
         if ci?(), do: "skafolder_tester_test", else: "skafolder_tester_#{unquote(Mix.env())}"
 
-      "postgresql://postgres:postgres@#{db_host}/#{db_name}"
+      "postgresql://postgres:postgres@#{database_host}/#{database_name}"
     end
 
     defp ci?, do: System.get_env("CI") == "true"
