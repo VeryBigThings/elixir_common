@@ -78,6 +78,12 @@ defmodule Mix.Vbt.ConfigFile do
           updated_opts =
             updated_opts
             |> inspect(limit: :infinity)
+            # We accidentally expand `{:cd, Path.expand("../assets", __DIR__)}` since config is
+            # evaled above. This is a hacky way of returning this to the original form.
+            |> String.replace(
+              ~s["#{Path.expand("../assets")}"],
+              ~s[Path.expand("../assets", __DIR__)]
+            )
             |> String.replace(~r/^\[/, "")
             |> String.replace(~r/\]$/, "")
 
