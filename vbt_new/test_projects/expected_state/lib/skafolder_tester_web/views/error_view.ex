@@ -17,6 +17,10 @@ defmodule SkafolderTesterWeb.ErrorView do
   # the template name. For example, "404.json" becomes
   # "Not Found".
   def template_not_found(template, _assigns) do
-    %{errors: [%{message: Phoenix.Controller.status_message_from_template(template)}]}
+    message = Phoenix.Controller.status_message_from_template(template)
+
+    if Path.extname(template) == ".json",
+      do: %{errors: [%{message: message}]},
+      else: message
   end
 end
