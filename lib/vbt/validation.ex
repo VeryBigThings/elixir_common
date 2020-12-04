@@ -13,7 +13,7 @@ defmodule VBT.Validation do
 
   @type field_spec :: {field_name, field_type} | {field_name, {field_type, field_opts}}
   @type field_name :: atom
-  @type field_type :: atom
+  @type field_type :: atom | {:enum, [atom]} | {module, any}
   @type field_opts :: [required: boolean]
 
   @doc """
@@ -42,6 +42,14 @@ defmodule VBT.Validation do
 
   Since it is based on Ecto changesets, the function supports the same types
   (see [here](https://hexdocs.pm/ecto/Ecto.Schema.html#module-types-and-casting) for details).
+
+  In addition, custom `{:enum, values}` can be provided for the type. In this case, `Ecto.Enum`
+  will be used to validate the value and normalize the result to the atom type.
+
+  Finally, you can provide `{module, arg}` for the type, where `module` implements the
+  [Ecto.ParameterizedType](https://hexdocs.pm/ecto/Ecto.ParameterizedType.html) behaviour. Note
+  that you can only provide the parameterized type in the fully expanded form, i.e. as
+  `field_name: {{module, arg}, field_opts}`.
 
   If validation fails, an error changeset is returned, with the action set to `:insert`. You can
   set a different action with the `:action` option.
@@ -95,11 +103,17 @@ defmodule VBT.Validation do
     |> Changeset.validate_required(required)
   end
 
+  defp field_spec({name, {:enum, _values} = type}), do: field_spec({name, {type, []}})
+
   defp field_spec({name, {type, opts}}) do
     %{required: false}
     |> Map.merge(Map.new(opts))
-    |> Map.merge(%{type: type, name: name})
+    |> Map.merge(%{type: type_spec(type), name: name})
   end
 
   defp field_spec({name, type}), do: field_spec({name, {type, []}})
+
+  defp type_spec(name) when is_atom(name), do: name
+  defp type_spec({:enum, values}), do: type_spec({Ecto.Enum, values: values})
+  defp type_spec({module, arg}), do: {:parameterized, module, module.init(arg)}
 end

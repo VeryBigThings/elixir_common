@@ -41,6 +41,11 @@ defmodule VBT.ValidationTest do
                {:ok, %{foo: ~U[2020-01-31 01:02:03Z]}}
     end
 
+    test "supports enum" do
+      assert Validation.normalize(%{"foo" => "bar"}, foo: {:enum, ~w/bar baz/a}) ==
+               {:ok, %{foo: :bar}}
+    end
+
     test "returns validation errors as changeset" do
       assert {:error, changeset} =
                Validation.normalize(
