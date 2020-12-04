@@ -29,6 +29,8 @@ defmodule VBT.Accounts.Token do
   The function returns a token which can be safely sent to remote client. When a client sends the
   token back, it can be verified and used with `use/3`.
 
+  The token will be valid for the `max_age` seconds.
+
   This function always succeeds. If the account is `nil`, the token will still be generated. This
   approach is chosen to prevent user enumeration attack.
   """

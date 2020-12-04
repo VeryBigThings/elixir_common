@@ -170,6 +170,8 @@ defmodule VBT.Accounts do
   @doc """
   Creates a one-time password reset token for the given user.
 
+  The token will be valid for the `max_age` seconds.
+
   This function always succeeds. If the account for the given login doesn't exist, the token will
   still be generated. However, this token can't be actually used. This approach is chosen to
   prevent user enumeration attack.
@@ -185,6 +187,7 @@ defmodule VBT.Accounts do
 
   The password is changed only if the token is valid. The token is valid if:
 
+  - it has been created with `start_password_reset/3`
   - it corresponds to an existing user
   - it hasn't expired
   - it is a password reset token
