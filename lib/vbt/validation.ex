@@ -71,6 +71,7 @@ defmodule VBT.Validation do
 
   See `Phoenix.HTML.Form.form_for/4` for details.
 
+
   ## Custom validations
 
   You can perform additional custom validations with the `:validate` option:
@@ -83,6 +84,80 @@ defmodule VBT.Validation do
 
   The `:validate` option is a function which takes a changeset and returns the changeset with
   extra custom validations performed.
+
+
+  ## Nested data structures
+
+  This function can be used to normalize the nested data (maps inside maps, and list of maps).
+
+  However, due to limitations in Ecto changesets, this function doesn't return errors which can
+  work with Phoenix HTML forms. Therefore it is not recommended to use this feature
+  in such situations. Instead consider using embedded schemas.
+
+  On the other hand, you can use this feature to normalize the data from 3rd party APIs. In case
+  of validation errors, the resulting changeset will contain detailed information (see the
+  "Nested errors" section for details).
+
+  ### Direct nesting
+
+  A nested map can be described as `{:map, nested_type_spec}`. For example:
+
+      order_item_spec = {:map, product_id: :integer, quantity: :integer}
+      order_spec = [user_id: :integer, order_item: order_item_spec]
+
+      data = %{
+        "user_id" => "1",
+        "order_item" => %{"product_id" => "2", "quantity" => "3"}
+      }
+
+      Validation.normalize(data, order_spec)
+
+  If you want to provide additional normalization options you can use a tuple form:
+
+      order_item_spec =
+        {
+          :map,
+          {
+            # nested type specification
+            [product_id: :integer, quantity: :integer],
+
+            # normalization options for this nested type
+            validate: &custom_order_item_validation/1
+          }
+        }
+
+      order_spec = [user_id: :integer, order_item: order_item_spec]
+      Validation.normalize(data, order_spec)
+
+
+  ### Nesting inside lists
+
+  A list of nested maps can be described as follows:
+
+      order_item_spec = {:map, product_id: :integer, quantity: :integer}
+      order_spec = [user_id: :integer, order_items: {:array, order_item_spec}]
+
+      data = %{
+        "user_id" => "1",
+        "order_items" => [
+          %{"product_id" => "2", "quantity" => "3"},
+          %{"product_id" => "4", "quantity" => "5"}
+        ]
+      }
+
+      Validation.normalize(data, order_spec)
+
+  ### Nested errors
+
+  The resulting changeset will contain expanded errors for all nested structures. For example,
+  suppose we're trying to cast two order items, where 1st one has two errors, and the 2nd one
+  has three errors. The final changeset will contain 5 errors, all of them residing under the
+  `:order_items` field.
+
+  Each error will contain the `:path` meta that points to the problematic field. For example
+  the `:path` of an error in the `:product_id` field of the 2nd item will be `[1, :product_id]`,
+  where `1` represents an index in the list, and `:product_id` the field name inside the nested
+  data structure.
   """
   @spec normalize(map, field_specs, normalize_opts) :: {:ok, map} | {:error, Changeset.t()}
   def normalize(data, specs, opts \\ []) do
