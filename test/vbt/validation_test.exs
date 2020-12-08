@@ -46,6 +46,13 @@ defmodule VBT.ValidationTest do
                {:ok, %{foo: :bar}}
     end
 
+    test "supports arrays" do
+      assert Validation.normalize(
+               %{"foo" => ["bar", "baz"]},
+               foo: {:array, {:enum, ~w/bar baz/a}}
+             ) == {:ok, %{foo: [:bar, :baz]}}
+    end
+
     test "returns validation errors as changeset" do
       assert {:error, changeset} =
                Validation.normalize(

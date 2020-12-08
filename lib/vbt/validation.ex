@@ -14,7 +14,7 @@ defmodule VBT.Validation do
   @type field_specs :: [field_spec, ...]
   @type field_spec :: {field_name, field_type} | {field_name, {field_type, field_opts}}
   @type field_name :: atom
-  @type field_type :: atom | {:enum, [atom]} | {module, any} | nested
+  @type field_type :: atom | {:enum, [atom]} | {module, any} | nested | {:array, field_type}
   @type field_opts :: [required: boolean]
 
   @type nested :: field_specs | {field_specs, normalize_opts}
@@ -106,6 +106,7 @@ defmodule VBT.Validation do
   end
 
   defp field_spec({name, {:enum, _values} = type}), do: field_spec({name, {type, []}})
+  defp field_spec({name, {:array, _type} = type}), do: field_spec({name, {type, []}})
 
   defp field_spec({name, {type, opts}}) do
     %{required: false}
@@ -118,6 +119,7 @@ defmodule VBT.Validation do
   defp type_spec(name) when is_atom(name), do: name
   defp type_spec([_ | _] = nested), do: {nested, []}
   defp type_spec({[_ | _], _opts} = nested), do: nested
+  defp type_spec({:array, type}), do: {:array, type_spec(type)}
   defp type_spec({:enum, values}), do: type_spec({Ecto.Enum, values: values})
   defp type_spec({module, arg}), do: {:parameterized, module, module.init(arg)}
 
