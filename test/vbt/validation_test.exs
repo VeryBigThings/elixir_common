@@ -116,6 +116,63 @@ defmodule VBT.ValidationTest do
       assert {:error, changeset} = Validation.normalize(data, order_spec)
       assert "can't be blank" in field_errors(changeset, :order_item)
     end
+
+    test "supports has_many-like assoc" do
+      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_spec = [user_id: :integer, order_items: {:array, order_item_spec}]
+
+      data = %{
+        "user_id" => "1",
+        "order_items" => [
+          %{"product_id" => "2", "quantity" => "3"},
+          %{"product_id" => "4", "quantity" => "5"}
+        ]
+      }
+
+      assert {:ok, normalized} = Validation.normalize(data, order_spec)
+
+      assert normalized == %{
+               user_id: 1,
+               order_items: [%{product_id: 2, quantity: 3}, %{product_id: 4, quantity: 5}]
+             }
+    end
+
+    test "returns errors from has_many-like assoc" do
+      order_item_spec = [
+        product_id: {:integer, required: true},
+        quantity: {:integer, required: true}
+      ]
+
+      order_spec = [user_id: :integer, order_items: {:array, order_item_spec}]
+
+      data = %{"user_id" => "1", "order_items" => [%{}, %{}]}
+
+      assert {:error, changeset} = Validation.normalize(data, order_spec)
+      assert "[0] product_id can't be blank" in field_errors(changeset, :order_items)
+      assert "[1] product_id can't be blank" in field_errors(changeset, :order_items)
+
+      assert "[0] quantity can't be blank" in field_errors(changeset, :order_items)
+      assert "[1] quantity can't be blank" in field_errors(changeset, :order_items)
+    end
+
+    test "custom validation in a nested assoc" do
+      user_spec = {
+        [password: {:string, required: true}],
+        validate: &Ecto.Changeset.validate_confirmation(&1, :password, required: true)
+      }
+
+      data = %{
+        "users" => [
+          %{"password" => "foo", "password_confirmation" => "foo"},
+          %{"password" => "bar", "password_confirmation" => "baz"}
+        ]
+      }
+
+      assert {:error, changeset} = Validation.normalize(data, users: {:array, user_spec})
+
+      assert field_errors(changeset, :users) ==
+               ["[1] password_confirmation does not match confirmation"]
+    end
   end
 
   defp field_errors(changeset, field),

@@ -97,7 +97,7 @@ defmodule VBT.Validation do
     types = Enum.into(specs, %{}, &{&1.name, ecto_type(&1.type)})
     required = specs |> Enum.filter(& &1.required) |> Enum.map(& &1.name)
 
-    {assocs, fields} = Enum.split_with(specs, &match?({[_ | _], _opts}, &1.type))
+    {assocs, fields} = Enum.split_with(specs, &assoc?(&1.type))
 
     {%{}, types}
     |> Changeset.cast(data, Enum.map(fields, & &1.name))
@@ -125,7 +125,12 @@ defmodule VBT.Validation do
 
   # has_one-like assoc is represented with a map
   defp ecto_type({[_ | _], _opts}), do: :map
+  defp ecto_type({:array, {[_ | _], _opts}}), do: {:array, :map}
   defp ecto_type(other), do: other
+
+  defp assoc?({[_ | _], _opts}), do: true
+  defp assoc?({:array, type}), do: assoc?(type)
+  defp assoc?(_other), do: false
 
   defp cast_assocs(changeset, data, assocs) do
     Enum.reduce(
@@ -143,19 +148,35 @@ defmodule VBT.Validation do
   defp fetch_assoc_data(data, name),
     do: with(:error <- Map.fetch(data, name), do: Map.fetch(data, to_string(name)))
 
+  defp cast_assoc(changeset, data, %{type: {:array, type}} = assoc) do
+    casted = Enum.map(data, &cast_nested(&1, type))
+
+    if Enum.any?(casted, &match?({:error, _}, &1)) do
+      for {{:error, errors}, index} <- Enum.with_index(casted),
+          error <- errors,
+          reduce: changeset do
+        changeset -> Changeset.add_error(changeset, assoc.name, "[#{index}] #{error}")
+      end
+    else
+      Changeset.put_change(changeset, assoc.name, Enum.map(casted, fn {:ok, value} -> value end))
+    end
+  end
+
   defp cast_assoc(changeset, data, assoc) do
-    {specs, opts} = assoc.type
+    case cast_nested(data, assoc.type) do
+      {:ok, normalized} -> Changeset.put_change(changeset, assoc.name, normalized)
+      {:error, errors} -> Enum.reduce(errors, changeset, &Changeset.add_error(&2, assoc.name, &1))
+    end
+  end
 
-    case normalize(data, specs, opts) do
-      {:ok, normalized} ->
-        Changeset.put_change(changeset, assoc.name, normalized)
-
-      {:error, assoc_changeset} ->
-        for {field, errors} <- field_errors(assoc_changeset),
+  defp cast_nested(data, {specs, opts}) do
+    with {:error, changeset} <- normalize(data, specs, opts) do
+      errors =
+        for {field, errors} <- field_errors(changeset),
             error <- errors,
-            reduce: changeset do
-          changeset -> Changeset.add_error(changeset, assoc.name, "#{field} #{error}")
-        end
+            do: "#{field} #{error}"
+
+      {:error, errors}
     end
   end
 
