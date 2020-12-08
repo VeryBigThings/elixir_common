@@ -155,9 +155,10 @@ defmodule VBT.Validation do
 
       if Enum.any?(casted, &match?({:error, _}, &1)) do
         for {{:error, errors}, index} <- Enum.with_index(casted),
-            error <- errors,
+            {field, error, path} <- errors,
             reduce: changeset do
-          changeset -> Changeset.add_error(changeset, assoc.name, "[#{index}] #{error}")
+          changeset ->
+            Changeset.add_error(changeset, assoc.name, error, path: [index, field | path])
         end
       else
         Changeset.put_change(
@@ -178,7 +179,13 @@ defmodule VBT.Validation do
           Changeset.put_change(changeset, assoc.name, normalized)
 
         {:error, errors} ->
-          Enum.reduce(errors, changeset, &Changeset.add_error(&2, assoc.name, &1))
+          Enum.reduce(
+            errors,
+            changeset,
+            fn {field, error, path}, changeset ->
+              Changeset.add_error(changeset, assoc.name, error, path: [field | path])
+            end
+          )
       end
     else
       Changeset.add_error(changeset, assoc.name, "is invalid")
@@ -189,8 +196,8 @@ defmodule VBT.Validation do
     with {:error, changeset} <- normalize(data, specs, opts) do
       errors =
         for {field, errors} <- field_errors(changeset),
-            error <- errors,
-            do: "#{field} #{error}"
+            {error, path} <- errors,
+            do: {field, error, path}
 
       {:error, errors}
     end
@@ -198,9 +205,12 @@ defmodule VBT.Validation do
 
   defp field_errors(changeset) do
     Changeset.traverse_errors(changeset, fn {msg, opts} ->
-      Enum.reduce(opts, msg, fn {key, value}, acc ->
-        String.replace(acc, "%{#{key}}", to_string(value))
-      end)
+      error =
+        Enum.reduce(opts, msg, fn {key, value}, acc ->
+          String.replace(acc, "%{#{key}}", to_string(value))
+        end)
+
+      {error, Keyword.get(opts, :path, [])}
     end)
   end
 end
