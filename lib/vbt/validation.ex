@@ -11,10 +11,13 @@ defmodule VBT.Validation do
 
   alias Ecto.Changeset
 
+  @type field_specs :: [field_spec, ...]
   @type field_spec :: {field_name, field_type} | {field_name, {field_type, field_opts}}
   @type field_name :: atom
-  @type field_type :: atom | {:enum, [atom]} | {module, any}
+  @type field_type :: atom | {:enum, [atom]} | {module, any} | nested
   @type field_opts :: [required: boolean]
+
+  @type nested :: field_specs | {field_specs, normalize_opts}
 
   @type normalize_opts :: [
           action: Changeset.action(),
@@ -81,7 +84,7 @@ defmodule VBT.Validation do
   The `:validate` option is a function which takes a changeset and returns the changeset with
   extra custom validations performed.
   """
-  @spec normalize(map, [field_spec], normalize_opts) :: {:ok, map} | {:error, Changeset.t()}
+  @spec normalize(map, field_specs, normalize_opts) :: {:ok, map} | {:error, Changeset.t()}
   def normalize(data, specs, opts \\ []) do
     data
     |> changeset(specs)
@@ -91,11 +94,14 @@ defmodule VBT.Validation do
 
   defp changeset(data, specs) do
     specs = Enum.map(specs, &field_spec/1)
-    types = Enum.into(specs, %{}, &{&1.name, &1.type})
+    types = Enum.into(specs, %{}, &{&1.name, ecto_type(&1.type)})
     required = specs |> Enum.filter(& &1.required) |> Enum.map(& &1.name)
 
+    {assocs, fields} = Enum.split_with(specs, &match?({[_ | _], _opts}, &1.type))
+
     {%{}, types}
-    |> Changeset.cast(data, Map.keys(types))
+    |> Changeset.cast(data, Enum.map(fields, & &1.name))
+    |> cast_assocs(data, assocs)
     |> Changeset.validate_required(required)
   end
 
@@ -110,6 +116,52 @@ defmodule VBT.Validation do
   defp field_spec({name, type}), do: field_spec({name, {type, []}})
 
   defp type_spec(name) when is_atom(name), do: name
+  defp type_spec([_ | _] = nested), do: {nested, []}
+  defp type_spec({[_ | _], _opts} = nested), do: nested
   defp type_spec({:enum, values}), do: type_spec({Ecto.Enum, values: values})
   defp type_spec({module, arg}), do: {:parameterized, module, module.init(arg)}
+
+  # has_one-like assoc is represented with a map
+  defp ecto_type({[_ | _], _opts}), do: :map
+  defp ecto_type(other), do: other
+
+  defp cast_assocs(changeset, data, assocs) do
+    Enum.reduce(
+      assocs,
+      changeset,
+      fn assoc, changeset ->
+        case fetch_assoc_data(data, assoc.name) do
+          :error -> changeset
+          {:ok, data} -> cast_assoc(changeset, data, assoc)
+        end
+      end
+    )
+  end
+
+  defp fetch_assoc_data(data, name),
+    do: with(:error <- Map.fetch(data, name), do: Map.fetch(data, to_string(name)))
+
+  defp cast_assoc(changeset, data, assoc) do
+    {specs, opts} = assoc.type
+
+    case normalize(data, specs, opts) do
+      {:ok, normalized} ->
+        Changeset.put_change(changeset, assoc.name, normalized)
+
+      {:error, assoc_changeset} ->
+        for {field, errors} <- field_errors(assoc_changeset),
+            error <- errors,
+            reduce: changeset do
+          changeset -> Changeset.add_error(changeset, assoc.name, "#{field} #{error}")
+        end
+    end
+  end
+
+  defp field_errors(changeset) do
+    Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Enum.reduce(opts, msg, fn {key, value}, acc ->
+        String.replace(acc, "%{#{key}}", to_string(value))
+      end)
+    end)
+  end
 end

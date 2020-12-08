@@ -57,8 +57,8 @@ defmodule VBT.ValidationTest do
       refute changeset.valid?
       assert changeset.action == :insert
 
-      assert {"is invalid", _} = changeset.errors[:foo]
-      assert {"can't be blank", _} = changeset.errors[:bar]
+      assert "is invalid" in field_errors(changeset, :foo)
+      assert "can't be blank" in field_errors(changeset, :bar)
     end
 
     test "supports custom validation" do
@@ -69,7 +69,48 @@ defmodule VBT.ValidationTest do
                  validate: &Ecto.Changeset.validate_confirmation(&1, :password, required: true)
                )
 
-      assert {"does not match confirmation", _} = changeset.errors[:password_confirmation]
+      assert "does not match confirmation" in field_errors(changeset, :password_confirmation)
+    end
+
+    test "supports has_one-like assoc" do
+      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_spec = [user_id: :integer, order_item: order_item_spec]
+
+      data = %{
+        "user_id" => "1",
+        "order_item" => %{"product_id" => "2", "quantity" => "3"}
+      }
+
+      assert {:ok, normalized} = Validation.normalize(data, order_spec)
+      assert normalized == %{user_id: 1, order_item: %{product_id: 2, quantity: 3}}
+    end
+
+    test "returns errors from has_one-like assoc" do
+      order_item_spec = [
+        product_id: {:integer, required: true},
+        quantity: {:integer, required: true}
+      ]
+
+      order_spec = [user_id: :integer, order_item: order_item_spec]
+
+      data = %{"user_id" => "1", "order_item" => %{}}
+
+      assert {:error, changeset} = Validation.normalize(data, order_spec)
+      assert "product_id can't be blank" in field_errors(changeset, :order_item)
+      assert "quantity can't be blank" in field_errors(changeset, :order_item)
+    end
+
+    test "validates required has_one-like assoc" do
+      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_spec = [user_id: :integer, order_item: {order_item_spec, required: true}]
+
+      data = %{"user_id" => "1"}
+
+      assert {:error, changeset} = Validation.normalize(data, order_spec)
+      assert "can't be blank" in field_errors(changeset, :order_item)
     end
   end
+
+  defp field_errors(changeset, field),
+    do: Enum.map(Keyword.get_values(changeset.errors, field), fn {error, _} -> error end)
 end
