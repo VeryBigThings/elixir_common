@@ -125,12 +125,27 @@ defmodule VBT.Validation do
 
   # has_one-like assoc is represented with a map
   defp ecto_type({[_ | _], _opts}), do: :map
+  # has_many-like assoc is represented as an array of maps
   defp ecto_type({:array, {[_ | _], _opts}}), do: {:array, :map}
   defp ecto_type(other), do: other
 
   defp assoc?({[_ | _], _opts}), do: true
   defp assoc?({:array, type}), do: assoc?(type)
   defp assoc?(_other), do: false
+
+  # ------------------------------------------------------------------------
+  # Nested data structures
+  # ------------------------------------------------------------------------
+
+  # In Ecto nested data structures are typically handled with associations (e.g. has_one & has_many).
+  # Unfortunately, Ecto associations only work with dedicated modules (i.e. schemas), so they can't
+  # be used in this case.
+  #
+  # Another option that was explored is a custom parameterized type (https://hexdocs.pm/ecto/Ecto.ParameterizedType.html).
+  # This approach works, and requires less amount of code, but the problem is that error reporting
+  # is very poor. An error deep inside a nested structure is going to be completely useless.
+  #
+  # The selected approach manually casts nested data strucure, and produces errors with details.
 
   defp cast_assocs(changeset, data, assocs) do
     Enum.reduce(
@@ -149,6 +164,7 @@ defmodule VBT.Validation do
   defp fetch_assoc_data(data, name),
     do: with(:error <- Map.fetch(data, name), do: Map.fetch(data, to_string(name)))
 
+  # list of nested maps
   defp cast_assoc(changeset, data, %{type: {:array, type}} = assoc) do
     if is_list(data) do
       casted = Enum.map(data, &cast_nested(&1, type))
@@ -172,6 +188,7 @@ defmodule VBT.Validation do
     end
   end
 
+  # nested map
   defp cast_assoc(changeset, data, assoc) do
     if is_map(data) do
       case cast_nested(data, assoc.type) do
