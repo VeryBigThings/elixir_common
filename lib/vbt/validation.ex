@@ -139,6 +139,7 @@ defmodule VBT.Validation do
       fn assoc, changeset ->
         case fetch_assoc_data(data, assoc.name) do
           :error -> changeset
+          {:ok, nil} -> changeset
           {:ok, data} -> cast_assoc(changeset, data, assoc)
         end
       end

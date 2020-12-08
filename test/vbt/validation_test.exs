@@ -92,6 +92,16 @@ defmodule VBT.ValidationTest do
       assert normalized == %{user_id: 1, order_item: %{product_id: 2, quantity: 3}}
     end
 
+    test "ignores has_one-like assoc if it's nil" do
+      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_spec = [user_id: :integer, order_item: order_item_spec]
+
+      data = %{"user_id" => "1", "order_item" => nil}
+
+      assert {:ok, normalized} = Validation.normalize(data, order_spec)
+      assert normalized == %{user_id: 1}
+    end
+
     test "returns errors from has_one-like assoc" do
       order_item_spec = [
         product_id: {:integer, required: true},
