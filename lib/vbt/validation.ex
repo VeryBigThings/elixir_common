@@ -17,7 +17,7 @@ defmodule VBT.Validation do
   @type field_type :: atom | {:enum, [atom]} | {module, any} | nested | {:array, field_type}
   @type field_opts :: [required: boolean]
 
-  @type nested :: field_specs | {field_specs, normalize_opts}
+  @type nested :: {:map, field_specs | {field_specs, normalize_opts}}
 
   @type normalize_opts :: [
           action: Changeset.action(),
@@ -107,6 +107,7 @@ defmodule VBT.Validation do
 
   defp field_spec({name, {:enum, _values} = type}), do: field_spec({name, {type, []}})
   defp field_spec({name, {:array, _type} = type}), do: field_spec({name, {type, []}})
+  defp field_spec({name, {:map, _type} = type}), do: field_spec({name, {type, []}})
 
   defp field_spec({name, {type, opts}}) do
     %{required: false}
@@ -117,19 +118,19 @@ defmodule VBT.Validation do
   defp field_spec({name, type}), do: field_spec({name, {type, []}})
 
   defp type_spec(name) when is_atom(name), do: name
-  defp type_spec([_ | _] = nested), do: {nested, []}
-  defp type_spec({[_ | _], _opts} = nested), do: nested
+  defp type_spec({:map, [_ | _] = nested}), do: {:map, {nested, []}}
+  defp type_spec({:map, {[_ | _], _opts}} = nested), do: nested
   defp type_spec({:array, type}), do: {:array, type_spec(type)}
   defp type_spec({:enum, values}), do: type_spec({Ecto.Enum, values: values})
   defp type_spec({module, arg}), do: {:parameterized, module, module.init(arg)}
 
   # has_one-like assoc is represented with a map
-  defp ecto_type({[_ | _], _opts}), do: :map
+  defp ecto_type({:map, {[_ | _], _opts}}), do: :map
   # has_many-like assoc is represented as an array of maps
-  defp ecto_type({:array, {[_ | _], _opts}}), do: {:array, :map}
+  defp ecto_type({:array, type}), do: {:array, ecto_type(type)}
   defp ecto_type(other), do: other
 
-  defp assoc?({[_ | _], _opts}), do: true
+  defp assoc?({:map, {[_ | _], _opts}}), do: true
   defp assoc?({:array, type}), do: assoc?(type)
   defp assoc?(_other), do: false
 
@@ -205,7 +206,7 @@ defmodule VBT.Validation do
     end
   end
 
-  defp cast_nested(data, {specs, opts}) do
+  defp cast_nested(data, {:map, {specs, opts}}) do
     with {:error, changeset} <- normalize(data, specs, opts) do
       errors =
         for {field, errors} <- field_errors(changeset),

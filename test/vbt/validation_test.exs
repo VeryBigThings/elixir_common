@@ -81,7 +81,7 @@ defmodule VBT.ValidationTest do
     end
 
     test "supports has_one-like assoc" do
-      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_item_spec = {:map, product_id: :integer, quantity: :integer}
       order_spec = [user_id: :integer, order_item: order_item_spec]
 
       data = %{
@@ -94,7 +94,7 @@ defmodule VBT.ValidationTest do
     end
 
     test "ignores has_one-like assoc if it's nil" do
-      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_item_spec = {:map, product_id: :integer, quantity: :integer}
       order_spec = [user_id: :integer, order_item: order_item_spec]
 
       data = %{"user_id" => "1", "order_item" => nil}
@@ -104,10 +104,8 @@ defmodule VBT.ValidationTest do
     end
 
     test "returns errors from has_one-like assoc" do
-      order_item_spec = [
-        product_id: {:integer, required: true},
-        quantity: {:integer, required: true}
-      ]
+      order_item_spec =
+        {:map, product_id: {:integer, required: true}, quantity: {:integer, required: true}}
 
       order_spec = [user_id: :integer, order_item: order_item_spec]
 
@@ -119,7 +117,7 @@ defmodule VBT.ValidationTest do
     end
 
     test "validates required has_one-like assoc" do
-      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_item_spec = {:map, product_id: :integer, quantity: :integer}
       order_spec = [user_id: :integer, order_item: {order_item_spec, required: true}]
 
       data = %{"user_id" => "1"}
@@ -129,7 +127,7 @@ defmodule VBT.ValidationTest do
     end
 
     test "has_one-like assoc must be a map" do
-      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_item_spec = {:map, product_id: :integer, quantity: :integer}
       order_spec = [user_id: :integer, order_item: order_item_spec]
 
       data = %{"user_id" => "1", "order_item" => 123}
@@ -139,7 +137,7 @@ defmodule VBT.ValidationTest do
     end
 
     test "supports has_many-like assoc" do
-      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_item_spec = {:map, product_id: :integer, quantity: :integer}
       order_spec = [user_id: :integer, order_items: {:array, order_item_spec}]
 
       data = %{
@@ -159,10 +157,8 @@ defmodule VBT.ValidationTest do
     end
 
     test "returns errors from has_many-like assoc" do
-      order_item_spec = [
-        product_id: {:integer, required: true},
-        quantity: {:integer, required: true}
-      ]
+      order_item_spec =
+        {:map, product_id: {:integer, required: true}, quantity: {:integer, required: true}}
 
       order_spec = [user_id: :integer, order_items: {:array, order_item_spec}]
 
@@ -179,8 +175,11 @@ defmodule VBT.ValidationTest do
 
     test "custom validation in a nested assoc" do
       user_spec = {
-        [password: {:string, required: true}],
-        validate: &Ecto.Changeset.validate_confirmation(&1, :password, required: true)
+        :map,
+        {
+          [password: {:string, required: true}],
+          validate: &Ecto.Changeset.validate_confirmation(&1, :password, required: true)
+        }
       }
 
       data = %{
@@ -195,7 +194,7 @@ defmodule VBT.ValidationTest do
     end
 
     test "has_many-like assoc must be a list" do
-      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_item_spec = {:map, product_id: :integer, quantity: :integer}
       order_spec = [user_id: :integer, order_items: {:array, order_item_spec}]
 
       data = %{"user_id" => "1", "order_items" => 123}
