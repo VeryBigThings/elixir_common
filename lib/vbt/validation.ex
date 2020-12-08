@@ -149,23 +149,38 @@ defmodule VBT.Validation do
     do: with(:error <- Map.fetch(data, name), do: Map.fetch(data, to_string(name)))
 
   defp cast_assoc(changeset, data, %{type: {:array, type}} = assoc) do
-    casted = Enum.map(data, &cast_nested(&1, type))
+    if is_list(data) do
+      casted = Enum.map(data, &cast_nested(&1, type))
 
-    if Enum.any?(casted, &match?({:error, _}, &1)) do
-      for {{:error, errors}, index} <- Enum.with_index(casted),
-          error <- errors,
-          reduce: changeset do
-        changeset -> Changeset.add_error(changeset, assoc.name, "[#{index}] #{error}")
+      if Enum.any?(casted, &match?({:error, _}, &1)) do
+        for {{:error, errors}, index} <- Enum.with_index(casted),
+            error <- errors,
+            reduce: changeset do
+          changeset -> Changeset.add_error(changeset, assoc.name, "[#{index}] #{error}")
+        end
+      else
+        Changeset.put_change(
+          changeset,
+          assoc.name,
+          Enum.map(casted, fn {:ok, value} -> value end)
+        )
       end
     else
-      Changeset.put_change(changeset, assoc.name, Enum.map(casted, fn {:ok, value} -> value end))
+      Changeset.add_error(changeset, assoc.name, "is invalid")
     end
   end
 
   defp cast_assoc(changeset, data, assoc) do
-    case cast_nested(data, assoc.type) do
-      {:ok, normalized} -> Changeset.put_change(changeset, assoc.name, normalized)
-      {:error, errors} -> Enum.reduce(errors, changeset, &Changeset.add_error(&2, assoc.name, &1))
+    if is_map(data) do
+      case cast_nested(data, assoc.type) do
+        {:ok, normalized} ->
+          Changeset.put_change(changeset, assoc.name, normalized)
+
+        {:error, errors} ->
+          Enum.reduce(errors, changeset, &Changeset.add_error(&2, assoc.name, &1))
+      end
+    else
+      Changeset.add_error(changeset, assoc.name, "is invalid")
     end
   end
 

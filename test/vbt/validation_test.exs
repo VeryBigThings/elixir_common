@@ -117,6 +117,16 @@ defmodule VBT.ValidationTest do
       assert "can't be blank" in field_errors(changeset, :order_item)
     end
 
+    test "has_one-like assoc must be a map" do
+      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_spec = [user_id: :integer, order_item: order_item_spec]
+
+      data = %{"user_id" => "1", "order_item" => 123}
+
+      assert {:error, changeset} = Validation.normalize(data, order_spec)
+      assert "is invalid" in field_errors(changeset, :order_item)
+    end
+
     test "supports has_many-like assoc" do
       order_item_spec = [product_id: :integer, quantity: :integer]
       order_spec = [user_id: :integer, order_items: {:array, order_item_spec}]
@@ -172,6 +182,16 @@ defmodule VBT.ValidationTest do
 
       assert field_errors(changeset, :users) ==
                ["[1] password_confirmation does not match confirmation"]
+    end
+
+    test "has_many-like assoc must be a list" do
+      order_item_spec = [product_id: :integer, quantity: :integer]
+      order_spec = [user_id: :integer, order_items: {:array, order_item_spec}]
+
+      data = %{"user_id" => "1", "order_items" => 123}
+
+      assert {:error, changeset} = Validation.normalize(data, order_spec)
+      assert "is invalid" in field_errors(changeset, :order_items)
     end
   end
 
