@@ -60,25 +60,16 @@ defmodule VBT.ValidationTest do
       assert {"is invalid", _} = changeset.errors[:foo]
       assert {"can't be blank", _} = changeset.errors[:bar]
     end
-  end
 
-  describe "changeset" do
-    test "returns the changeset with the changes" do
-      changeset = Validation.changeset(%{"foo" => "1"}, foo: :string)
-      assert Ecto.Changeset.apply_changes(changeset) == %{foo: "1"}
-    end
+    test "supports custom validation" do
+      assert {:error, changeset} =
+               Validation.normalize(
+                 %{"password" => "abc", "password_confirmation" => "def"},
+                 [password: :string],
+                 validate: &Ecto.Changeset.validate_confirmation(&1, :password, required: true)
+               )
 
-    test "returns the changeset with errors" do
-      changeset =
-        Validation.changeset(
-          %{"foo" => "invalid value"},
-          foo: :integer,
-          bar: {:string, required: true}
-        )
-
-      refute changeset.valid?
-      assert {"is invalid", _} = changeset.errors[:foo]
-      assert {"can't be blank", _} = changeset.errors[:bar]
+      assert {"does not match confirmation", _} = changeset.errors[:password_confirmation]
     end
   end
 end

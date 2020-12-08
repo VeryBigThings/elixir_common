@@ -16,6 +16,11 @@ defmodule VBT.Validation do
   @type field_type :: atom | {:enum, [atom]} | {module, any}
   @type field_opts :: [required: boolean]
 
+  @type normalize_opts :: [
+          action: Changeset.action(),
+          validate: (Changeset.t() -> Changeset.t())
+        ]
+
   @doc """
   Normalizes a free-form map according to the given specification.
 
@@ -63,37 +68,28 @@ defmodule VBT.Validation do
 
   See `Phoenix.HTML.Form.form_for/4` for details.
 
-  If you want to perform additional changeset validations use `changeset/2` instead.
+  ## Custom validations
+
+  You can perform additional custom validations with the `:validate` option:
+
+      Validation.normalize(
+        data,
+        [password: :string],
+        validate: &Ecto.Changeset.validate_confirmation(&1, :password, required: true)
+      )
+
+  The `:validate` option is a function which takes a changeset and returns the changeset with
+  extra custom validations performed.
   """
-  @spec normalize(map, [field_spec], action: Changeset.action()) ::
-          {:ok, map} | {:error, Changeset.t()}
+  @spec normalize(map, [field_spec], normalize_opts) :: {:ok, map} | {:error, Changeset.t()}
   def normalize(data, specs, opts \\ []) do
     data
     |> changeset(specs)
+    |> Keyword.get(opts, :validate, & &1).()
     |> Changeset.apply_action(Keyword.get(opts, :action, :insert))
   end
 
-  @doc """
-  Returns a changeset which can be used to validate and normalize a free-form map.
-
-  This function basically work the same as `normalize/3`, except it doesn't invoke
-  `Ecto.Changeset.apply_action/2`. Therefore, you can use the result of this function to perform
-  additional custom validations.
-
-  Example:
-
-      iex> VBT.Validation.changeset(
-      ...>   %{"password" => "qwerty", "password_confirmation" => "qwerty"},
-      ...>   password: :string
-      ...> )
-      ...> |> Ecto.Changeset.validate_confirmation(:password)
-      ...> |> Ecto.Changeset.apply_action(:insert)
-      {:ok, %{password: "qwerty"}}
-
-  See `normalize/3` for details.
-  """
-  @spec changeset(map, [field_spec]) :: Changeset.t()
-  def changeset(data, specs) do
+  defp changeset(data, specs) do
     specs = Enum.map(specs, &field_spec/1)
     types = Enum.into(specs, %{}, &{&1.name, &1.type})
     required = specs |> Enum.filter(& &1.required) |> Enum.map(& &1.name)
