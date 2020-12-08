@@ -171,17 +171,13 @@ defmodule VBT.Validation do
 
       if Enum.any?(casted, &match?({:error, _}, &1)) do
         for {{:error, errors}, index} <- Enum.with_index(casted),
-            {field, error, path} <- errors,
+            {error, path} <- errors,
             reduce: changeset do
-          changeset ->
-            Changeset.add_error(changeset, assoc.name, error, path: [index, field | path])
+          changeset -> Changeset.add_error(changeset, assoc.name, error, path: [index | path])
         end
       else
-        Changeset.put_change(
-          changeset,
-          assoc.name,
-          Enum.map(casted, fn {:ok, value} -> value end)
-        )
+        values = Enum.map(casted, fn {:ok, value} -> value end)
+        Changeset.put_change(changeset, assoc.name, values)
       end
     else
       Changeset.add_error(changeset, assoc.name, "is invalid")
@@ -199,8 +195,8 @@ defmodule VBT.Validation do
           Enum.reduce(
             errors,
             changeset,
-            fn {field, error, path}, changeset ->
-              Changeset.add_error(changeset, assoc.name, error, path: [field | path])
+            fn {error, path}, changeset ->
+              Changeset.add_error(changeset, assoc.name, error, path: path)
             end
           )
       end
@@ -214,7 +210,7 @@ defmodule VBT.Validation do
       errors =
         for {field, errors} <- field_errors(changeset),
             {error, path} <- errors,
-            do: {field, error, path}
+            do: {error, [field | path]}
 
       {:error, errors}
     end
