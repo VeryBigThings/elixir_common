@@ -87,6 +87,26 @@ defmodule VBT.Accounts.Token do
     end)
   end
 
+  @doc """
+  Returns the account corresponding to the given token.
+
+  The account is returned only if:
+
+    - the token exists in the database
+    - the token has not been used
+    - the token has not expired
+    - the token type is `expected_type`
+    - the token corresponds to an existing account
+
+  If any of the conditions above is not met, this function will return `nil`.
+  """
+  @spec get_account(encoded, String.t(), VBT.Accounts.config()) :: Ecto.Schema.t() | nil
+  def get_account(token, expected_type, config) do
+    valid_token_query(token, expected_type, config)
+    |> select([account: account], account)
+    |> config.repo.one()
+  end
+
   # ------------------------------------------------------------------------
   # Private
   # ------------------------------------------------------------------------
