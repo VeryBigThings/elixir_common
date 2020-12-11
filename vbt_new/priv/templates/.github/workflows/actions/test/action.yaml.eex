@@ -8,7 +8,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: echo ::set-env name=SSH_AUTH_SOCK::/tmp/ssh_agent.sock
+    - run: echo "SSH_AUTH_SOCK=/tmp/ssh_agent.sock" >> $GITHUB_ENV
       shell: bash
 
     - name: Setup SSH Keys and known_hosts
