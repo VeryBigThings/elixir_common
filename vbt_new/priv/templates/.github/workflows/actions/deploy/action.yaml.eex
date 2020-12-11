@@ -48,21 +48,21 @@ runs:
   using: "composite"
   steps:
      # Set env vars
-    - run: echo ::set-env name=AWS_ACCESS_KEY_ID::${{ inputs.aws-access-key-id }}
+    - run: echo "AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }}" >> $GITHUB_ENV
       shell: bash
-    - run: echo ::set-env name=AWS_SECRET_ACCESS_KEY::${{ inputs.aws-secret-access-key }}
+    - run: echo "AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }}" >> $GITHUB_ENV
       shell: bash
-    - run: echo ::set-env name=AWS_REGION::${{ inputs.aws-region }}
+    - run: echo "AWS_REGION=${{ inputs.aws-region }}" >> $GITHUB_ENV
       shell: bash
-    - run: echo ::set-env name=KEYBASE_PAPERKEY::${{ inputs.keybase-paperkey }}
+    - run: echo "KEYBASE_PAPERKEY=${{ inputs.keybase-paperkey }}" >> $GITHUB_ENV
       shell: bash
-    - run: echo ::set-env name=KEYBASE_USERNAME::${{ inputs.keybase-username }}
+    - run: echo "KEYBASE_USERNAME=${{ inputs.keybase-username }}" >> $GITHUB_ENV
       shell: bash
-    - run: echo ::set-env name=SSH_AUTH_SOCK::/tmp/ssh_agent.sock
+    - run: echo "SSH_AUTH_SOCK=/tmp/ssh_agent.sock" >> $GITHUB_ENV
       shell: bash
-    - run: echo ::set-env name=DOCKER_IMAGE::${{ inputs.docker-registry }}/${{ inputs.package-path }}/${{ inputs.app-name }}:${{ inputs.release-level }}-${GITHUB_SHA::7}
+    - run: echo "DOCKER_IMAGE=${{ inputs.docker-registry }}/${{ inputs.package-path }}/${{ inputs.app-name }}:${{ inputs.release-level }}-${GITHUB_SHA::7}" >> $GITHUB_ENV
       shell: bash
-    - run: echo ::set-env name=DEPLOYMENT_NAME::<%= "#{organization}-${{ inputs.release-level }}-#{Mix.Vbt.otp_app()}-backend" %>
+    - run: echo "DEPLOYMENT_NAME=:<%= "#{organization}-${{ inputs.release-level }}-#{Mix.Vbt.otp_app()}-backend" %>" >> $GITHUB_ENV
       shell: bash
 
     - name: Setup SSH Keys and known_hosts
