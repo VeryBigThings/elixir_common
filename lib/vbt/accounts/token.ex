@@ -77,17 +77,34 @@ defmodule VBT.Accounts.Token do
           result | {:error, :invalid}
         when result: operation_result
   def use(token, expected_type, operation, config) do
-    hash = hash(token)
-
     config.repo.transaction(fn repo ->
-      with {:ok, account_id, token_type} <- mark_used(repo, hash, config),
-           :ok <- VBT.validate(not is_nil(account_id) and expected_type == token_type, :invalid),
+      with {:ok, account_id} <- mark_used(repo, token, expected_type, config),
            {:ok, result} <- operation.(account_id) do
         result
       else
         {:error, reason} -> repo.rollback(reason)
       end
     end)
+  end
+
+  @doc """
+  Returns the account corresponding to the given token.
+
+  The account is returned only if:
+
+    - the token exists in the database
+    - the token has not been used
+    - the token has not expired
+    - the token type is `expected_type`
+    - the token corresponds to an existing account
+
+  If any of the conditions above is not met, this function will return `nil`.
+  """
+  @spec get_account(encoded, String.t(), VBT.Accounts.config()) :: Ecto.Schema.t() | nil
+  def get_account(token, expected_type, config) do
+    valid_token_query(token, expected_type, config)
+    |> select([account: account], account)
+    |> config.repo.one()
   end
 
   # ------------------------------------------------------------------------
@@ -98,22 +115,25 @@ defmodule VBT.Accounts.Token do
   @spec hash(String.t()) :: binary
   def hash(token), do: :crypto.hash(:sha256, token)
 
-  defp mark_used(repo, hash, config) do
-    now = DateTime.utc_now()
-
+  defp mark_used(repo, token, expected_type, config) do
     case repo.update_all(
-           from(
-             token in config.schemas.token,
-             where: token.hash == ^hash,
-             where: is_nil(token.used_at),
-             where: token.expires_at >= ^now,
-             select: [field(token, ^account_id_field_name(config)), token.type]
-           ),
-           set: [used_at: now]
+           select(valid_token_query(token, expected_type, config), as(:account).id),
+           set: [used_at: DateTime.utc_now()]
          ) do
-      {1, [[account_id, type]]} -> {:ok, account_id, type}
+      {1, [account_id]} -> {:ok, account_id}
       _ -> {:error, :invalid}
     end
+  end
+
+  defp valid_token_query(token, expected_type, config) do
+    from token in config.schemas.token,
+      as: :token,
+      where: [hash: ^hash(token), type: ^expected_type],
+      where: is_nil(token.used_at),
+      where: token.expires_at >= ^DateTime.utc_now(),
+      inner_join: account in ^config.schemas.account,
+      on: account.id == field(token, ^account_id_field_name(config)),
+      as: :account
   end
 
   defp account_id_field_name(config) do
