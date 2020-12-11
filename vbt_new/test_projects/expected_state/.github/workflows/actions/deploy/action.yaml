@@ -62,7 +62,7 @@ runs:
       shell: bash
     - run: echo "DOCKER_IMAGE=${{ inputs.docker-registry }}/${{ inputs.package-path }}/${{ inputs.app-name }}:${{ inputs.release-level }}-${GITHUB_SHA::7}" >> $GITHUB_ENV
       shell: bash
-    - run: echo "DEPLOYMENT_NAME=:vbt-${{ inputs.release-level }}-skafolder_tester-backend" >> $GITHUB_ENV
+    - run: echo "DEPLOYMENT_NAME=vbt-${{ inputs.release-level }}-skafolder_tester-backend" >> $GITHUB_ENV
       shell: bash
 
     - name: Setup SSH Keys and known_hosts

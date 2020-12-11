@@ -62,7 +62,7 @@ runs:
       shell: bash
     - run: echo "DOCKER_IMAGE=${{ inputs.docker-registry }}/${{ inputs.package-path }}/${{ inputs.app-name }}:${{ inputs.release-level }}-${GITHUB_SHA::7}" >> $GITHUB_ENV
       shell: bash
-    - run: echo "DEPLOYMENT_NAME=:<%= "#{organization}-${{ inputs.release-level }}-#{Mix.Vbt.otp_app()}-backend" %>" >> $GITHUB_ENV
+    - run: echo "DEPLOYMENT_NAME=<%= "#{organization}-${{ inputs.release-level }}-#{Mix.Vbt.otp_app()}-backend" %>" >> $GITHUB_ENV
       shell: bash
 
     - name: Setup SSH Keys and known_hosts
