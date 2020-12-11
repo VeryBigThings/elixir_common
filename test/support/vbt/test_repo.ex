@@ -18,7 +18,7 @@ defmodule VBT.TestRepo do
   end
 
   defp access_opts do
-    if System.get_env("CI"),
+    if System.get_env("CI") == "true" or System.get_env("DOCKER") == "true",
       do: [username: "postgres", password: "postgres"],
       else: [socket_dir: "/var/run/postgresql"]
   end

@@ -1,0 +1,33 @@
+version: '3.4'
+services:
+  web:
+    build:
+      context: .
+      target: build
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    volumes:
+     - .:/opt/app
+     - build_cache:/opt/cache
+    env_file: .env.development
+    environment:
+      - LOCAL_USER_ID=${LOCAL_USER_ID}
+    tty: true
+    stdin_open: true
+    command: '/bin/bash -c "while true; do sleep 10; done;"'
+    ulimits:
+      nofile: 1024
+      nproc: 63090
+  db:
+    image: "postgres:12.2-alpine"
+    volumes:
+        - db:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+volumes:
+  db: {}
+  build_cache: {}
