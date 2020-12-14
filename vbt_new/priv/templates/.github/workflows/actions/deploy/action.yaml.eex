@@ -43,6 +43,12 @@ inputs:
   ssh-private-key:
     description: 'SSH private key used to fetch private deps'
     required: true
+  docker-cache-repo:
+    description: 'Repo used for docker caching'
+    default: 'ASK_DEVOPS_FOR_ECR_REPO'
+  docker-cache-version:
+    description: 'Docker cache version'
+    default: 'v1'
 
 runs:
   using: "composite"
@@ -60,9 +66,19 @@ runs:
       shell: bash
     - run: echo "SSH_AUTH_SOCK=/tmp/ssh_agent.sock" >> $GITHUB_ENV
       shell: bash
-    - run: echo "DOCKER_IMAGE=${{ inputs.docker-registry }}/${{ inputs.package-path }}/${{ inputs.app-name }}:${{ inputs.release-level }}-${GITHUB_SHA::7}" >> $GITHUB_ENV
+    - run: echo "DOCKER_DEPLOY_IMAGE=${{ inputs.docker-registry }}/${{ inputs.package-path }}/${{ inputs.app-name }}:${{ inputs.release-level }}-${GITHUB_SHA::7}" >> $GITHUB_ENV
       shell: bash
-    - run: echo "DEPLOYMENT_NAME=:<%= "#{organization}-${{ inputs.release-level }}-#{Mix.Vbt.otp_app()}-backend" %>" >> $GITHUB_ENV
+    - run: echo "DEPLOYMENT_NAME=<%= "#{organization}-${{ inputs.release-level }}-#{Mix.Vbt.otp_app()}-backend" %>" >> $GITHUB_ENV
+      shell: bash
+    - run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+      shell: bash
+    - run: echo "DOCKERFILE_HASH=`sha256sum Dockerfile`" >> $GITHUB_ENV
+      shell: bash
+    - run: echo "MIX_HASH=`sha256sum mix.lock mix.exs | sha256sum`" >> $GITHUB_ENV
+      shell: bash
+    - run: echo "CONFIG_HASH=`sha256sum config/prod.exs config/config.exs | sha256sum`" >> $GITHUB_ENV
+      shell: bash
+    - run: echo "DOCKER_CACHE_IMAGE=${{ inputs.docker-cache-repo }}:${{ inputs.docker-cache-version }}-${DOCKERFILE_HASH::7}-${MIX_HASH::7}-${CONFIG_HASH::7}" >> $GITHUB_ENV
       shell: bash
 
     - name: Setup SSH Keys and known_hosts
@@ -71,10 +87,6 @@ runs:
         ssh-keyscan github.com >> ~/.ssh/known_hosts
         ssh-agent -a $SSH_AUTH_SOCK > /dev/null
         ssh-add - <<< "${{ inputs.ssh-private-key }}"
-      shell: bash
-
-    - name: Login to Github docker registry
-      run: echo ${{ inputs.github-token }} | docker login ${{ inputs.docker-registry }} -u ${{ inputs.github-username }} --password-stdin
       shell: bash
 
     - name: Install keybase
@@ -99,20 +111,61 @@ runs:
       run: aws eks --region us-east-1 update-kubeconfig --name ${{ inputs.cluster-name }}
       shell: bash
 
-    - name: Build docker image
+    # Builds for setting up docker cache
+    - name: Login to ECR docker registry (used only for docker cache)
+      run: $(aws ecr get-login --region $AWS_REGION --no-include-email)
+      shell: bash
+
+    - name: Build docker cache (build phase)
       run: |
         docker build . \
-        --tag ${DOCKER_IMAGE} \
+        --tag $DOCKER_CACHE_IMAGE-build \
+        --target build \
+        --build-arg MIX_ENV=prod \
+        --build-arg APP_NAME=${{ inputs.app-name }} \
+        --cache-from $DOCKER_CACHE_IMAGE-build \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        --ssh default
+      shell: bash
+
+    - name: Push docker cache (build phase)
+      run: docker push $DOCKER_CACHE_IMAGE-build || true
+      shell: bash
+
+    - name: Build docker cache (pre-release phase)
+      run: |
+        docker build . \
+        --tag $DOCKER_CACHE_IMAGE-pre-release \
+        --target pre-release \
+        --build-arg MIX_ENV=prod \
+        --build-arg APP_NAME=${{ inputs.app-name }} \
+        --cache-from $DOCKER_CACHE_IMAGE-build \
+        --cache-from $DOCKER_CACHE_IMAGE-pre-release \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        --ssh default
+      shell: bash
+
+    - name: Push docker cache (pre-release phase)
+      run: docker push $DOCKER_CACHE_IMAGE-pre-release || true
+      shell: bash
+
+    # Deployment docker build
+    - name: Login to Github docker registry
+      run: echo ${{ inputs.github-token }} | docker login ${{ inputs.docker-registry }} -u ${{ inputs.github-username }} --password-stdin
+      shell: bash
+
+    - name: Build deployment docker image
+      run: |
+        docker build . \
+        --tag ${DOCKER_DEPLOY_IMAGE} \
         --target release \
         --build-arg MIX_ENV=prod \
         --build-arg APP_NAME=${{ inputs.app-name }} \
         --ssh default
       shell: bash
-      env:
-        DOCKER_BUILDKIT: 1
 
     - name: Push image to Docker registry
-      run: docker push ${DOCKER_IMAGE}
+      run: docker push ${DOCKER_DEPLOY_IMAGE}
       shell: bash
 
     - name: Apply overlay
@@ -123,8 +176,8 @@ runs:
       run: |
         kubectl --namespace ${{ inputs.release-level }} \
         set image deployment ${DEPLOYMENT_NAME} \
-        web-server=${DOCKER_IMAGE} \
-        migration-runner=${DOCKER_IMAGE}
+        web-server=${DOCKER_DEPLOY_IMAGE} \
+        migration-runner=${DOCKER_DEPLOY_IMAGE}
       shell: bash
 
     - name: Verify deployment success
