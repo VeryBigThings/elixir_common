@@ -127,14 +127,15 @@ defmodule VBT.Auth do
     |> Stream.map(fn {"authorization", value} -> value end)
   end
 
-  defp tokens_from_header(%Phoenix.Socket{} = _socket), do: []
-  defp tokens_from_header(%Phoenix.LiveView.Socket{} = _lv_socket), do: []
+  defp tokens_from_header(%Plug.Conn{} = conn),
+    do: Plug.Conn.get_req_header(conn, "authorization")
 
-  defp tokens_from_header(verifier),
-    do: Plug.Conn.get_req_header(conn(verifier), "authorization")
+  defp tokens_from_header(%Absinthe.Resolution{} = resolution),
+    do: Plug.Conn.get_req_header(conn(resolution), "authorization")
 
-  defp endpoint(%Phoenix.Socket{} = socket), do: socket.endpoint
-  defp endpoint(%Phoenix.LiveView.Socket{} = socket), do: socket.endpoint
+  defp tokens_from_header(_other), do: []
+
+  defp endpoint(%{endpoint: endpoint}), do: endpoint
   defp endpoint(other), do: Phoenix.Controller.endpoint_module(conn(other))
 
   defp conn(%Absinthe.Resolution{} = resolution), do: resolution.context.conn
