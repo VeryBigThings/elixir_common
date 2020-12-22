@@ -48,6 +48,7 @@ defmodule VBT.MixProject do
       {:oban, "~> 2.2.0"},
       {:parent, "~> 0.11"},
       {:phoenix_html, "~> 2.0"},
+      {:phoenix_live_view, "~> 0.14.8", optional: true},
       {:phoenix_pubsub, "~> 1.0 or ~> 2.0"},
       {:phoenix, "~> 1.4.0 or ~> 1.5.0"},
       {:plug_cowboy, "~> 2.1"},

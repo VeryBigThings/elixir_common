@@ -66,7 +66,12 @@ defmodule VBT.Auth do
   @type salt :: String.t()
   @type data :: any
   @type token :: String.t()
-  @type verifier :: Plug.Conn.t() | Phoenix.Socket.t() | endpoint | Absinthe.Resolution.t()
+  @type verifier ::
+          Plug.Conn.t()
+          | Phoenix.Socket.t()
+          | Phoenix.LiveView.Socket.t()
+          | endpoint
+          | Absinthe.Resolution.t()
   @type endpoint :: module
   @type args :: %{String.t() => arg} | [{String.t(), arg}]
   @type arg :: String.t() | args
@@ -123,11 +128,13 @@ defmodule VBT.Auth do
   end
 
   defp tokens_from_header(%Phoenix.Socket{} = _socket), do: []
+  defp tokens_from_header(%Phoenix.LiveView.Socket{} = _lv_socket), do: []
 
   defp tokens_from_header(verifier),
     do: Plug.Conn.get_req_header(conn(verifier), "authorization")
 
   defp endpoint(%Phoenix.Socket{} = socket), do: socket.endpoint
+  defp endpoint(%Phoenix.LiveView.Socket{} = socket), do: socket.endpoint
   defp endpoint(other), do: Phoenix.Controller.endpoint_module(conn(other))
 
   defp conn(%Absinthe.Resolution{} = resolution), do: resolution.context.conn
