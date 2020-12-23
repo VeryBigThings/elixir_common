@@ -172,6 +172,10 @@ defmodule VBT.Accounts do
 
   The token will be valid for the `max_age` seconds.
 
+  If at some later point you want to verify if a token represents a valid and unused password
+  reset token, you can invoke `Token.get_account/3`, passing `"password_reset"` as the expected
+  type.
+
   This function always succeeds. If the account for the given login doesn't exist, the token will
   still be generated. However, this token can't be actually used. This approach is chosen to
   prevent user enumeration attack.

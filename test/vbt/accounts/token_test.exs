@@ -73,6 +73,31 @@ defmodule VBT.Accounts.TokenTest do
     end
   end
 
+  describe "get_account" do
+    test "returns the account if the token is valid" do
+      {:ok, account} = create_account(@config)
+      token = Token.create!(account, "some type", 100, @config)
+      assert Token.get_account(token, "some type", @config) == account
+    end
+
+    test "returns nil if the token type is incorrect" do
+      {:ok, account} = create_account(@config)
+      token = Token.create!(account, "some type", 100, @config)
+      assert is_nil(Token.get_account(token, "another type", @config))
+    end
+
+    test "returns nil if the token expired" do
+      {:ok, account} = create_account(@config)
+      token = Token.create!(account, "some type", -1, @config)
+      assert is_nil(Token.get_account(token, "some type", @config))
+    end
+
+    test "returns nil if the token is invalid" do
+      create_account(@config)
+      assert is_nil(Token.get_account("invalid token", "some type", @config))
+    end
+  end
+
   describe "VBT.Accounts.Token.Cleanup" do
     setup do
       Periodic.Test.observe(__MODULE__)

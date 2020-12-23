@@ -48,6 +48,7 @@ defmodule VBT.MixProject do
       {:oban, "~> 2.2.0"},
       {:parent, "~> 0.11"},
       {:phoenix_html, "~> 2.0"},
+      {:phoenix_live_view, "~> 0.14", optional: true},
       {:phoenix_pubsub, "~> 1.0 or ~> 2.0"},
       {:phoenix, "~> 1.4.0 or ~> 1.5.0"},
       {:plug_cowboy, "~> 2.1"},
@@ -78,7 +79,7 @@ defmodule VBT.MixProject do
 
   defp dialyzer() do
     [
-      plt_add_apps: ~w/mix eex ecto credo bamboo ex_unit phoenix_pubsub/a
+      plt_add_apps: ~w/mix eex ecto credo bamboo ex_unit phoenix_pubsub phoenix_live_view/a
     ]
   end
 
