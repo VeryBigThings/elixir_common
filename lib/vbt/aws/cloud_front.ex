@@ -12,6 +12,14 @@ defmodule VBT.Aws.CloudFront do
 
   @type cookies :: %{String.t() => String.t()}
 
+  @doc "Returns the signed and encoded download URL for the given path."
+  @spec download_url(config, String.t()) :: String.t()
+  def download_url(config, path) do
+    resource = resource(config, path)
+    query = URI.encode_query(cdn_params(config, resource))
+    URI.to_string(%URI{URI.parse(resource) | query: query})
+  end
+
   @doc "Returns the signed and encoded download URL for the given `S3.Hostable` object."
   @spec download_url(config, String.t(), S3.Hostable.t(), map | Keyword.t()) :: String.t()
   def download_url(config, bucket, object, params \\ []) do

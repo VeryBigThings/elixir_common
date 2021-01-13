@@ -3,7 +3,19 @@ defmodule VBT.Aws.CloudFrontTest do
 
   alias VBT.Aws.CloudFront
 
-  describe "download_url" do
+  describe "download_url/2" do
+    test "encodes the given path" do
+      url = CloudFront.download_url(config(), "/*")
+
+      uri = URI.parse(url)
+      encoded_policy = URI.decode_query(uri.query)
+
+      assert %{"Statement" => [%{"Resource" => uri}]} = decode_policy!(encoded_policy)
+      assert URI.parse(uri).path == "/*"
+    end
+  end
+
+  describe "download_url/4" do
     test "properly encodes url" do
       decoded_url = decoded_download_url("some bucket", "/some/path")
       assert decoded_url.scheme == "https"
