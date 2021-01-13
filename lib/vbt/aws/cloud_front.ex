@@ -10,18 +10,27 @@ defmodule VBT.Aws.CloudFront do
           url_expires_in_sec: pos_integer
         }
 
+  @type cookies :: %{String.t() => String.t()}
+
   @doc "Returns the signed and encoded download URL for the given `S3.Hostable` object."
   @spec download_url(config, String.t(), S3.Hostable.t(), map | Keyword.t()) :: String.t()
   def download_url(config, bucket, object, params \\ []),
     do: sign_url(config, uri(config, bucket, object, params))
 
+  @doc "Returns the cookies which can be used in the browser to access resource at the given path."
+  @spec cookies(config, String.t()) :: cookies
+  def cookies(config, path) do
+    config
+    |> cdn_params(%URI{scheme: "https", host: config.host, path: path})
+    |> to_cookies()
+  end
+
   @doc "Returns the cookies which can be used in the browser to access the given hostable object."
-  @spec cookies(config, String.t(), S3.Hostable.t(), map | Keyword.t()) ::
-          %{String.t() => String.t()}
+  @spec cookies(config, String.t(), S3.Hostable.t(), map | Keyword.t()) :: cookies
   def cookies(config, bucket, object, params \\ []) do
     config
     |> cdn_params(uri(config, bucket, object, params))
-    |> Enum.into(%{}, fn {key, value} -> {"CloudFront-#{key}", value} end)
+    |> to_cookies()
   end
 
   defp uri(config, bucket, object, params) do
@@ -36,6 +45,9 @@ defmodule VBT.Aws.CloudFront do
 
   defp sign_url(config, uri),
     do: URI.to_string(%URI{uri | query: URI.encode_query(cdn_params(config, uri))})
+
+  defp to_cookies(cdn_params),
+    do: Enum.into(cdn_params, %{}, fn {key, value} -> {"CloudFront-#{key}", value} end)
 
   defp cdn_params(config, uri) do
     expires_at = expiration_time(config.url_expires_in_sec)

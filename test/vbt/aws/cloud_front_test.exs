@@ -26,7 +26,16 @@ defmodule VBT.Aws.CloudFrontTest do
     end
   end
 
-  describe "cookies" do
+  describe "cookies/2" do
+    test "encodes the given path" do
+      cookies = CloudFront.cookies(config(), "/*")
+      encoded_policy = Enum.into(cookies, %{}, fn {"CloudFront-" <> k, v} -> {k, v} end)
+      assert %{"Statement" => [%{"Resource" => uri}]} = decode_policy!(encoded_policy)
+      assert URI.parse(uri).path == "/*"
+    end
+  end
+
+  describe "cookies/4" do
     test "returns the map with expected keys" do
       cookies = CloudFront.cookies(config(), "some bucket", "/some/path")
 
