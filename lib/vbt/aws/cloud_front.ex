@@ -15,6 +15,15 @@ defmodule VBT.Aws.CloudFront do
   def download_url(config, bucket, object, params \\ []),
     do: sign_url(config, uri(config, bucket, object, params))
 
+  @doc "Returns the cookies which can be used in the browser to access the given hostable object."
+  @spec cookies(config, String.t(), S3.Hostable.t(), map | Keyword.t()) ::
+          %{String.t() => String.t()}
+  def cookies(config, bucket, object, params \\ []) do
+    config
+    |> cdn_params(uri(config, bucket, object, params))
+    |> Enum.into(%{}, fn {key, value} -> {"CloudFront-#{key}", value} end)
+  end
+
   defp uri(config, bucket, object, params) do
     path =
       %{bucket: bucket, key: S3.Hostable.path(object)}

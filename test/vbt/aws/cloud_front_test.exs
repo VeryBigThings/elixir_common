@@ -26,18 +26,37 @@ defmodule VBT.Aws.CloudFrontTest do
     end
   end
 
+  describe "cookies" do
+    test "returns the map with expected keys" do
+      cookies = CloudFront.cookies(config(), "some bucket", "/some/path")
+
+      assert Map.keys(cookies) ==
+               ~w/CloudFront-Key-Pair-Id CloudFront-Policy CloudFront-Signature/
+    end
+
+    test "properly encodes bucket and path" do
+      cookies = CloudFront.cookies(config(), "some bucket", "/some/path")
+      assert decode_cookies(cookies) == %{"bucket" => "some bucket", "key" => "/some/path"}
+    end
+  end
+
+  defp decode_cookies(cookies) do
+    encoded_policy = Enum.into(cookies, %{}, fn {"CloudFront-" <> k, v} -> {k, v} end)
+    policy = decode_policy!(encoded_policy)
+    decode_resource!(policy)
+  end
+
   defp decoded_download_url(bucket, object, params \\ []) do
-    now = DateTime.utc_now()
     url = CloudFront.download_url(config(), bucket, object, params)
     uri = URI.parse(url)
-    query = URI.decode_query(uri.query)
-    policy = decode_policy!(query)
+    encoded_policy = URI.decode_query(uri.query)
+    policy = decode_policy!(encoded_policy)
 
     %{
       scheme: uri.scheme,
       host: uri.host,
-      key_pair_id: Map.fetch!(query, "Key-Pair-Id"),
-      expires_in: decode_expires_in(policy, now),
+      key_pair_id: Map.fetch!(encoded_policy, "Key-Pair-Id"),
+      expires_in: decode_expires_in(policy, DateTime.utc_now()),
       resource: decode_resource!(policy)
     }
   end
