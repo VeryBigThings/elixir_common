@@ -12,30 +12,33 @@ defmodule VBT.Aws.CloudFront do
 
   @doc "Returns the signed and encoded download URL for the given `S3.Hostable` object."
   @spec download_url(config, String.t(), S3.Hostable.t(), map | Keyword.t()) :: String.t()
-  def download_url(config, bucket, object, params \\ []) do
+  def download_url(config, bucket, object, params \\ []),
+    do: sign_url(config, uri(config, bucket, object, params))
+
+  defp uri(config, bucket, object, params) do
     path =
       %{bucket: bucket, key: S3.Hostable.path(object)}
       |> Map.merge(Map.new(params))
       |> Jason.encode!()
       |> Base.encode64()
 
-    sign_url(config, %URI{scheme: "https", host: config.host, path: "/#{path}"})
+    %URI{scheme: "https", host: config.host, path: "/#{path}"}
   end
 
-  defp sign_url(config, uri) do
+  defp sign_url(config, uri),
+    do: URI.to_string(%URI{uri | query: URI.encode_query(cdn_params(config, uri))})
+
+  defp cdn_params(config, uri) do
     expires_at = expiration_time(config.url_expires_in_sec)
     raw_policy = build_policy(to_string(uri), expires_at)
     policy = safe_base64(raw_policy)
     signature = sign_policy(raw_policy, config.private_key)
 
-    query =
-      URI.encode_query(%{
-        "Key-Pair-Id" => config.key_pair_id,
-        "Policy" => policy,
-        "Signature" => signature
-      })
-
-    URI.to_string(%URI{uri | query: query})
+    %{
+      "Key-Pair-Id" => config.key_pair_id,
+      "Policy" => policy,
+      "Signature" => signature
+    }
   end
 
   defp build_policy(uri, expires_at) do
