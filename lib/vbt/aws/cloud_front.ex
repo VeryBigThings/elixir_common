@@ -15,7 +15,7 @@ defmodule VBT.Aws.CloudFront do
   @doc "Returns the signed and encoded download URL for the given `S3.Hostable` object."
   @spec download_url(config, String.t(), S3.Hostable.t(), map | Keyword.t()) :: String.t()
   def download_url(config, bucket, object, params \\ []),
-    do: sign_url(config, uri(config, bucket, object, params))
+    do: sign_url(config, resource(config, bucket, object, params))
 
   @doc "Returns the cookies which can be used in the browser to access resource at the given path."
   @spec cookies(config, String.t()) :: cookies
@@ -29,11 +29,11 @@ defmodule VBT.Aws.CloudFront do
   @spec cookies(config, String.t(), S3.Hostable.t(), map | Keyword.t()) :: cookies
   def cookies(config, bucket, object, params \\ []) do
     config
-    |> cdn_params(uri(config, bucket, object, params))
+    |> cdn_params(resource(config, bucket, object, params))
     |> to_cookies()
   end
 
-  defp uri(config, bucket, object, params) do
+  defp resource(config, bucket, object, params) do
     path =
       %{bucket: bucket, key: S3.Hostable.path(object)}
       |> Map.merge(Map.new(params))
@@ -43,15 +43,15 @@ defmodule VBT.Aws.CloudFront do
     %URI{scheme: "https", host: config.host, path: "/#{path}"}
   end
 
-  defp sign_url(config, uri),
-    do: URI.to_string(%URI{uri | query: URI.encode_query(cdn_params(config, uri))})
+  defp sign_url(config, resource),
+    do: URI.to_string(%URI{resource | query: URI.encode_query(cdn_params(config, resource))})
 
   defp to_cookies(cdn_params),
     do: Enum.into(cdn_params, %{}, fn {key, value} -> {"CloudFront-#{key}", value} end)
 
-  defp cdn_params(config, uri) do
+  defp cdn_params(config, resource) do
     expires_at = expiration_time(config.url_expires_in_sec)
-    raw_policy = build_policy(to_string(uri), expires_at)
+    raw_policy = build_policy(to_string(resource), expires_at)
     policy = safe_base64(raw_policy)
     signature = sign_policy(raw_policy, config.private_key)
 
@@ -62,11 +62,11 @@ defmodule VBT.Aws.CloudFront do
     }
   end
 
-  defp build_policy(uri, expires_at) do
+  defp build_policy(resource, expires_at) do
     policy = %{
       "Statement" => [
         %{
-          "Resource" => uri,
+          "Resource" => resource,
           "Condition" => %{
             "DateLessThan" => %{
               "AWS:EpochTime" => expires_at
