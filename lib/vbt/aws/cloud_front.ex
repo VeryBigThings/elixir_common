@@ -10,39 +10,74 @@ defmodule VBT.Aws.CloudFront do
           url_expires_in_sec: pos_integer
         }
 
+  @type cookies :: %{String.t() => String.t()}
+
+  @doc "Returns the signed and encoded download URL for the given path."
+  @spec download_url(config, String.t()) :: String.t()
+  def download_url(config, path) do
+    resource = resource(config, path)
+    query = URI.encode_query(cdn_params(config, resource))
+    URI.to_string(%URI{URI.parse(resource) | query: query})
+  end
+
   @doc "Returns the signed and encoded download URL for the given `S3.Hostable` object."
   @spec download_url(config, String.t(), S3.Hostable.t(), map | Keyword.t()) :: String.t()
   def download_url(config, bucket, object, params \\ []) do
-    path =
-      %{bucket: bucket, key: S3.Hostable.path(object)}
-      |> Map.merge(Map.new(params))
-      |> Jason.encode!()
-      |> Base.encode64()
-
-    sign_url(config, %URI{scheme: "https", host: config.host, path: "/#{path}"})
+    resource = resource(config, path(bucket, object, params))
+    query = URI.encode_query(cdn_params(config, resource))
+    URI.to_string(%URI{URI.parse(resource) | query: query})
   end
 
-  defp sign_url(config, uri) do
+  @doc "Returns the cookies which can be used in the browser to access resource at the given path."
+  @spec cookies(config, String.t()) :: cookies
+  def cookies(config, path) do
+    config
+    |> cdn_params(resource(config, path))
+    |> to_cookies()
+  end
+
+  @doc "Returns the cookies which can be used in the browser to access the given hostable object."
+  @spec cookies(config, String.t(), S3.Hostable.t(), map | Keyword.t()) :: cookies
+  def cookies(config, bucket, object, params \\ []) do
+    config
+    |> cdn_params(resource(config, path(bucket, object, params)))
+    |> to_cookies()
+  end
+
+  defp path(bucket, object, params) do
+    %{bucket: bucket, key: S3.Hostable.path(object)}
+    |> Map.merge(Map.new(params))
+    |> Jason.encode!()
+    |> Base.encode64()
+  end
+
+  defp resource(config, path),
+    do: URI.to_string(%URI{scheme: "https", host: config.host, path: normalize_path(path)})
+
+  defp normalize_path("/" <> _ = path), do: path
+  defp normalize_path(path), do: "/" <> path
+
+  defp to_cookies(cdn_params),
+    do: Enum.into(cdn_params, %{}, fn {key, value} -> {"CloudFront-#{key}", value} end)
+
+  defp cdn_params(config, resource) do
     expires_at = expiration_time(config.url_expires_in_sec)
-    raw_policy = build_policy(to_string(uri), expires_at)
+    raw_policy = build_policy(resource, expires_at)
     policy = safe_base64(raw_policy)
     signature = sign_policy(raw_policy, config.private_key)
 
-    query =
-      URI.encode_query(%{
-        "Key-Pair-Id" => config.key_pair_id,
-        "Policy" => policy,
-        "Signature" => signature
-      })
-
-    URI.to_string(%URI{uri | query: query})
+    %{
+      "Key-Pair-Id" => config.key_pair_id,
+      "Policy" => policy,
+      "Signature" => signature
+    }
   end
 
-  defp build_policy(uri, expires_at) do
+  defp build_policy(resource, expires_at) do
     policy = %{
       "Statement" => [
         %{
-          "Resource" => uri,
+          "Resource" => resource,
           "Condition" => %{
             "DateLessThan" => %{
               "AWS:EpochTime" => expires_at
