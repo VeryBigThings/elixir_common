@@ -67,7 +67,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
         case System.cmd("mix", String.split(mix_task),
                cd: build_path(folder),
                stderr_to_stdout: true,
-               env: [{"MIX_ENV", "test"}]
+               env: [{"MIX_ENV", "test"}, {"BUILD_PATH", "_build"}]
              ) do
           {_output, 0} -> :ok
           {output, _error} -> flunk("Error running #{mix_task}. Output:\n\n#{output}")
