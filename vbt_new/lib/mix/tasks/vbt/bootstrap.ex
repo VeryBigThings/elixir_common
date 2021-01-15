@@ -99,7 +99,6 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
     adapt_test_references!()
 
-    File.rm(Path.join(~w/config prod.secret.exs/))
     File.rm_rf("priv/repo/migrations/.formatter.exs")
 
     disable_credo_checks()
@@ -275,6 +274,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   end
 
   defp drop_prod_secret(source_files) do
+    File.rm(Path.join(~w/config prod.secret.exs/))
+
     update_in(
       source_files.prod_config.content,
       &String.replace(
