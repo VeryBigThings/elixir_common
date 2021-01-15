@@ -58,8 +58,8 @@ jobs:
     - name: Deploy
       uses: ./.github/workflows/actions/deploy
       with:
-        aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         cluster-name: <%= organization %>-cluster
         github-token: ${{ secrets.GITHUB_TOKEN }}
         keybase-paperkey: ${{ secrets.KEYBASE_PAPERKEY }}
