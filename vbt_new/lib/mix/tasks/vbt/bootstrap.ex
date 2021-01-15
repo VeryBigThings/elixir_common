@@ -199,7 +199,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     |> MixFile.append_config(:project, "preferred_cli_env: preferred_cli_env()")
     |> SourceFile.add_to_module("""
     defp preferred_cli_env,
-      do: [credo: :dev, dialyzer: :dev, release: :prod, operator_template: :prod]
+      do: [release: :prod, operator_template: :prod]
 
     """)
   end
