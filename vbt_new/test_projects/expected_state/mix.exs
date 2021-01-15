@@ -75,7 +75,7 @@ defmodule SkafolderTester.MixProject do
   end
 
   defp preferred_cli_env,
-    do: [credo: :test, dialyzer: :test, release: :prod, operator_template: :prod]
+    do: [credo: :dev, dialyzer: :dev, release: :prod, operator_template: :prod]
 
   defp dialyzer do
     [
