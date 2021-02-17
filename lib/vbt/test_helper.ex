@@ -8,6 +8,9 @@ defmodule VBT.TestHelper do
   @doc """
   Asserts that an e-mail has been delivered via Bamboo.
 
+  Note that in Bamboo 1.7+ there's a native support for this via
+  `Bamboo.Test.assert_email_delivered_with/1`.
+
   ## Examples
 
       # pattern matching desired mail parameters
