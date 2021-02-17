@@ -75,7 +75,7 @@ defmodule VBT.Mailer do
         def config(), do: %{api_key: System.fetch_env!("SENDGRID_API_KEY")}
       end
 
-  Mailer is a wrapper around `Bamboo`, so it can use any conforming adapter. The adapter will only
+  Mailer is a wrapper around Bamboo, so it can use any conforming adapter. The adapter will only
   be used in `:prod`. Mailer always uses `Bamboo.LocalAdapter` in `:dev`, and `Bamboo.TestAdapter`
   in `:test`.
 
