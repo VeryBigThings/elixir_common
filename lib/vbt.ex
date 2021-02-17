@@ -5,10 +5,6 @@ defmodule VBT do
   # API
   # ------------------------------------------------------------------------
 
-  # TODO: remove this at some point
-  @deprecated "Use `VBT.Aws.client` instead"
-  defdelegate aws_client, to: VBT.Aws, as: :client
-
   @doc "Converts a boolean into `:ok | {:error, reason}`."
   @spec validate(boolean, error) :: :ok | {:error, error} when error: var
   def validate(condition, error), do: if(condition, do: :ok, else: {:error, error})
