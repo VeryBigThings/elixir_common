@@ -323,7 +323,8 @@ defmodule VBT.Mailer do
 
         # Add a helper `drain_queue` function to simplify testing.
         if Mix.env() == :test do
-          @spec drain_queue(name: GenServer.server()) :: Oban.Queue.Drainer.drain_result()
+          # Using any in the spec, since the result type varies depending on the Oban version.
+          @spec drain_queue(name: GenServer.server()) :: any
           def drain_queue(opts \\ []) do
             Oban.drain_queue(
               Keyword.get(opts, :name, Oban),
