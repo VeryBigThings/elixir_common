@@ -1,3 +1,9 @@
+## 2021-02-17
+
+- **[Breaking]** `VBT.Provider` is removed. USe https://github.com/verybigthings/provider instead.
+- **[Breaking]** `VBT.aws_client` is removed. Use `VBT.Aws.client` instead.
+- **[Breaking]** `VBT.Absinthe.ResolverHelper` is hard-deprecated. Use `VBT.Absinthe.Schema` instead.
+
 ## 2020-08-11
 
 **[Breaking]** Uses oban 2.0. If you use oban, you'll need to go through all of the instructions from the [upgrade guide](https://hexdocs.pm/oban/v2-0.html#content). If you don't use oban, but use `VBT.Mailer`, you only need to adapt the config files (see [this section](https://hexdocs.pm/oban/v2-0.html#update-your-config)).  If neither oban nor `VBT.Mailer` is used, nothing needs to be changed.
