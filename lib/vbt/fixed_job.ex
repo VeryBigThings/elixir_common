@@ -18,7 +18,7 @@ defmodule VBT.FixedJob do
             when: %{hour: 0, minute: 0},
 
             # prevents periodic job from running automatically in test mode
-            mode: unquote(if Mix.env() == :test, do: :manual, else: :automatic)
+            mode: unquote(if Mix.env() == :test, do: :manual, else: :auto)
           )
         end
 
