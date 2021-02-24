@@ -37,8 +37,7 @@ defmodule Mix.Tasks.Vbt.NewTest do
       "compile --warnings-as-errors",
       "format --check-formatted",
       "credo --strict",
-      "test",
-      "dialyzer"
+      "test"
     ])
   end
 
@@ -48,7 +47,6 @@ defmodule Mix.Tasks.Vbt.NewTest do
 
     bootstrap_project(folder, "--no-html --no-webpack")
 
-    # not checking the dialyzer here since it's already checked in the previous test
     run_mix_tasks(folder, [
       "deps.get",
       "compile --warnings-as-errors",
