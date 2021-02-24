@@ -43,7 +43,7 @@ defmodule SkafolderTester.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:mox, "~> 0.5", only: :test},
-      {:phoenix, "~> 1.5.7"},
+      {:phoenix, "~> 1.5.8"},
       {:phoenix_ecto, "~> 4.1"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_dashboard, "~> 0.4"},
