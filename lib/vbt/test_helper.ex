@@ -159,9 +159,6 @@ defmodule VBT.TestHelper do
   def normalize_keys(list) when is_list(list), do: Enum.map(list, &normalize_keys/1)
   def normalize_keys(other), do: other
 
-  defp normalize_key(key) when is_binary(key), do: key |> Macro.underscore() |> String.to_atom()
-  defp normalize_key(key), do: key
-
   @doc """
   Converts map atom keys to camelized strings.
 
@@ -185,13 +182,6 @@ defmodule VBT.TestHelper do
   def camelize_keys(list) when is_list(list), do: Enum.map(list, &camelize_keys/1)
   def camelize_keys(other), do: other
 
-  defp camelize_key(key) when is_atom(key) do
-    <<first::utf8, rest::binary>> = key |> Atom.to_string() |> Macro.camelize()
-    String.downcase(<<first::utf8>>) <> rest
-  end
-
-  defp camelize_key(key), do: key
-
   # ------------------------------------------------------------------------
   # Private
   # ------------------------------------------------------------------------
@@ -204,4 +194,14 @@ defmodule VBT.TestHelper do
       Process.sleep(delay)
       eventually(fun, attempts - 1, delay)
   end
+
+  defp normalize_key(key) when is_binary(key), do: key |> Macro.underscore() |> String.to_atom()
+  defp normalize_key(key), do: key
+
+  defp camelize_key(key) when is_atom(key) do
+    <<first::utf8, rest::binary>> = key |> Atom.to_string() |> Macro.camelize()
+    String.downcase(<<first::utf8>>) <> rest
+  end
+
+  defp camelize_key(key), do: key
 end
