@@ -143,6 +143,53 @@ defmodule VBT.TestHelperTest do
     end
   end
 
+  describe "camelize_keys" do
+    test "converts atoms to camel cased strings" do
+      keys = [:camelAtom, :PascalAtom, :underscore_atom, :word, :"multiple words"]
+      input = Enum.into(keys, %{}, &{&1, make_ref()})
+
+      expected =
+        Enum.into(input, %{}, fn {k, v} ->
+          <<first::utf8, rest::binary>> = k |> Atom.to_string() |> Macro.camelize()
+          {String.downcase(<<first::utf8>>) <> rest, v}
+        end)
+
+      assert TestHelper.camelize_keys(input) == expected
+    end
+
+    test "converts map keys in a list" do
+      assert TestHelper.camelize_keys([%{underscore_atom: 1}]) == [%{"underscoreAtom" => 1}]
+    end
+
+    test "convert struct keys" do
+      input = %{underscore_atom: 1, __struct__: Foo}
+      assert TestHelper.camelize_keys(input) == %{"underscoreAtom" => 1}
+    end
+
+    test "deep camelizes map values" do
+      assert TestHelper.camelize_keys(%{foo: %{underscore_atom: 1}}) ==
+               %{"foo" => %{"underscoreAtom" => 1}}
+    end
+
+    test "preserves other types of keys" do
+      Enum.each(
+        ["foo_bar", 42, 3.14, make_ref(), self(), {:foo_bar}, [:foo_bar]],
+        &assert(TestHelper.camelize_keys(%{&1 => 1}) == %{&1 => 1})
+      )
+    end
+
+    test "preserves map values" do
+      assert TestHelper.camelize_keys(%{1 => :underscore_atom}) == %{1 => :underscore_atom}
+    end
+
+    test "preserves other input types" do
+      Enum.each(
+        [:foo_bar, 42, 3.14, make_ref(), self(), :foo_bar, {:foo_bar}],
+        &assert(TestHelper.camelize_keys(&1) == &1)
+      )
+    end
+  end
+
   defp deliver_mail(subject) do
     VBT.Mailer.send!(
       VBT.TestMailer,

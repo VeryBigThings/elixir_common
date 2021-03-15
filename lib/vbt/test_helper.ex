@@ -162,6 +162,36 @@ defmodule VBT.TestHelper do
   defp normalize_key(key) when is_binary(key), do: key |> Macro.underscore() |> String.to_atom()
   defp normalize_key(key), do: key
 
+  @doc """
+  Converts map atom keys to camelized strings.
+
+  Example:
+
+      iex> VBT.TestHelper.camelize_keys(%{foo_bar: 1})
+      %{"fooBar" => 1}
+
+  Notes:
+
+    - The function can handle deep structure of nested lists and maps.
+    - Structs are converted into plain maps and camelized.
+    - String keys are preserved. For example `"foo_bar"` will not be camelized.
+  """
+  @spec camelize_keys(any) :: any
+  def camelize_keys(struct) when is_struct(struct), do: camelize_keys(Map.from_struct(struct))
+
+  def camelize_keys(map) when is_map(map),
+    do: Enum.into(map, %{}, fn {key, value} -> {camelize_key(key), camelize_keys(value)} end)
+
+  def camelize_keys(list) when is_list(list), do: Enum.map(list, &camelize_keys/1)
+  def camelize_keys(other), do: other
+
+  defp camelize_key(key) when is_atom(key) do
+    <<first::utf8, rest::binary>> = key |> Atom.to_string() |> Macro.camelize()
+    String.downcase(<<first::utf8>>) <> rest
+  end
+
+  defp camelize_key(key), do: key
+
   # ------------------------------------------------------------------------
   # Private
   # ------------------------------------------------------------------------
