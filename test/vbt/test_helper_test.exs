@@ -99,6 +99,50 @@ defmodule VBT.TestHelperTest do
     end
   end
 
+  describe "normalize_keys" do
+    test "converts strings to underscore atoms" do
+      keys = ["camelString", "PascalString", "underscore_string", "word", "multiple words", ""]
+      input = Enum.into(keys, %{}, &{&1, make_ref()})
+
+      expected =
+        Enum.into(input, %{}, fn {k, v} -> {k |> Macro.underscore() |> String.to_atom(), v} end)
+
+      assert TestHelper.normalize_keys(input) == expected
+    end
+
+    test "atomizes map keys in a list" do
+      assert TestHelper.normalize_keys([%{"camelString" => 1}]) == [%{camel_string: 1}]
+    end
+
+    test "deep atomizes map values" do
+      assert TestHelper.normalize_keys(%{foo: %{"camelString" => 1}}) ==
+               %{foo: %{camel_string: 1}}
+    end
+
+    test "preserves other types of keys" do
+      Enum.each(
+        [:CamelAtom, :PascalAtom, 42, 3.14, make_ref(), self(), {"camelString"}, ["camelString"]],
+        &assert(TestHelper.normalize_keys(%{&1 => 1}) == %{&1 => 1})
+      )
+    end
+
+    test "preserves map values" do
+      assert TestHelper.normalize_keys(%{1 => "camelString"}) == %{1 => "camelString"}
+    end
+
+    test "preserves structs" do
+      input = %{"camelString" => 1, __struct__: Foo}
+      assert TestHelper.normalize_keys(input) == input
+    end
+
+    test "preserves other input types" do
+      Enum.each(
+        [:CamelAtom, 42, 3.14, make_ref(), self(), "camelString", {"camelString"}],
+        &assert(TestHelper.normalize_keys(&1) == &1)
+      )
+    end
+  end
+
   defp deliver_mail(subject) do
     VBT.Mailer.send!(
       VBT.TestMailer,

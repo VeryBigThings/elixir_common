@@ -138,6 +138,30 @@ defmodule VBT.TestHelper do
   def eventually(fun, opts \\ []),
     do: eventually(fun, Keyword.get(opts, :attempts, 10), Keyword.get(opts, :delay, 100))
 
+  @doc """
+  Converts map string keys to underscore atoms.
+
+  Example:
+
+      iex> VBT.TestHelper.normalize_keys(%{"fooBar" => 1})
+      %{foo_bar: 1}
+
+  Notes:
+
+    - The function can handle deep structure of nested lists and maps.
+    - Atom keys are preserved. For example `:FooBar` will not be underscored.
+    - Tuples and structs are also preserved.
+  """
+  @spec normalize_keys(any) :: any
+  def normalize_keys(%{} = map) when not is_struct(map),
+    do: Enum.into(map, %{}, fn {key, value} -> {normalize_key(key), normalize_keys(value)} end)
+
+  def normalize_keys(list) when is_list(list), do: Enum.map(list, &normalize_keys/1)
+  def normalize_keys(other), do: other
+
+  defp normalize_key(key) when is_binary(key), do: key |> Macro.underscore() |> String.to_atom()
+  defp normalize_key(key), do: key
+
   # ------------------------------------------------------------------------
   # Private
   # ------------------------------------------------------------------------
