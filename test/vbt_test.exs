@@ -1,6 +1,8 @@
 defmodule VBTTest do
   use ExUnit.Case, async: true
 
+  doctest VBT
+
   describe "validate" do
     test "returns :ok if condition is met" do
       assert VBT.validate(1 + 1 == 2, :some_error) == :ok
