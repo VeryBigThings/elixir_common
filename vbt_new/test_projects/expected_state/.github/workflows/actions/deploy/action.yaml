@@ -113,7 +113,7 @@ runs:
 
     # Builds for setting up docker cache
     - name: Login to ECR docker registry (used only for docker cache)
-      run: $(aws ecr get-login --region $AWS_REGION --no-include-email)
+      run: aws ecr get-login-password | docker login --username AWS --password-stdin ${{ inputs.docker-cache-repo }}
       shell: bash
 
     - name: Build docker cache (build phase)
