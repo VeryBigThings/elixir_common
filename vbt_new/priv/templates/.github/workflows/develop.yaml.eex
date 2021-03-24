@@ -28,8 +28,8 @@ jobs:
 
       - uses: erlef/setup-elixir@v1
         with:
-          otp-version: 23.1
-          elixir-version: 1.11.1
+          otp-version: '<%= "#{Mix.Vbt.tool_versions().erlang.major}.#{Mix.Vbt.tool_versions().erlang.minor}" %>'
+          elixir-version: '<%= "#{Mix.Vbt.tool_versions().elixir.major}.#{Mix.Vbt.tool_versions().elixir.minor}.#{Mix.Vbt.tool_versions().elixir.patch}" %>'
 
       - name: Restore cached deps
         uses: actions/cache@v2
