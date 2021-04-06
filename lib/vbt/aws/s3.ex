@@ -88,11 +88,12 @@ defmodule VBT.Aws.S3 do
         # make assertions on uploaded_content
       end
   """
-  @spec upload(config, String.t(), upload_source, Hostable.t()) :: VBT.Aws.response(s3_response)
-  def upload(config, bucket, source, target) do
+  @spec upload(config, String.t(), upload_source, Hostable.t(), ExAws.S3.upload_opts()) ::
+          VBT.Aws.response(s3_response)
+  def upload(config, bucket, source, target, opts \\ []) do
     source
     |> upload_chunks()
-    |> ExAws.S3.upload(bucket, Hostable.path(target))
+    |> ExAws.S3.upload(bucket, Hostable.path(target), opts)
     |> VBT.Aws.client().request(config)
   end
 
