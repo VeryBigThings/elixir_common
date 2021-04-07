@@ -87,8 +87,12 @@ defmodule VBT.Aws.S3 do
 
         # make assertions on uploaded_content
       end
+
+  Note: `opts` are any options accepted by `ExAws.S3.upload/4`. This should correspond to
+  `t:ExAws.S3.upload_opts/0`. However, this type is slightly incorrect, and using it leads to
+  dialyzer errors, so the spec of this function uses a more relaxed `Keyword.t`.
   """
-  @spec upload(config, String.t(), upload_source, Hostable.t(), ExAws.S3.upload_opts()) ::
+  @spec upload(config, String.t(), upload_source, Hostable.t(), Keyword.t()) ::
           VBT.Aws.response(s3_response)
   def upload(config, bucket, source, target, opts \\ []) do
     source
