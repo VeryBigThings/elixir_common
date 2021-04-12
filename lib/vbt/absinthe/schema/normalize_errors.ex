@@ -19,9 +19,13 @@ defmodule VBT.Absinthe.Schema.NormalizeErrors do
   def call(resolution, _arg) do
     if resolution.state == :resolved do
       errors =
-        resolution.errors
-        |> Enum.map(&with %Ecto.Changeset{} <- &1, do: changeset_errors(&1))
-        |> List.flatten()
+        Enum.flat_map(
+          resolution.errors,
+          fn
+            %Ecto.Changeset{} = changeset -> changeset_errors(changeset)
+            other -> [other]
+          end
+        )
 
       %Absinthe.Resolution{resolution | errors: errors}
     else

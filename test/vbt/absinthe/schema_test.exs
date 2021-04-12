@@ -20,6 +20,20 @@ defmodule VBT.Absinthe.SchemaTest do
       assert errors(response) == ["some error"]
     end
 
+    test "handles a keyword error" do
+      assert {:error, response} = resolver_result({:error, message: "some error", foo: :bar})
+      assert [error] = response.errors
+      assert error.message == "some error"
+      assert error.foo == "bar"
+    end
+
+    test "handles a map error" do
+      assert {:error, response} = resolver_result({:error, %{message: "some error", foo: :bar}})
+      assert [error] = response.errors
+      assert error.message == "some error"
+      assert error.foo == "bar"
+    end
+
     test "handles a changeset error" do
       changeset =
         struct(__MODULE__.User)
