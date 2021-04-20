@@ -161,11 +161,15 @@ defmodule VBT.Mailer do
 
   @type opts :: [
           attachments: [Attachment.t()],
-          cc: [Email.address_list()],
-          bcc: [Email.address_list()],
+          cc: [address_list()],
+          bcc: [address_list()],
           headers: %{String.t() => String.t()},
           name: GenServer.server()
         ]
+
+  # using our own versions of bamboo types due to an error in bamboo spec
+  @type address :: String.t() | {String.t(), String.t()}
+  @type address_list :: nil | address | [address] | any
 
   @callback config :: map
 
@@ -174,7 +178,7 @@ defmodule VBT.Mailer do
   # ------------------------------------------------------------------------
 
   @doc "Composes the email and sends it to the target address."
-  @spec send!(module, Email.address_list(), Email.address_list(), String.t(), body, opts) :: :ok
+  @spec send!(module, address_list(), address_list(), String.t(), body, opts) :: :ok
   def send!(mailer, from, to, subject, body, opts \\ []) do
     opts = Keyword.update(opts, :attachments, [], &normalize_attachments/1)
     [adapter] = Keyword.fetch!(mailer.__info__(:attributes), __MODULE__)
@@ -192,7 +196,7 @@ defmodule VBT.Mailer do
   end
 
   @doc "Enqueues the mail for sending."
-  @spec enqueue(module, Email.address(), Email.address(), String.t(), body, opts :: opts) ::
+  @spec enqueue(module, address(), address(), String.t(), body, opts :: opts) ::
           {:ok, Oban.Job.t()} | {:error, Ecto.Changeset.t()}
   def enqueue(mailer, from, to, subject, body, opts \\ []) do
     {name, opts} = Keyword.pop(opts, :name, Oban)
