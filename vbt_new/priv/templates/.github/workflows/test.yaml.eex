@@ -29,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: erlef/setup-elixir@v1
+      - uses: erlef/setup-beam@v1
         with:
           otp-version: '<%= "#{Mix.Vbt.tool_versions().erlang.major}.#{Mix.Vbt.tool_versions().erlang.minor}" %>'
           elixir-version: '<%= "#{Mix.Vbt.tool_versions().elixir.major}.#{Mix.Vbt.tool_versions().elixir.minor}.#{Mix.Vbt.tool_versions().elixir.patch}" %>'
