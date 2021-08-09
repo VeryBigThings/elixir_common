@@ -24,8 +24,8 @@ jobs:
 
       - uses: erlef/setup-beam@v1
         with:
-          otp-version: 23.1
-          elixir-version: 1.11.1
+          otp-version: 24.0
+          elixir-version: 1.12.2
 
       - name: Restore cached deps
         uses: actions/cache@v1

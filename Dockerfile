@@ -1,5 +1,5 @@
 
-FROM verybigthings/elixir:1.11 AS build
+FROM verybigthings/elixir:1.12 AS build
 
 ARG WORKDIR=/opt/app
 ARG APP_USER=user
