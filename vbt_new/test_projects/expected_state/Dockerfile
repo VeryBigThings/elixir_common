@@ -5,7 +5,7 @@
 # ===========================================================
 # Used for development purposes and as a base for pre-release
 
-FROM verybigthings/elixir:1.11.4 AS build
+FROM verybigthings/elixir:1.12.2 AS build
 
 ARG WORKDIR=/opt/app
 ARG APP_USER=user
@@ -63,7 +63,7 @@ ENV SKIP_ASSETS=${SKIP_ASSETS}
 # allows us to use the cached docker layer in the cases where only the regular code is changed,
 # which means we avoid about extra 4 minutes during the docker build.
 COPY mix.exs mix.lock ./
-COPY config/prod.exs config/config.exs .
+COPY config/prod.exs config/config.exs ./config/
 RUN --mount=type=ssh MIX_ENV=prod mix do deps.get, deps.compile
 
 # Now we copy the entire project and build the OTP release.

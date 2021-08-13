@@ -5,7 +5,7 @@ defmodule SkafolderTester.MixProject do
     [
       app: :skafolder_tester,
       version: "0.1.0",
-      elixir: "~> 1.11",
+      elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:boundary, :phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -43,7 +43,7 @@ defmodule SkafolderTester.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:mox, "~> 0.5", only: :test},
-      {:phoenix, "~> 1.5.8"},
+      {:phoenix, "~> 1.5.10"},
       {:phoenix_ecto, "~> 4.1"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_dashboard, "~> 0.4"},
