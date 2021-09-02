@@ -30,9 +30,7 @@ defmodule VBT.MixProject do
   defp deps do
     [
       {:absinthe_phoenix, "~> 2.0"},
-      {:absinthe_plug, "~> 1.5"},
       {:absinthe_relay, "~> 1.5"},
-      {:absinthe, "~> 1.5"},
       {:bamboo, "~> 2.2"},
       {:bamboo_phoenix, "~> 1.0.0"},
       {:bcrypt_elixir, "~> 2.3"},
@@ -40,9 +38,7 @@ defmodule VBT.MixProject do
       {:dialyxir, "~> 1.1", runtime: false},
       {:ecto_enum, "~> 1.4"},
       {:ecto_sql, "~> 3.7"},
-      {:ecto, "~> 3.7"},
       {:ex_aws_s3, "~> 2.3"},
-      {:ex_aws, "~> 2.2"},
       {:ex_crypto, "~> 0.10.0"},
       {:ex_doc, "~> 0.25.1", only: :dev, runtime: false},
       {:mox, "~> 1.0", only: :test},
@@ -50,10 +46,9 @@ defmodule VBT.MixProject do
       {:parent, "~> 0.12.0"},
       {:phoenix_html, "~> 2.13"},
       {:phoenix_live_view, "~> 0.14", optional: true},
-      {:phoenix_pubsub, "~> 2.0"},
       {:phoenix, "~> 1.5.12"},
       {:plug_cowboy, "~> 2.5"},
-      {:provider, github: "VeryBigThings/provider", branch: "update-deps"},
+      {:provider, github: "VeryBigThings/provider"},
       {:sentry, "~> 8.0"},
       {:stream_data, "~> 0.5.0", only: [:test, :dev]}
     ]
