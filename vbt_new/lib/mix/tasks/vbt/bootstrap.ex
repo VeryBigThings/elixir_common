@@ -347,7 +347,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   end
 
   defp configure_sentry(source_files) do
-    update_in(source_files.config,
+    update_in(
+      source_files.config,
       &ConfigFile.prepend(&1, """
       config :sentry,
         dsn: {:system, "SENTRY_DSN"},
