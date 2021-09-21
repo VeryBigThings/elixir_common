@@ -79,13 +79,13 @@ jobs:
       - name: Build archive
         run: cd vbt_new && mix archive.build
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: AKIA5B73P2OV7SEEGVWQ
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          #- name: Configure AWS Credentials
+          #  uses: aws-actions/configure-aws-credentials@v1
+          #  with:
+          #    aws-access-key-id: AKIA5B73P2OV7SEEGVWQ
+          #    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          #    aws-region: us-east-1
 
-      - name: Deploy archive
-        if: github.ref == 'refs/heads/master'
-        run: aws s3 cp --acl public-read --region us-east-1 ./vbt_new/vbt_new-0.1.0.ez s3://vbt-common-docs.verybigthings.com/vbt_new.ez
+          #- name: Deploy archive
+          #  if: github.ref == 'refs/heads/master'
+          #  run: aws s3 cp --acl public-read --region us-east-1 ./vbt_new/vbt_new-0.1.0.ez s3://vbt-common-docs.verybigthings.com/vbt_new.ez
