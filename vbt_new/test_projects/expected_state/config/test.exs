@@ -1,7 +1,5 @@
 use Mix.Config
 
-config :sentry, client: SkafolderTesterTest.SentryClient
-
 config :bcrypt_elixir, :log_rounds, 1
 
 # Configure your database

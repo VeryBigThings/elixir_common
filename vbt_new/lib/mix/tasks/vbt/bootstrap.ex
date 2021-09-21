@@ -156,8 +156,8 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
 
   defp adapt_deps(mix_file) do
     mix_file
-    |> MixFile.append_config(:deps, ~s/\n{:boundary, "~> 0.6"}/)
-    |> MixFile.append_config(:deps, ~s/\n{:mox, "~> 0.5", only: :test}/)
+    |> MixFile.append_config(:deps, ~s/\n{:boundary, "~> 0.8"}/)
+    |> MixFile.append_config(:deps, ~s/\n{:mox, "~> 1.0", only: :test}/)
     |> MixFile.append_config(:deps, ~s/\n{:bypass, "~> 2.1", only: :test}/)
     |> sort_deps()
   end
@@ -367,7 +367,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
       &String.replace(
         &1,
         ~r/(use Phoenix\.Endpoint.*?)\n/s,
-        "\nuse Sentry.PlugCapture\n\\1"
+        "\nuse Sentry.PlugCapture\n\\1\n"
       )
     )
     |> update_in(
