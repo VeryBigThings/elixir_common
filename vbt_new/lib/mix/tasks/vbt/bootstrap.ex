@@ -158,6 +158,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
     mix_file
     |> MixFile.append_config(:deps, ~s/\n{:boundary, "~> 0.6"}/)
     |> MixFile.append_config(:deps, ~s/\n{:mox, "~> 0.5", only: :test}/)
+    |> MixFile.append_config(:deps, ~s/\n{:bypass, "~> 2.1", only: :test}/)
     |> sort_deps()
   end
 
@@ -346,9 +347,7 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
   end
 
   defp configure_sentry(source_files) do
-    source_files
-    |> update_in(
-      [:config],
+    update_in(source_files.config,
       &ConfigFile.prepend(&1, """
       config :sentry,
         dsn: {:system, "SENTRY_DSN"},
@@ -359,22 +358,28 @@ defmodule Mix.Tasks.Vbt.Bootstrap do
         release: #{context_module_name()}.MixProject.project()[:version]
       """)
     )
-    |> update_in(
-      [:test_config],
-      &ConfigFile.prepend(
-        &1,
-        "config :sentry, client: #{test_module_name()}.SentryClient"
-      )
-    )
   end
 
   defp add_sentry_to_endpoint(source_files) do
-    update_in(
-      source_files.endpoint.content,
+    source_files
+    |> update_in(
+      [:endpoint, :content],
       &String.replace(
         &1,
         ~r/(use Phoenix\.Endpoint.*?)\n/s,
-        "\\1\nuse Sentry.Phoenix.Endpoint\n"
+        "\nuse Sentry.PlugCapture\n\\1"
+      )
+    )
+    |> update_in(
+      [:endpoint, :content],
+      &String.replace(
+        &1,
+        ~r/(plug Plug.MethodOverride)\n/,
+        """
+        plug Sentry.PlugContext
+
+        \\1
+        """
       )
     )
   end

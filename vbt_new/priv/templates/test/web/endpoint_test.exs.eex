@@ -28,14 +28,29 @@ defmodule <%= Mix.Vbt.web_module_name() %>.EndpointTest do
       end
     end
 
-    for release_level <- ~w/develop stage preview prod/ do
+    for release_level <- ~w/develop preview prod/ do
       test "are sent to sentry on #{release_level}" do
+        capture_sentry_events()
         cause_server_exception(release_level: unquote(release_level), message: "some error")
-        assert_receive {:sentry_report, event}
-        assert event.message == "(RuntimeError) some error"
+        assert_receive {:sentry_report, body}
+        assert Map.fetch!(Jason.decode!(body), "message") =~ "(RuntimeError some error)"
       end
     end
   end
+
+  defp capture_sentry_events do
+    test_pid = self()
+    bypass = Bypass.open()
+
+    Bypass.expect(bypass, fn conn ->
+      {:ok, body, conn} = Plug.Conn.read_body(conn)
+      send(test_pid, {:sentry_report, body})
+      Plug.Conn.resp(conn, 200, ~s<{"id": "340"}>)
+    end)
+
+    Application.put_env(:sentry, :dsn, "http://public:secret@localhost:#{bypass.port}/1")
+    Application.put_env(:sentry, :send_result, :sync)
+ end
 
   defp cause_server_exception(opts) do
     prev_release_level = set_release_level(Keyword.get(opts, :release_level))
