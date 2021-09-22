@@ -38,13 +38,14 @@ defmodule SkafolderTester.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:boundary, "~> 0.6"},
+      {:boundary, "~> 0.8"},
+      {:bypass, "~> 2.1", only: :test},
       {:ecto_sql, "~> 3.4"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:mox, "~> 0.5", only: :test},
-      {:phoenix, "~> 1.5.10"},
-      {:phoenix_ecto, "~> 4.1"},
+      {:mox, "~> 1.0", only: :test},
+      {:phoenix, "~> 1.5.12"},
+      {:phoenix_ecto, "~> 4.4"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_dashboard, "~> 0.4"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

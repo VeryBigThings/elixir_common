@@ -190,7 +190,7 @@ defmodule VBT.Mailer do
       |> Email.new_email()
       |> set_body(body, mailer)
 
-    Bamboo.Mailer.deliver_now(adapter, email, config, [])
+    Bamboo.Mailer.deliver_now!(adapter, email, config, [])
 
     :ok
   end

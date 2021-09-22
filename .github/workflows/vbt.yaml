@@ -69,13 +69,13 @@ jobs:
       - name: Build docs
         run: mix docs
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: AKIA5B73P2OV7SEEGVWQ
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          #- name: Configure AWS Credentials
+          #  uses: aws-actions/configure-aws-credentials@v1
+          #  with:
+          #    aws-access-key-id: AKIA5B73P2OV7SEEGVWQ
+          #    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          #    aws-region: us-east-1
 
-      - name: "Release docs"
-        if: github.ref == 'refs/heads/master' || contains(github.event.head_commit.message, '# push docs')
-        run: aws s3 sync --acl public-read --region us-east-1 ./doc/ s3://vbt-common-docs.verybigthings.com/
+          #- name: "Release docs"
+          #  if: github.ref == 'refs/heads/master' || contains(github.event.head_commit.message, '# push docs')
+          #  run: aws s3 sync --acl public-read --region us-east-1 ./doc/ s3://vbt-common-docs.verybigthings.com/

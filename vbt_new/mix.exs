@@ -5,7 +5,7 @@ defmodule VbtNew.MixProject do
     [
       app: :vbt_new,
       version: "0.1.0",
-      elixir: "~> 1.10",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       preferred_cli_env: preferred_cli_env(),
