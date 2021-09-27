@@ -1,21 +1,34 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
+
 defmodule VBT.Credo.Check.Consistency.FileLocation do
   @moduledoc false
-  # credo:disable-for-this-file Credo.Check.Readability.Specs
 
-  @checkdoc """
-  File location should follow the namespace hierarchy of the module it defines.
+  use Credo.Check,
+    category: :warning,
+    base_priority: :high,
+    explanations: [
+      check: """
+      File location should follow the namespace hierarchy of the module it defines.
 
-  Examples:
+      Examples:
 
-      - `lib/my_system.ex` should define the `MySystem` module
-      - `lib/my_system/accounts.ex` should define the `MySystem.Accounts` module
-  """
-  @explanation [warning: @checkdoc]
+          - `lib/my_system.ex` should define the `MySystem` module
+          - `lib/my_system/accounts.ex` should define the `MySystem.Accounts` module
+      """,
+      params: [
+        ignore_folder_namespace: """
+        A map listing the folders which will be ignored. For example, to ignore the folders
+        channels, controllers, and views under lib/my_system_web and test/my_system_web, you can
+        provide the following value:
 
-  # `use Credo.Check` required that module attributes are already defined, so we need to place these attributes
-  # before use/alias expressions.
-  # credo:disable-for-next-line VBT.Credo.Check.Consistency.ModuleLayout
-  use Credo.Check, category: :warning, base_priority: :high
+            %{
+              "lib/my_system_web" => ~w/channels controllers views/,
+              "test/my_system_web" => ~w/channels controllers views/
+            }
+        """
+      ]
+    ],
+    param_defaults: [ignore_folder_namespace: %{}]
 
   alias Credo.Code
 
@@ -25,7 +38,7 @@ defmodule VBT.Credo.Check.Consistency.FileLocation do
         []
 
       {:error, module, expected_file} ->
-        error(IssueMeta.for(source_file, params), module, expected_file)
+        [error(IssueMeta.for(source_file, params), module, expected_file)]
     end
   end
 

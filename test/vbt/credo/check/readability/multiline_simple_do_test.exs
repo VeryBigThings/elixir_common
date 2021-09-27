@@ -1,8 +1,8 @@
 defmodule VBT.Credo.Check.Readability.MultilineSimpleDoTest do
   # credo:disable-for-this-file VBT.Credo.Check.Readability.MultilineSimpleDo
-  use Credo.TestHelper
+  use Credo.Test.Case
 
-  @described_check VBT.Credo.Check.Readability.MultilineSimpleDo
+  alias VBT.Credo.Check.Readability.MultilineSimpleDo
 
   test "reports no errors on valid usage" do
     """
@@ -18,10 +18,20 @@ defmodule VBT.Credo.Check.Readability.MultilineSimpleDoTest do
           do: :ok,
           else: :error
       end
+
+      def fun5 do
+        if true do
+          with :ok <- :ok,
+              do: :ok
+        else
+          :ok
+        end
+      end
     end
     """
     |> to_source_file()
-    |> refute_issues(@described_check)
+    |> run_check(MultilineSimpleDo)
+    |> refute_issues()
   end
 
   test "reports error on multiline do:" do
@@ -34,7 +44,8 @@ defmodule VBT.Credo.Check.Readability.MultilineSimpleDoTest do
       end
       """
       |> to_source_file()
-      |> assert_issue(@described_check)
+      |> run_check(MultilineSimpleDo)
+      |> assert_issue()
 
     assert issue.line_no == 3
     assert issue.column == 5
@@ -52,7 +63,8 @@ defmodule VBT.Credo.Check.Readability.MultilineSimpleDoTest do
       end
       """
       |> to_source_file()
-      |> assert_issue(@described_check)
+      |> run_check(MultilineSimpleDo)
+      |> assert_issue()
 
     assert issue.line_no == 4
     assert issue.column == 5
@@ -76,7 +88,8 @@ defmodule VBT.Credo.Check.Readability.MultilineSimpleDoTest do
              end
              """
              |> to_source_file()
-             |> assert_issues(@described_check)
+             |> run_check(MultilineSimpleDo)
+             |> assert_issues()
 
     assert issue1.line_no == 3
     assert issue1.column == 5

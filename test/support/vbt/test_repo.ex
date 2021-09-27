@@ -1,10 +1,11 @@
 defmodule VBT.TestRepo do
   @moduledoc false
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
-  use Ecto.Repo, otp_app: :vbt, adapter: Ecto.Adapters.Postgres
+  use VBT.Repo, otp_app: :vbt, adapter: Ecto.Adapters.Postgres
 
-  @doc false
+  @impl Ecto.Repo
   def init(_type, opts),
     do: {:ok, opts |> Keyword.merge(access_opts()) |> Keyword.merge(common_opts())}
 
@@ -17,7 +18,7 @@ defmodule VBT.TestRepo do
   end
 
   defp access_opts do
-    if System.get_env("CI"),
+    if System.get_env("CI") == "true" or System.get_env("DOCKER") == "true",
       do: [username: "postgres", password: "postgres"],
       else: [socket_dir: "/var/run/postgresql"]
   end

@@ -23,8 +23,7 @@ defmodule VBT.AccountsTest do
       },
       login_field: :email,
       password_hash_field: :password_hash,
-      min_password_length: 6,
-      secret_key_base: String.duplicate("A", 64)
+      min_password_length: 6
     }
 
     describe "create for table with #{id_type} id" do
@@ -95,6 +94,30 @@ defmodule VBT.AccountsTest do
       end
     end
 
+    describe "set_password for table with #{id_type} id" do
+      test "succeeds with valid input" do
+        {:ok, account} = create_account(@config, email: "email@x.y.z", password: "some password")
+        assert {:ok, changed_account} = Accounts.set_password(account, "new password", @config)
+        assert changed_account.id == account.id
+        assert {:ok, _} = Accounts.authenticate("email@x.y.z", "new password", @config)
+        assert {:error, :invalid} = Accounts.authenticate("email@x.y.z", "some password", @config)
+      end
+
+      test "fails if password is empty" do
+        {:ok, account} = create_account(@config, password: "some password")
+        assert {:error, changeset} = Accounts.set_password(account, "", @config)
+        assert "can't be blank" in errors_on(changeset).password
+        assert Accounts.authenticate(account.email, "some password", @config) == {:ok, account}
+      end
+
+      test "fails if password is too short" do
+        {:ok, account} = create_account(@config, password: "some password")
+        assert {:error, changeset} = Accounts.set_password(account, "A", @config)
+        assert "should be at least 6 character(s)" in errors_on(changeset).password
+        assert Accounts.authenticate(account.email, "some password", @config) == {:ok, account}
+      end
+    end
+
     describe "change_password for table with #{id_type} id" do
       test "succeeds with valid input" do
         {:ok, account} = create_account(@config, email: "email@x.y.z", password: "some password")
@@ -157,20 +180,9 @@ defmodule VBT.AccountsTest do
         assert reset_password(@config, "invalid email", "new password") == {:error, :invalid}
       end
 
-      test "fails if token is generated for another user" do
-        {:ok, account} = create_account(@config, password: "some password")
-        {:ok, account2} = create_account(@config)
-        token = Accounts.start_password_reset(account2.email, 100, @config)
-
-        assert reset_password(@config, account.email, "new password", token: token) ==
-                 {:error, :invalid}
-
-        assert Accounts.authenticate(account.email, "some password", @config) == {:ok, account}
-      end
-
       test "fails if token is generated for a different purpose" do
         {:ok, account} = create_account(@config, password: "some password")
-        token = Accounts.Token.create!(account, nil, 100, @config)
+        token = Accounts.Token.create!(account, "different purpose", 100, @config)
 
         assert reset_password(@config, account.email, "new password", token: token) ==
                  {:error, :invalid}
@@ -229,7 +241,7 @@ defmodule VBT.AccountsTest do
         end
       )
 
-    Accounts.reset_password(email, token, new_password, config)
+    Accounts.reset_password(token, new_password, config)
   end
 
   defp errors_on(changeset) do

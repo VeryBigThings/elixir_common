@@ -1,7 +1,7 @@
 defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
-  use Credo.TestHelper
+  use Credo.Test.Case
 
-  @described_check VBT.Credo.Check.Consistency.ModuleLayout
+  alias VBT.Credo.Check.Consistency.ModuleLayout
 
   test "no errors are reported on a successful layout" do
     """
@@ -54,7 +54,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
     end
     """
     |> to_source_file
-    |> refute_issues(@described_check)
+    |> run_check(ModuleLayout)
+    |> refute_issues()
   end
 
   test "only first-level parts are analyzed" do
@@ -66,7 +67,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
     end
     """
     |> to_source_file
-    |> refute_issues(@described_check)
+    |> run_check(ModuleLayout)
+    |> refute_issues()
   end
 
   test "custom macro invocations are ignored" do
@@ -81,7 +83,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
     end
     """
     |> to_source_file
-    |> refute_issues(@described_check)
+    |> run_check(ModuleLayout)
+    |> refute_issues()
   end
 
   test "shortdoc must appear before moduledoc" do
@@ -93,7 +96,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "shortdoc must appear before moduledoc"
   end
@@ -107,7 +111,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "moduledoc must appear before behaviour"
   end
@@ -121,7 +126,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "behaviour must appear before use"
   end
@@ -135,7 +141,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "use must appear before import"
   end
@@ -149,7 +156,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "import must appear before alias"
   end
@@ -163,7 +171,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "alias must appear before require"
   end
@@ -177,7 +186,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "require must appear before module attribute"
   end
@@ -191,7 +201,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "module attribute must appear before defstruct"
   end
@@ -205,7 +216,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "defstruct must appear before opaque"
   end
@@ -219,7 +231,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "opaque must appear before type"
   end
@@ -233,7 +246,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "type must appear before typep"
   end
@@ -247,7 +261,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "typep must appear before callback"
   end
@@ -261,7 +276,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "callback must appear before macrocallback"
   end
@@ -275,7 +291,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "macrocallback must appear before optional_callbacks"
   end
@@ -289,7 +306,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "optional_callbacks must appear before public guard"
   end
@@ -303,7 +321,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "public guard must appear before public macro"
   end
@@ -317,7 +336,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "public macro must appear before public function"
   end
@@ -333,7 +353,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "public function must appear before callback implementation"
   end
@@ -349,7 +370,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "callback implementation must appear before private function"
   end
@@ -366,7 +388,8 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
       end
       """
       |> to_source_file
-      |> assert_issue(@described_check)
+      |> run_check(ModuleLayout)
+      |> assert_issue()
 
     assert issue.message == "callback implementation must appear before private function"
   end
@@ -382,6 +405,7 @@ defmodule VBT.Credo.Check.Consistency.ModuleLayoutTest do
     end
     """
     |> to_source_file
-    |> refute_issues(@described_check)
+    |> run_check(ModuleLayout)
+    |> refute_issues()
   end
 end

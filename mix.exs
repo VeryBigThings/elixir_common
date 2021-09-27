@@ -1,18 +1,20 @@
-defmodule VBT.Credo.MixProject do
+defmodule VBT.MixProject do
   use Mix.Project
 
   def project do
     [
       app: :vbt,
       version: "0.1.0",
-      elixir: "~> 1.9",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
       preferred_cli_env: preferred_cli_env(),
       dialyzer: dialyzer(),
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix] ++ Mix.compilers()
+      compilers: [:phoenix] ++ Mix.compilers(),
+      source_url: "https://github.com/VeryBigThings/elixir_common_private/",
+      docs: docs()
     ]
   end
 
@@ -27,23 +29,28 @@ defmodule VBT.Credo.MixProject do
 
   defp deps do
     [
-      {:absinthe_phoenix, "~> 1.4"},
-      {:absinthe_plug, "~> 1.4"},
-      {:absinthe_relay, "~> 1.4"},
-      {:absinthe, "~> 1.4"},
-      {:bamboo, "~> 1.4"},
-      {:bcrypt_elixir, "~> 2.0"},
-      {:credo, "~> 1.1", runtime: false},
-      {:dialyxir, "~> 0.5", runtime: false},
-      {:ecto_enum, "~> 1.3"},
-      {:ecto, "~> 3.0"},
-      {:ex_aws, "~> 2.1"},
-      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
-      {:oban, "~> 1.0"},
-      {:parent, "~> 0.8"},
-      {:phoenix_html, "~> 2.0"},
-      {:phoenix, "~> 1.4"},
-      {:stream_data, "~> 0.4", only: [:test, :dev]}
+      {:absinthe_phoenix, "~> 2.0"},
+      {:absinthe_relay, "~> 1.5"},
+      {:bamboo, "~> 2.2"},
+      {:bamboo_phoenix, "~> 1.0.0"},
+      {:bcrypt_elixir, "~> 2.3"},
+      {:credo, "~> 1.5", runtime: false},
+      {:dialyxir, "~> 1.1", runtime: false},
+      {:ecto_enum, "~> 1.4"},
+      {:ecto_sql, "~> 3.7"},
+      {:ex_aws_s3, "~> 2.3"},
+      {:ex_crypto, "~> 0.10.0"},
+      {:ex_doc, "~> 0.25.1", only: :dev, runtime: false},
+      {:mox, "~> 1.0", only: :test},
+      {:oban, "~> 2.8"},
+      {:parent, "~> 0.12.0"},
+      {:phoenix_html, "~> 2.13"},
+      {:phoenix_live_view, "~> 0.14", optional: true},
+      {:phoenix, "~> 1.5.12"},
+      {:plug_cowboy, "~> 2.5"},
+      {:provider, github: "VeryBigThings/provider"},
+      {:sentry, "~> 8.0"},
+      {:stream_data, "~> 0.5.0", only: [:test, :dev]}
     ]
   end
 
@@ -68,10 +75,24 @@ defmodule VBT.Credo.MixProject do
 
   defp dialyzer() do
     [
-      plt_add_apps: ~w/mix eex ecto credo bamboo ex_unit phoenix_pubsub/a
+      plt_add_apps: ~w/mix eex ecto credo bamboo ex_unit phoenix_pubsub phoenix_live_view/a
     ]
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
+
+  defp docs do
+    [
+      main: VBT,
+      groups_for_modules: [
+        "GraphQL & Absinthe": ~r/VBT\.((Absinthe)|(Graphql)).*/,
+        Ecto: ~r/VBT\.((Ecto)|(Repo)).*/,
+        "Auth & accounts": ~r/VBT\.((Auth)|(Accounts)).*/,
+        "External services": ~r/VBT\.((Aws)|(Kubernetes)).*/,
+        Credo: ~r/VBT\.Credo.*/,
+        "Business errors": ~r/VBT\.[^\.]*Error/
+      ]
+    ]
+  end
 end

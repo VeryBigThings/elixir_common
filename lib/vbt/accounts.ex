@@ -21,15 +21,20 @@ defmodule VBT.Accounts do
   the table can be named `users`, and the login field can be named `email`. Finally, this table
   can contain arbitrary additional data (e.g. first and last name)
 
-  The tokens table can bear arbitrary name, but the list of fields and their names is more \
+  The tokens table can bear arbitrary name, but the list of fields and their names is more
   restrictive. You can create this table with the following migration:
 
       create table(:tokens, primary_key: false) do
         add :id, :uuid, primary_key: true
+        add :hash, :binary, null: false
+        add :type, :string, null: false
         add :used_at, :utc_datetime
         add :expires_at, :utc_datetime, null: false
-        add :account_id, references(:accounts, type: :uuid), null: false
+        add :account_id, references(:accounts, type: :uuid), null: true
       end
+
+  Note that `account_id` must be made nullable. The reason is that we're inserting tokens even if
+  the account is not existing, which prevents enumeration attacks.
 
   The Ecto schemas should mirror the database structure of these tables. Most importantly, the
   accounts schema should specify `has_many :tokens`, while the tokens schema should specify
@@ -53,8 +58,7 @@ defmodule VBT.Accounts do
             },
             login_field: :email,
             password_hash_field: :password_hash,
-            min_password_length: 6,
-            secret_key_base: Application.fetch_env!(MyProject, :secret_key_base)
+            min_password_length: 6
           }
         end
       end
@@ -93,8 +97,7 @@ defmodule VBT.Accounts do
           schemas: %{account: module, token: module},
           login_field: atom,
           password_hash_field: atom,
-          min_password_length: pos_integer,
-          secret_key_base: String.t()
+          min_password_length: pos_integer
         }
 
   @type data :: Ecto.Schema.t() | Ecto.Changeset.t()
@@ -120,7 +123,7 @@ defmodule VBT.Accounts do
           {:ok, Ecto.Schema.t()} | {:error, Ecto.Changeset.t()}
   def create(data, login, password, config) do
     data
-    |> set_password(password, config)
+    |> set_password_changeset(password, config)
     |> set_login(login, config)
     |> config.repo.insert()
   end
@@ -144,47 +147,69 @@ defmodule VBT.Accounts do
           {:ok, Ecto.Schema.t()} | {:error, :invalid | Ecto.Changeset.t()}
   def change_password(account, current_password, new_password, config) do
     if password_ok?(account, current_password),
-      do: config.repo.update(set_password(account, new_password, config)),
+      do: set_password(account, new_password, config),
       else: {:error, :invalid}
   end
 
   @doc """
+  Changes the account password in the database without checking the current password.
+
+  ## Warning
+
+  Be careful when using this function because you could end up creating security issues, such as
+  allowing attackers to change the password of another user. In almost all cases it's prefered to
+  use `change_password/4` or `start_password_reset/3`. Use this function only when the requirements
+  explicitly state that the user should be able to change their password without providing the
+  current one.
+  """
+  @spec set_password(Ecto.Schema.t(), String.t(), config) ::
+          {:ok, Ecto.Schema.t()} | {:error, Ecto.Changeset.t()}
+  def set_password(account, new_password, config),
+    do: config.repo.update(set_password_changeset(account, new_password, config))
+
+  @doc """
   Creates a one-time password reset token for the given user.
 
-  This function always succeeds. If the account for the given login doesn't exist, the token
-  will still be generated, although it won't be stored in the database, and thus it can't be
-  actually used. This approach is chosen to prevent user enumeration attack.
+  The token will be valid for the `max_age` seconds.
+
+  If at some later point you want to verify if a token represents a valid and unused password
+  reset token, you can invoke `Token.get_account/3`, passing `"password_reset"` as the expected
+  type.
+
+  This function always succeeds. If the account for the given login doesn't exist, the token will
+  still be generated. However, this token can't be actually used. This approach is chosen to
+  prevent user enumeration attack.
   """
   @spec start_password_reset(String.t(), Token.max_age(), config) :: Token.encoded()
   def start_password_reset(login, max_age, config),
     # We're always creating the token, even if the account doesn't exist, to prevent a possible
     # enumeration attack (https://www.owasp.org/index.php/Testing_for_User_Enumeration_and_Guessable_User_Account_(OWASP-AT-002)#Description_of_the_Issue).
-    do: login |> get(config) |> Token.create!(%{type: :password_reset}, max_age, config)
+    do: login |> get(config) |> Token.create!("password_reset", max_age, config)
 
   @doc """
   Resets the password for the given login and token.
 
   The password is changed only if the token is valid. The token is valid if:
 
-  - it corresponds to the correct user
+  - it has been created with `start_password_reset/3`
+  - it corresponds to an existing user
   - it hasn't expired
   - it is a password reset token
   - it hasn't been used
   """
-  @spec reset_password(String.t(), Token.encoded(), String.t(), config) ::
+  @spec reset_password(Token.encoded(), String.t(), config) ::
           {:ok, Ecto.Schema.t()} | {:error, :invalid | Ecto.Changeset.t()}
-  def reset_password(login, token, new_password, config) do
-    with {:ok, account} <- fetch(login, config),
-         {:ok, %{data: %{type: :password_reset}} = token} <- Token.decode(token, account, config) do
-      Token.use(
-        token,
-        account,
-        fn -> config.repo.update(set_password(account, new_password, config)) end,
-        config
-      )
-    else
-      _ -> {:error, :invalid}
-    end
+  def reset_password(token, new_password, config) do
+    Token.use(
+      token,
+      "password_reset",
+      fn account_id ->
+        config.schemas.account
+        |> config.repo.get!(account_id)
+        |> set_password(new_password, config)
+      end,
+      config
+    )
   end
 
   # ------------------------------------------------------------------------
@@ -214,7 +239,7 @@ defmodule VBT.Accounts do
 
   defp to_changeset(data), do: change(data)
 
-  defp set_password(data, password, config) do
+  defp set_password_changeset(data, password, config) do
     data
     |> to_changeset()
     |> validate_password(password, config.min_password_length)

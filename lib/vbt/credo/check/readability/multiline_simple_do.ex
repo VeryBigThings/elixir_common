@@ -1,36 +1,36 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
+# credo:disable-for-this-file VBT.Credo.Check.Readability.MultilineSimpleDo
+
 defmodule VBT.Credo.Check.Readability.MultilineSimpleDo do
   @moduledoc false
-  # credo:disable-for-this-file Credo.Check.Readability.Specs
-  # credo:disable-for-this-file VBT.Credo.Check.Readability.MultilineSimpleDo
 
-  @checkdoc """
-  Avoid using multiline simple do expression.
+  use Credo.Check,
+    category: :warning,
+    base_priority: :high,
+    explanations: [
+      check: """
+      Avoid using multiline simple do expression.
 
-      # preferred
+          # preferred
 
-      defp some_fun() do
-        %{
-          a: 1,
-          b: 2,
-          c: 3
-        }
-      end
+          defp some_fun() do
+            %{
+              a: 1,
+              b: 2,
+              c: 3
+            }
+          end
 
-      # NOT preferred
+          # NOT preferred
 
-      defp some_fun(),
-        do: %{
-          a: 1,
-          b: 2,
-          c: 3
-        }
-  """
-  @explanation [check: @checkdoc]
-
-  # `use Credo.Check` required that module attributes are already defined, so we need to place these attributes
-  # before use/alias expressions.
-  # credo:disable-for-next-line VBT.Credo.Check.Consistency.ModuleLayout
-  use Credo.Check, category: :warning, base_priority: :high
+          defp some_fun(),
+            do: %{
+              a: 1,
+              b: 2,
+              c: 3
+            }
+      """
+    ]
 
   def run(source_file, params \\ []) do
     source_file
@@ -63,12 +63,12 @@ defmodule VBT.Credo.Check.Readability.MultilineSimpleDo do
       # Recognition algorithm:
       #   1. Previous line ends with `,`
       #   2. This line starts with `do:`
-      #   3. Next line is not empty, `end`, `)`, or `else:`
+      #   3. Next line is not empty, `end`, `)`, or `else`
       if previous_line.content =~ ~r/^.*,$/ and
            String.starts_with?(this_line.content, "do:") and
            not (next_line.content == "" or
                   next_line.content in ~w/end ) end) " """/ or
-                  String.starts_with?(next_line.content, "else:")),
+                  String.starts_with?(next_line.content, "else")),
          do: this_line
     end)
     |> Stream.reject(&is_nil/1)

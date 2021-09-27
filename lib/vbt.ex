@@ -5,19 +5,33 @@ defmodule VBT do
   # API
   # ------------------------------------------------------------------------
 
+  @doc "Converts a boolean into `:ok | {:error, reason}`."
+  @spec validate(boolean, error) :: :ok | {:error, error} when error: var
+  def validate(condition, error), do: if(condition, do: :ok, else: {:error, error})
+
+  @doc "Converts a boolean into `:ok | {:error, :unauthorized}`."
+  @spec authorize(boolean) :: :ok | {:error, :unauthorized}
+  def authorize(condition), do: validate(condition, :unauthorized)
+
   @doc """
-  Returns AWS client module.
+  Performs recursive merge of two maps.
 
-  Invoke this function when making AWS requests to obtain the AWS module which implements
-  `ExAws.Behaviour`. For example, to make a request:
+  Example:
 
-      VBT.aws_client().request(ExAws.S3.list_buckets(), region: "eu-west-1")
-
-  By default, this function returns `ExAws`. However, you can change the module globally via
-  the `:ex_aws_client` configuration of the `:vbt` app. This should typically be done only in
-  test environment to use a mock defined via `Mox`. If you generated your project via the latest
-  skafolder, the mock module named `VBT.TestAwsClient` will be already configured.
+      iex> map1 = %{a: 1, b: 2, c: %{d: 3}}
+      iex> map2 = %{a: 4, c: %{e: 5}, f: 6}
+      iex> VBT.deep_merge(map1, map2)
+      %{a: 4, b: 2, c: %{d: 3, e: 5}, f: 6}
   """
-  @spec aws_client() :: module()
-  def aws_client, do: Application.get_env(:vbt, :ex_aws_client, ExAws)
+  @spec deep_merge(map, map) :: map
+  def deep_merge(left, right), do: Map.merge(left, right, &deep_resolve/3)
+
+  # Key exists in both maps, and both values are maps as well.
+  # These can be merged recursively.
+  defp deep_resolve(_key, %{} = left, %{} = right), do: deep_merge(left, right)
+
+  # Key exists in both maps, but at least one of the values is
+  # NOT a map. We fall back to standard merge behavior, preferring
+  # the value on the right.
+  defp deep_resolve(_key, _left, right), do: right
 end

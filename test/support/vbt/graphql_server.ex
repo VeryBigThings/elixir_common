@@ -1,27 +1,20 @@
 defmodule VBT.GraphqlServer do
   @moduledoc false
+
   # credo:disable-for-this-file Credo.Check.Readability.Specs
 
   use Phoenix.Endpoint, otp_app: :vbt
-  import Phoenix.Controller, only: [accepts: 2]
-  import VBT.Absinthe.ResolverHelper
 
   socket "/socket", __MODULE__.Socket,
     websocket: true,
     longpoll: false
 
-  plug Plug.Parsers,
-    parsers: [:urlencoded, :multipart, :json, Absinthe.Plug.Parser],
-    pass: ["*/*"],
-    json_decoder: Jason
-
-  plug :accepts, ["json"]
   plug VBT.Auth
   plug Absinthe.Plug, schema: __MODULE__.Schema
 
   defmodule Schema do
     @moduledoc false
-    use Absinthe.Schema
+    use VBT.Absinthe.Schema
 
     query do
       field :order, :order do
@@ -45,6 +38,22 @@ defmodule VBT.GraphqlServer do
           VBT.Auth.verify(resolution, "some_salt", arg.max_age || 100)
         end
       end
+
+      field :datetime_usec, :datetime_usec_result do
+        arg :value, :datetime_usec
+
+        resolve fn arg, _ ->
+          decoded = arg.value |> :erlang.term_to_binary() |> Base.encode64()
+
+          {:ok,
+           %{
+             decoded: decoded,
+             encoded: arg.value,
+             encoded_msec: arg.value && DateTime.truncate(arg.value, :millisecond),
+             encoded_sec: arg.value && DateTime.truncate(arg.value, :second)
+           }}
+        end
+      end
     end
 
     mutation do
@@ -52,13 +61,13 @@ defmodule VBT.GraphqlServer do
         resolve fn _, _ ->
           types = %{login: :string, password: :string}
 
-          changeset_errors =
+          changeset =
             {%{}, types}
             |> Ecto.Changeset.cast(%{}, Map.keys(types))
             |> Ecto.Changeset.validate_required([:login])
-            |> changeset_errors()
+            |> Ecto.Changeset.add_error(:password, "invalid password")
 
-          {:error, ["invalid login data" | changeset_errors]}
+          {:error, changeset}
         end
       end
     end
@@ -71,6 +80,13 @@ defmodule VBT.GraphqlServer do
     object :order_item do
       field :product_name, non_null(:string)
       field :quantity, non_null(:integer)
+    end
+
+    object :datetime_usec_result do
+      field :decoded, :string
+      field :encoded, :datetime_usec
+      field :encoded_msec, :datetime_usec
+      field :encoded_sec, :datetime_usec
     end
 
     defp order_item(id), do: %{product_name: "product #{id}", quantity: id}

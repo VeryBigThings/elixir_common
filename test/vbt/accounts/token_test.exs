@@ -27,29 +27,75 @@ defmodule VBT.Accounts.TokenTest do
     schemas: %{account: Serial.Account, token: Serial.Token},
     login_field: :email,
     password_hash_field: :password_hash,
-    min_password_length: 6,
-    secret_key_base: String.duplicate("A", 64)
+    min_password_length: 6
   }
 
-  test "token data is successfully decoded" do
-    {:ok, account} = create_account(@config)
-    encoded_token = Token.create!(account, %{foo: :bar}, 100, @config)
-    assert {:ok, token} = Token.decode(encoded_token, account, @config)
-    assert token.data == %{foo: :bar}
+  describe "use" do
+    test "succeeds with a valid token" do
+      {:ok, account} = create_account(@config)
+      token = Token.create!(account, "some type", 100, @config)
+      assert Token.use(token, "some type", &{:ok, &1}, @config) == {:ok, account.id}
+      assert used?(token)
+    end
+
+    test "fails for the token of a different type" do
+      {:ok, account} = create_account(@config)
+      token = Token.create!(account, "some type", 100, @config)
+      assert Token.use(token, "another type", &{:ok, &1}, @config) == {:error, :invalid}
+      refute used?(token)
+    end
+
+    test "fails for the token created for an unknown user" do
+      token = Token.create!(nil, "some type", 100, @config)
+      assert Token.use(token, "some type", &{:ok, &1}, @config) == {:error, :invalid}
+      refute used?(token)
+    end
+
+    test "fails if the operation returns an error" do
+      {:ok, account} = create_account(@config)
+      token = Token.create!(account, "some type", 100, @config)
+
+      assert Token.use(token, "some type", fn _ -> {:error, :some_error} end, @config) ==
+               {:error, :some_error}
+
+      refute used?(token)
+    end
+
+    defp used?(token) do
+      [used?] =
+        VBT.TestRepo.one!(
+          from token in @config.schemas.token,
+            where: [hash: ^Token.hash(token)],
+            select: [not is_nil(token.used_at)]
+        )
+
+      used?
+    end
   end
 
-  test "if use operation fails, its error is returned, and token is not used" do
-    {:ok, account} = create_account(@config)
-    encoded_token = Token.create!(account, nil, 100, @config)
-    {:ok, token} = Token.decode(encoded_token, account, @config)
+  describe "get_account" do
+    test "returns the account if the token is valid" do
+      {:ok, account} = create_account(@config)
+      token = Token.create!(account, "some type", 100, @config)
+      assert Token.get_account(token, "some type", @config) == account
+    end
 
-    assert Token.use(token, account, fn -> {:error, :some_error} end, @config) ==
-             {:error, :some_error}
+    test "returns nil if the token type is incorrect" do
+      {:ok, account} = create_account(@config)
+      token = Token.create!(account, "some type", 100, @config)
+      assert is_nil(Token.get_account(token, "another type", @config))
+    end
 
-    assert VBT.TestRepo.exists?(
-             from token in @config.schemas.token,
-               where: token.id == ^token.id and is_nil(token.used_at)
-           )
+    test "returns nil if the token expired" do
+      {:ok, account} = create_account(@config)
+      token = Token.create!(account, "some type", -1, @config)
+      assert is_nil(Token.get_account(token, "some type", @config))
+    end
+
+    test "returns nil if the token is invalid" do
+      create_account(@config)
+      assert is_nil(Token.get_account("invalid token", "some type", @config))
+    end
   end
 
   describe "VBT.Accounts.Token.Cleanup" do
@@ -61,8 +107,7 @@ defmodule VBT.Accounts.TokenTest do
       cleaner_pid = start_cleanup_process!(now_fun: fn -> future_time(5, :second) end)
 
       {:ok, account} = create_account(@config)
-      encoded_token = Token.create!(account, nil, 1, @config)
-      {:ok, token} = Token.decode(encoded_token, account, @config)
+      token = Token.create!(account, "some type", 1, @config)
 
       sync_tick(cleaner_pid)
       refute exists?(token)
@@ -72,9 +117,8 @@ defmodule VBT.Accounts.TokenTest do
       cleaner_pid = start_cleanup_process!(now_fun: fn -> future_time(1, :second) end)
 
       {:ok, account} = create_account(@config)
-      encoded_token = Token.create!(account, nil, 100, @config)
-      {:ok, token} = Token.decode(encoded_token, account, @config)
-      Token.use(token, account, fn -> {:ok, nil} end, @config)
+      token = Token.create!(account, "some type", 100, @config)
+      Token.use(token, "some type", &{:ok, &1}, @config)
 
       sync_tick(cleaner_pid)
       refute exists?(token)
@@ -84,8 +128,7 @@ defmodule VBT.Accounts.TokenTest do
       cleaner_pid = start_cleanup_process!()
 
       {:ok, account} = create_account(@config)
-      encoded_token = Token.create!(account, nil, 100, @config)
-      {:ok, token} = Token.decode(encoded_token, account, @config)
+      token = Token.create!(account, "some type", 100, @config)
 
       sync_tick(cleaner_pid)
       assert exists?(token)
@@ -95,12 +138,10 @@ defmodule VBT.Accounts.TokenTest do
       cleaner_pid = start_cleanup_process!(retention: :timer.seconds(1))
 
       {:ok, account} = create_account(@config)
-      encoded_token = Token.create!(account, nil, 0, @config)
-      {:ok, expired_token} = Token.decode(encoded_token, account, @config)
+      expired_token = Token.create!(account, "some type", 0, @config)
 
-      encoded_token = Token.create!(account, nil, 100, @config)
-      {:ok, used_token} = Token.decode(encoded_token, account, @config)
-      Token.use(used_token, account, fn -> {:ok, nil} end, @config)
+      used_token = Token.create!(account, "some type", 100, @config)
+      Token.use(used_token, "some type", &{:ok, &1}, @config)
 
       sync_tick(cleaner_pid)
       assert exists?(expired_token)
@@ -140,7 +181,7 @@ defmodule VBT.Accounts.TokenTest do
     end
 
     defp exists?(token),
-      do: VBT.TestRepo.exists?(from token in @config.schemas.token, where: token.id == ^token.id)
+      do: VBT.TestRepo.exists?(from @config.schemas.token, where: [hash: ^Token.hash(token)])
   end
 
   defp create_account(config, data \\ []) do

@@ -13,13 +13,11 @@ defmodule VBT.Accounts.Token do
   """
 
   import Ecto.Query
-  alias Ecto.Multi
 
   @type encoded :: String.t()
-  @type raw :: %{id: binary, data: data}
   @type max_age :: pos_integer | :infinity
-  @type data :: any
   @type operation_result :: {:ok, any} | {:error, any}
+  @type account_id :: any
 
   # ------------------------------------------------------------------------
   # API
@@ -28,40 +26,36 @@ defmodule VBT.Accounts.Token do
   @doc """
   Creates a new token.
 
-  The function returns encoded and signed token which can be safely sent to remote client.
-  When a client sends the token back, it can be decoded and verified with `decode/3`.
+  The function returns a token which can be safely sent to remote client. When a client sends the
+  token back, it can be verified and used with `use/3`.
 
-  This function always succeeds. If the account is `nil`, the token will still be generated,
-  although it won't be stored in the database, and thus it can't be actually used. This approach
-  is chosen to prevent user enumeration attack.
+  The token will be valid for the `max_age` seconds.
+
+  This function always succeeds. If the account is `nil`, the token will still be generated. This
+  approach is chosen to prevent user enumeration attack.
   """
-  @spec create!(Ecto.Schema.t() | nil, data, max_age, VBT.Accounts.config()) :: encoded
-  def create!(account, data, max_age, config) do
-    token = %{id: Ecto.UUID.generate(), data: data}
-    store!(token.id, account, max_age, config)
-    Phoenix.Token.sign(config.secret_key_base, salt(account), token)
-  end
+  @spec create!(Ecto.Schema.t() | nil, String.t(), max_age, VBT.Accounts.config()) :: encoded
+  def create!(account, type, max_age, config) do
+    token = Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
 
-  @doc """
-  Decodes the encoded token.
+    attributes = %{
+      # store token hash to db to prevent tokens from being used if the db is compromised
+      hash: hash(token),
+      type: type,
+      expires_at:
+        DateTime.utc_now()
+        |> DateTime.add(max_age, :second)
+        |> DateTime.truncate(:second)
+    }
 
-  Note that this function requires a valid existing account. It is the responsibility of the
-  client to obtain the account.
+    schema =
+      if is_nil(account),
+        do: struct!(config.schemas.token, attributes),
+        else: Ecto.build_assoc(account, :tokens, attributes)
 
-  This function decodes the given encoded token and verifies that it hasn't been tampered with.
-  Other validations (e.g. checking if the token is expired, or if it has been used) are
-  performed with `use/1`.
-  """
-  @spec decode(encoded, Ecto.Schema.t(), VBT.Accounts.config()) :: {:ok, raw} | {:error, :invalid}
-  def decode(signed_token, account, config) do
-    Phoenix.Token.verify(
-      config.secret_key_base,
-      salt(account),
-      signed_token,
-      # Not verifying max_age here, since token validity will be checked by examining the
-      # expires_at value in the database table.
-      max_age: :infinity
-    )
+    config.repo.insert!(schema)
+
+    token
   end
 
   @doc """
@@ -70,68 +64,76 @@ defmodule VBT.Accounts.Token do
   This function will mark the token as used, and perform the desired operation. This is done
   atomically, inside a transaction.
 
+  The operation function will receive the account id of the corresponding user.
+
   If the token is not valid, the function will return an error. In this case, the token will
   not be marked as used. The token is valid if the following conditions are satisfied:
 
   - it hasn't expired
   - it hasn't been used
-  - it corresponds to the correct account
+  - it corresponds to an existing account
   """
-  @spec use(raw, Ecto.Schema.t(), (() -> result), VBT.Accounts.config()) ::
+  @spec use(encoded, String.t(), (account_id -> result), VBT.Accounts.config()) ::
           result | {:error, :invalid}
         when result: operation_result
-  def use(token, account, operation, config) do
-    Multi.new()
-    |> Multi.run(:mark_used, fn repo, _context -> mark_used(repo, token, account, config) end)
-    |> Multi.run(:operation, fn _repo, _context -> operation.() end)
-    |> config.repo.transaction()
-    |> case do
-      {:ok, %{operation: result}} -> {:ok, result}
-      {:error, _, error, _} -> {:error, error}
-    end
+  def use(token, expected_type, operation, config) do
+    config.repo.transaction(fn repo ->
+      with {:ok, account_id} <- mark_used(repo, token, expected_type, config),
+           {:ok, result} <- operation.(account_id) do
+        result
+      else
+        {:error, reason} -> repo.rollback(reason)
+      end
+    end)
+  end
+
+  @doc """
+  Returns the account corresponding to the given token.
+
+  The account is returned only if:
+
+    - the token exists in the database
+    - the token has not been used
+    - the token has not expired
+    - the token type is `expected_type`
+    - the token corresponds to an existing account
+
+  If any of the conditions above is not met, this function will return `nil`.
+  """
+  @spec get_account(encoded, String.t(), VBT.Accounts.config()) :: Ecto.Schema.t() | nil
+  def get_account(token, expected_type, config) do
+    valid_token_query(token, expected_type, config)
+    |> select([account: account], account)
+    |> config.repo.one()
   end
 
   # ------------------------------------------------------------------------
   # Private
   # ------------------------------------------------------------------------
 
-  defp store!(_id, nil, _max_age, _config), do: :ok
+  @doc false
+  @spec hash(String.t()) :: binary
+  def hash(token), do: :crypto.hash(:sha256, token)
 
-  defp store!(id, account, max_age, config) do
-    expires_at =
-      DateTime.utc_now()
-      |> DateTime.add(max_age, :second)
-      |> DateTime.truncate(:second)
-
-    account
-    |> Ecto.build_assoc(:tokens, id: id, expires_at: expires_at)
-    |> config.repo.insert!()
-
-    :ok
-  end
-
-  defp salt(nil),
-    do: Base.url_encode64(:crypto.hash(:sha256, ""), padding: false)
-
-  defp salt(account),
-    do: Base.url_encode64(:crypto.hash(:sha256, to_string(account.id)), padding: false)
-
-  defp mark_used(repo, token, account, config) do
-    now = DateTime.utc_now()
-
+  defp mark_used(repo, token, expected_type, config) do
     case repo.update_all(
-           from(
-             token in config.schemas.token,
-             where: token.id == ^token.id,
-             where: field(token, ^account_id_field_name(config)) == ^account.id,
-             where: is_nil(token.used_at),
-             where: token.expires_at >= ^now
-           ),
-           set: [used_at: now]
+           select(valid_token_query(token, expected_type, config), as(:account).id),
+           set: [used_at: DateTime.utc_now()]
          ) do
-      {1, _} -> {:ok, nil}
+      {1, [account_id]} -> {:ok, account_id}
       _ -> {:error, :invalid}
     end
+  end
+
+  defp valid_token_query(token, expected_type, config) do
+    from token in config.schemas.token,
+      as: :token,
+      where: [hash: ^hash(token), type: ^expected_type],
+      where: is_nil(token.used_at),
+      where: token.expires_at >= ^DateTime.utc_now(),
+      inner_join: account in ^config.schemas.account,
+      on: account.id == field(token, ^account_id_field_name(config)),
+      as: :account
   end
 
   defp account_id_field_name(config) do
@@ -180,6 +182,7 @@ defmodule VBT.Accounts.Token do
             retention: pos_integer,
             config: VBT.Accounts.config(),
             telemetry_id: any,
+            resolve_pid: (() -> pid),
             mode: :auto | :manual
           ]
 
@@ -188,14 +191,19 @@ defmodule VBT.Accounts.Token do
       config = Keyword.fetch!(opts, :config)
       retention = Keyword.get(opts, :retention, 7 * :timer.hours(24))
       now_fun = Keyword.get(opts, :now_fun, &DateTime.utc_now/0)
+      resolve_pid = Keyword.get(opts, :resolve_pid)
 
       [id: __MODULE__, every: :timer.minutes(10), timeout: :timer.minutes(1)]
       |> Keyword.merge(Keyword.take(opts, ~w/id name every timeout telemetry_id mode/a))
-      |> Keyword.merge(on_overlap: :ignore, run: fn -> cleanup(config, now_fun, retention) end)
+      |> Keyword.merge(
+        on_overlap: :ignore,
+        run: fn -> cleanup(config, now_fun, retention, resolve_pid) end
+      )
       |> Periodic.child_spec()
     end
 
-    defp cleanup(config, now_fun, retention) do
+    defp cleanup(config, now_fun, retention, resolve_pid) do
+      unless is_nil(resolve_pid), do: config.repo.put_dynamic_repo(resolve_pid.())
       date = DateTime.add(now_fun.(), -retention, :millisecond)
 
       config.repo.delete_all(

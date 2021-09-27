@@ -65,7 +65,7 @@ defmodule VBT.Graphql.Case do
       |> add_headers(opts)
       |> Phoenix.ConnTest.dispatch(endpoint(opts), :post, api_path(opts), query_body)
       |> Phoenix.ConnTest.json_response(200)
-      |> normalize_keys()
+      |> VBT.TestHelper.normalize_keys()
 
     if Map.has_key?(response, :errors),
       do: {:error, response},
@@ -128,14 +128,6 @@ defmodule VBT.Graphql.Case do
 
   defp add_headers(conn, opts), do: Enum.reduce(headers(opts), conn, &add_header(&2, &1))
   defp add_header(conn, {key, value}), do: Plug.Conn.put_req_header(conn, key, value)
-
-  defp normalize_keys(%{} = map),
-    do: Enum.into(map, %{}, fn {key, value} -> {normalize_key(key), normalize_keys(value)} end)
-
-  defp normalize_keys(list) when is_list(list), do: Enum.map(list, &normalize_keys/1)
-  defp normalize_keys(other), do: other
-
-  defp normalize_key(key), do: key |> Macro.underscore() |> String.to_atom()
 
   using opts do
     quote bind_quoted: [opts: opts, module: unquote(__MODULE__)] do

@@ -1,0 +1,34 @@
+version: '3.4'
+services:
+  web:
+    image: "<%= app %>:latest"
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    volumes:
+     - .:/opt/app
+     - build_cache:/opt/cache
+     - $SSH_AUTH_SOCK:${SSH_AUTH_SOCK}
+    env_file: .env.development
+    environment:
+      - LOCAL_USER_ID=${LOCAL_USER_ID}
+      - SSH_AUTH_SOCK=${SSH_AUTH_SOCK}
+    tty: true
+    stdin_open: true
+    command: '/bin/bash -c "while true; do sleep 10; done;"'
+    ulimits:
+      nofile: 1024
+      nproc: 63090
+  db:
+    image: "postgres:<%= Mix.Vbt.tool_versions().postgres.major %>.<%= Mix.Vbt.tool_versions().postgres.minor %>-alpine"
+    volumes:
+        - db:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+volumes:
+  db: {}
+  build_cache: {}

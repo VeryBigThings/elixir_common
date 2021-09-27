@@ -18,7 +18,7 @@ defmodule VBT.FixedJob do
             when: %{hour: 0, minute: 0},
 
             # prevents periodic job from running automatically in test mode
-            mode: unquote(if Mix.env() == :test, do: :manual, else: :automatic)
+            mode: unquote(if Mix.env() == :test, do: :manual, else: :auto)
           )
         end
 
@@ -178,6 +178,7 @@ defmodule VBT.FixedJob do
   |> Enum.each(fn {name, index} -> defp day_name(unquote(index)), do: unquote(name) end)
 
   @doc false
+  # credo:disable-for-next-line Credo.Check.Readability.Specs
   def init_time_provider do
     :ets.new(
       __MODULE__.TimeProvider,

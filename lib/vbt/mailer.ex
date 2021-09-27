@@ -27,7 +27,7 @@ defmodule VBT.Mailer do
 
   Make sure to disable queues in `config/test.exs`:
 
-      config :my_project, Oban, crontab: false, queues: false, prune: :disabled
+      config :my_project, Oban, crontab: false, queues: false, plugins: false
 
   Next, you need to start the oban process tree in your application:
 
@@ -75,9 +75,13 @@ defmodule VBT.Mailer do
         def config(), do: %{api_key: System.fetch_env!("SENDGRID_API_KEY")}
       end
 
-  Mailer is a wrapper around `Bamboo`, so it can use any conforming adapter. The adapter will only
+  Mailer is a wrapper around Bamboo, so it can use any conforming adapter. The adapter will only
   be used in `:prod`. Mailer always uses `Bamboo.LocalAdapter` in `:dev`, and `Bamboo.TestAdapter`
   in `:test`.
+
+  If you prefer to test the real adapter in development mode, you can pass the
+  `dev_adapter: Bamboo.SendGridAdapter` option (or any other real adapter you're using). However,
+  it's advised to instead test the real mailer by running the `:prod`-compiled version locally.
 
   ## Transactions
 
@@ -137,7 +141,14 @@ defmodule VBT.Mailer do
           mail = assert_delivered_email(to: [{_, ^email}])
           assert mail.text_body =~ reset_link
         end
+
+  ## Dynamic repos
+
+  If you need to run multiple instances of mailer, pass the `:name` option to Oban instance. Then
+  you need to pass the same name as an option to `enqueue/6` and `drain_queue/0`.
   """
+
+  alias Bamboo.{Attachment, Email}
 
   @type body ::
           String.t()
@@ -148,6 +159,18 @@ defmodule VBT.Mailer do
               optional(atom) => any
             }
 
+  @type opts :: [
+          attachments: [Attachment.t()],
+          cc: [address_list()],
+          bcc: [address_list()],
+          headers: %{String.t() => String.t()},
+          name: GenServer.server()
+        ]
+
+  # using our own versions of bamboo types due to an error in bamboo spec
+  @type address :: String.t() | {String.t(), String.t()}
+  @type address_list :: nil | address | [address] | any
+
   @callback config :: map
 
   # ------------------------------------------------------------------------
@@ -155,42 +178,69 @@ defmodule VBT.Mailer do
   # ------------------------------------------------------------------------
 
   @doc "Composes the email and sends it to the target address."
-  @spec send!(module, Bamboo.Email.address(), Bamboo.Email.address(), String.t(), body) :: :ok
-  def send!(mailer, from, to, subject, body) do
+  @spec send!(module, address_list(), address_list(), String.t(), body, opts) :: :ok
+  def send!(mailer, from, to, subject, body, opts \\ []) do
+    opts = Keyword.update(opts, :attachments, [], &normalize_attachments/1)
     [adapter] = Keyword.fetch!(mailer.__info__(:attributes), __MODULE__)
     config = mailer.config()
 
     email =
       [from: from, to: to, subject: subject]
-      |> Bamboo.Email.new_email()
+      |> Keyword.merge(Keyword.take(opts, ~w/attachments cc bcc headers/a))
+      |> Email.new_email()
       |> set_body(body, mailer)
 
-    Bamboo.Mailer.deliver_now(adapter, email, config, [])
+    Bamboo.Mailer.deliver_now!(adapter, email, config, [])
 
     :ok
   end
 
   @doc "Enqueues the mail for sending."
-  @spec enqueue(module, Bamboo.Email.address(), Bamboo.Email.address(), String.t(), body) ::
+  @spec enqueue(module, address(), address(), String.t(), body, opts :: opts) ::
           {:ok, Oban.Job.t()} | {:error, Ecto.Changeset.t()}
-  def enqueue(mailer, from, to, subject, body) do
-    %{from: from, to: to, subject: subject, body: body}
-    |> encode_for_queue()
-    |> mailer.new()
-    |> Oban.insert()
+  def enqueue(mailer, from, to, subject, body, opts \\ []) do
+    {name, opts} = Keyword.pop(opts, :name, Oban)
+
+    # Technically it would be enough to do this normalization in `send!`. However, we're also
+    # doing it here to raise early if there are some error in input opts.
+    opts = Keyword.update(opts, :attachments, [], &normalize_attachments/1)
+
+    changeset =
+      %{from: from, to: to, subject: subject, body: body, opts: opts}
+      |> encode_for_queue()
+      |> mailer.new()
+
+    Oban.insert(name, changeset)
   end
 
   # ------------------------------------------------------------------------
   # Private
   # ------------------------------------------------------------------------
 
+  defp normalize_attachments(attachments),
+    do: Enum.map(attachments, &normalize_attachment/1)
+
+  defp normalize_attachment(%Attachment{data: nil} = attachment) do
+    if is_nil(attachment.path), do: raise("missing file path or attachment data")
+
+    %Attachment{
+      data: File.read!(attachment.path),
+      filename: attachment.filename || Path.basename(attachment.path)
+    }
+  end
+
+  defp normalize_attachment(attachment) do
+    if is_nil(attachment.filename), do: raise("missing filename")
+    attachment
+  end
+
   defp set_body(email, body, _mailer) when is_binary(body),
-    do: Bamboo.Email.text_body(email, body)
+    do: Email.text_body(email, body)
 
   defp set_body(email, %{text: text_body, html: html_body}, _mailer) do
     email
-    |> Bamboo.Email.text_body(text_body)
-    |> Bamboo.Email.html_body(html_body)
+    |> Email.text_body(text_body)
+    |> Email.html_body(html_body)
   end
 
   defp set_body(email, %{layout: layout, template: template} = body, mailer) do
@@ -203,7 +253,7 @@ defmodule VBT.Mailer do
     # Before data is sent to Oban queue, it is encoded using `term_to_binary` and `Base.encode64`.
     # This allows us to easily store tuples (needed for senders and recepients), and atoms into
     # the database, and get this data preserved after deserialization.
-    %{"args" => args |> :erlang.term_to_binary() |> Base.encode64(padding: false)}
+    %{"encoded" => args |> :erlang.term_to_binary() |> Base.encode64(padding: false)}
   end
 
   # ------------------------------------------------------------------------
@@ -222,16 +272,16 @@ defmodule VBT.Mailer do
   end
 
   defp bamboo_fragment(opts) do
-    quote do
+    quote bind_quoted: [module: __MODULE__, opts: opts] do
       adapter =
         case Mix.env() do
-          :dev -> Bamboo.LocalAdapter
+          :dev -> Keyword.get(opts, :dev_adapter, Bamboo.LocalAdapter)
           :test -> Bamboo.TestAdapter
-          :prod -> Keyword.fetch!(unquote(opts), :adapter)
+          :prod -> Keyword.fetch!(opts, :adapter)
         end
 
-      Module.register_attribute(__MODULE__, unquote(__MODULE__), persist: true)
-      Module.put_attribute(__MODULE__, unquote(__MODULE__), adapter)
+      Module.register_attribute(__MODULE__, module, persist: true)
+      Module.put_attribute(__MODULE__, module, adapter)
     end
   end
 
@@ -256,25 +306,35 @@ defmodule VBT.Mailer do
 
         @impl Oban.Worker
         # credo:disable-for-next-line Credo.Check.Readability.Specs
-        def perform(%{"args" => args}, _job) do
-          args = args |> Base.decode64!(padding: false) |> :erlang.binary_to_term()
-          VBT.Mailer.send!(__MODULE__, args.from, args.to, args.subject, args.body)
+        def perform(job) do
+          args =
+            job.args
+            |> Map.fetch!("encoded")
+            |> Base.decode64!(padding: false)
+            |> :erlang.binary_to_term()
+
+          VBT.Mailer.send!(__MODULE__, args.from, args.to, args.subject, args.body, args.opts)
         end
 
         @impl Oban.Worker
         # credo:disable-for-next-line Credo.Check.Readability.Specs
-        def backoff(attempt) do
+        def backoff(job) do
           # These delays, together with the default number of attempts (30) will cause
           # the queue to retry sending the mail for at most 24 hours.
           delays = {1, 2, 3, 4, 10, 20, 20, 60}
-          elem(delays, min(attempt - 1, tuple_size(delays) - 1)) * 60
+          elem(delays, min(job.attempt - 1, tuple_size(delays) - 1)) * 60
         end
 
         # Add a helper `drain_queue` function to simplify testing.
         if Mix.env() == :test do
-          # credo:disable-for-next-line Credo.Check.Readability.Specs
-          def drain_queue,
-            do: Oban.drain_queue(unquote(Keyword.fetch!(oban_opts, :queue)))
+          # Using any in the spec, since the result type varies depending on the Oban version.
+          @spec drain_queue(name: GenServer.server()) :: any
+          def drain_queue(opts \\ []) do
+            Oban.drain_queue(
+              Keyword.get(opts, :name, Oban),
+              unquote(queue: Keyword.fetch!(oban_opts, :queue))
+            )
+          end
         end
 
         defoverridable Oban.Worker

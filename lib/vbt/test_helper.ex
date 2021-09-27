@@ -8,6 +8,9 @@ defmodule VBT.TestHelper do
   @doc """
   Asserts that an e-mail has been delivered via Bamboo.
 
+  Note that in Bamboo 1.7+ there's a native support for this via
+  `Bamboo.Test.assert_email_delivered_with/1`.
+
   ## Examples
 
       # pattern matching desired mail parameters
@@ -73,6 +76,20 @@ defmodule VBT.TestHelper do
   end
 
   @doc """
+  Asserts that an e-mail has not been delivered via Bamboo.
+
+  See `assert_delivered_email/2` for details.
+  """
+  defmacro refute_delivered_email(mail_params \\ [], opts \\ []) do
+    quote do
+      refute_receive(
+        {:delivered_email, %Bamboo.Email{unquote_splicing(mail_params)}},
+        Keyword.get(unquote(opts), :timeout, 100)
+      )
+    end
+  end
+
+  @doc """
   Returns a unique positive integer.
 
   The function is globally monotonically strictly increasing. A returned value is guaranteed to
@@ -121,6 +138,50 @@ defmodule VBT.TestHelper do
   def eventually(fun, opts \\ []),
     do: eventually(fun, Keyword.get(opts, :attempts, 10), Keyword.get(opts, :delay, 100))
 
+  @doc """
+  Converts map string keys to underscore atoms.
+
+  Example:
+
+      iex> VBT.TestHelper.normalize_keys(%{"fooBar" => 1})
+      %{foo_bar: 1}
+
+  Notes:
+
+    - The function can handle deep structure of nested lists and maps.
+    - Atom keys are preserved. For example `:FooBar` will not be underscored.
+    - Tuples and structs are also preserved.
+  """
+  @spec normalize_keys(any) :: any
+  def normalize_keys(%{} = map) when not is_struct(map),
+    do: Enum.into(map, %{}, fn {key, value} -> {normalize_key(key), normalize_keys(value)} end)
+
+  def normalize_keys(list) when is_list(list), do: Enum.map(list, &normalize_keys/1)
+  def normalize_keys(other), do: other
+
+  @doc """
+  Converts map atom keys to camelized strings.
+
+  Example:
+
+      iex> VBT.TestHelper.camelize_keys(%{foo_bar: 1})
+      %{"fooBar" => 1}
+
+  Notes:
+
+    - The function can handle deep structure of nested lists and maps.
+    - Structs are converted into plain maps and camelized.
+    - String keys are preserved. For example `"foo_bar"` will not be camelized.
+  """
+  @spec camelize_keys(any) :: any
+  def camelize_keys(struct) when is_struct(struct), do: camelize_keys(Map.from_struct(struct))
+
+  def camelize_keys(map) when is_map(map),
+    do: Enum.into(map, %{}, fn {key, value} -> {camelize_key(key), camelize_keys(value)} end)
+
+  def camelize_keys(list) when is_list(list), do: Enum.map(list, &camelize_keys/1)
+  def camelize_keys(other), do: other
+
   # ------------------------------------------------------------------------
   # Private
   # ------------------------------------------------------------------------
@@ -133,4 +194,14 @@ defmodule VBT.TestHelper do
       Process.sleep(delay)
       eventually(fun, attempts - 1, delay)
   end
+
+  defp normalize_key(key) when is_binary(key), do: key |> Macro.underscore() |> String.to_atom()
+  defp normalize_key(key), do: key
+
+  defp camelize_key(key) when is_atom(key) do
+    <<first::utf8, rest::binary>> = key |> Atom.to_string() |> Macro.camelize()
+    String.downcase(<<first::utf8>>) <> rest
+  end
+
+  defp camelize_key(key), do: key
 end

@@ -1,0 +1,68 @@
+name: "Test, build & deploy - develop env"
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:11.7
+        env:
+          POSTGRES_USER: "postgres"
+          POSTGRES_PASSWORD: "postgres"
+        ports:
+        - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      CACHE_VERSION: v1
+      RELEASE_LEVEL: CI
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: '<%= "#{Mix.Vbt.tool_versions().erlang.major}.#{Mix.Vbt.tool_versions().erlang.minor}" %>'
+          elixir-version: '<%= "#{Mix.Vbt.tool_versions().elixir.major}.#{Mix.Vbt.tool_versions().elixir.minor}.#{Mix.Vbt.tool_versions().elixir.patch}" %>'
+
+      - name: Restore cached deps
+        uses: actions/cache@v2
+        with:
+          path: |
+            deps
+             _build
+          key: deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+          restore-keys: |
+            deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-
+            deps-${{ env.CACHE_VERSION }}-
+
+      - name: Run CI checks
+        uses: ./.github/workflows/actions/test
+        with:
+          ssh-private-key: ${{ secrets.VBT_DEPLOY_SSH_PRIVATE_KEY }}
+
+  build:
+    needs: test
+    name: Build, push, and deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Deploy
+      uses: ./.github/workflows/actions/deploy
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        cluster-name: <%= organization %>-cluster
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        keybase-paperkey: ${{ secrets.KEYBASE_PAPERKEY }}
+        keybase-username: ${{ secrets.KEYBASE_USERNAME }}
+        release-level: develop
+        ssh-private-key: ${{ secrets.VBT_DEPLOY_SSH_PRIVATE_KEY }}

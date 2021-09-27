@@ -1,5 +1,8 @@
 use Mix.Config
 
+config :phoenix, :json_library, Jason
+config :ex_aws, json_codec: Jason
+
 if Mix.env() == :test do
   config :logger, level: :warn
   config :phoenix, :json_library, Jason
@@ -8,7 +11,7 @@ if Mix.env() == :test do
   config :vbt, VBT.GraphqlServer,
     server: false,
     secret_key_base: String.duplicate("0", 64),
-    pubsub: [name: VBT.PubSub, adapter: Phoenix.PubSub.PG2]
+    pubsub_server: VBT.GraphqlServer.PubSub
 
   config :vbt, ecto_repos: [VBT.TestRepo]
 

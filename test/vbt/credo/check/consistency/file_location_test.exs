@@ -12,7 +12,7 @@ defmodule VBT.Credo.Check.Consistency.FileLocationTest do
 
   property "reports errors for invalid file" do
     check all file <- invalid_file() do
-      assert {:error, top_module, expected_file} = verify(file)
+      assert {:error, _top_module, _expected_file} = verify(file)
     end
   end
 
