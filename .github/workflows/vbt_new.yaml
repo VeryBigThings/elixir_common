@@ -62,7 +62,7 @@ jobs:
           cd vbt_new
           MIX_ENV=test mix compile --warnings-as-errors
           MIX_ENV=dev mix compile --warnings-as-errors
-          MIX_ENV=prod mix compile --warnings-as-error
+          MIX_ENV=prod mix compile --warnings-as-errors
 
       - name: Check code format
         run: cd vbt_new && mix format --check-formatted
