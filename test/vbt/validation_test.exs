@@ -68,6 +68,13 @@ defmodule VBT.ValidationTest do
       assert [{"can't be blank", _}] = field_errors(changeset, :bar)
     end
 
+    test "supports trim" do
+      assert Validation.normalize(
+               %{"foo" => "   value   "},
+               foo: {:string, trim: true}
+             ) == {:ok, %{foo: "value"}}
+    end
+
     test "supports custom validation" do
       assert {:error, changeset} =
                Validation.normalize(
