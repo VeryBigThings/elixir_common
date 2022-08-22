@@ -171,6 +171,7 @@ defmodule VBT.Validation do
     specs = Enum.map(specs, &field_spec/1)
     types = Enum.into(specs, %{}, &{&1.name, ecto_type(&1.type)})
     required = specs |> Enum.filter(& &1.required) |> Enum.map(& &1.name)
+    trimable = specs |> Enum.filter(& &1.trim) |> Enum.map(& &1.name)
 
     {assocs, fields} = Enum.split_with(specs, &assoc?(&1.type))
 
@@ -178,6 +179,7 @@ defmodule VBT.Validation do
     |> Changeset.cast(data, Enum.map(fields, & &1.name))
     |> cast_assocs(data, assocs)
     |> Changeset.validate_required(required)
+    |> trim_params(trimable)
   end
 
   defp field_spec({name, {:enum, _values} = type}), do: field_spec({name, {type, []}})
@@ -185,7 +187,7 @@ defmodule VBT.Validation do
   defp field_spec({name, {:map, _type} = type}), do: field_spec({name, {type, []}})
 
   defp field_spec({name, {type, opts}}) do
-    %{required: false}
+    %{required: false, trim: false}
     |> Map.merge(Map.new(opts))
     |> Map.merge(%{type: type_spec(type), name: name})
   end
@@ -300,6 +302,12 @@ defmodule VBT.Validation do
         end)
 
       {error, Keyword.get(opts, :path, [])}
+    end)
+  end
+
+  defp trim_params(changeset, keys) do
+    Enum.reduce(keys, changeset, fn key, changeset ->
+      Changeset.update_change(changeset, key, &String.trim/1)
     end)
   end
 end
