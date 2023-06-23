@@ -33,7 +33,7 @@ defmodule VBT.MixProject do
       {:absinthe_relay, "~> 1.5"},
       {:bamboo, "~> 2.2"},
       {:bamboo_phoenix, "~> 1.0.0"},
-      {:bcrypt_elixir, "~> 2.3"},
+      {:bcrypt_elixir, "~> 3.0"},
       {:credo, "~> 1.5", runtime: false},
       {:dialyxir, "~> 1.1", runtime: false},
       {:ecto_enum, "~> 1.4"},
