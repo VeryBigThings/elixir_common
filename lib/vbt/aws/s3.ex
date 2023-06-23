@@ -6,13 +6,21 @@ defmodule VBT.Aws.S3 do
   client module. Consequently, you can use `VBT.Aws.Test` to test this module.
   """
 
-  @type config :: %{
+  @type config :: [
           scheme: String.t(),
           host: String.t(),
           region: String.t(),
           access_key_id: String.t(),
           secret_access_key: String.t()
-        }
+  ]
+
+  @type s3_config :: %{
+    scheme: String.t(),
+    host: String.t(),
+    region: String.t(),
+    access_key_id: String.t(),
+    secret_access_key: String.t()
+  }
 
   @type upload_source :: binary | {:file, Path.t()} | Enumerable.t()
 
@@ -42,12 +50,12 @@ defmodule VBT.Aws.S3 do
   end
 
   @doc "Returns the presigned download url for the given object."
-  @spec download_url(config, String.t(), Hostable.t()) :: String.t()
+  @spec download_url(s3_config, String.t(), Hostable.t()) :: String.t()
   def download_url(config, bucket, object),
     do: presigned_url(config, :get, bucket, Hostable.path(object))
 
   @doc "Returns the presigned upload url for the given object."
-  @spec upload_url(config, String.t(), Hostable.t()) :: String.t()
+  @spec upload_url(s3_config, String.t(), Hostable.t()) :: String.t()
   def upload_url(config, bucket, object),
     do: presigned_url(config, :put, bucket, Hostable.path(object))
 
