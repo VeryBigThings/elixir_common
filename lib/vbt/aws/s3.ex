@@ -12,15 +12,15 @@ defmodule VBT.Aws.S3 do
           region: String.t(),
           access_key_id: String.t(),
           secret_access_key: String.t()
-  ]
+        ]
 
   @type s3_config :: %{
-    scheme: String.t(),
-    host: String.t(),
-    region: String.t(),
-    access_key_id: String.t(),
-    secret_access_key: String.t()
-  }
+          scheme: String.t(),
+          host: String.t(),
+          region: String.t(),
+          access_key_id: String.t(),
+          secret_access_key: String.t()
+        }
 
   @type upload_source :: binary | {:file, Path.t()} | Enumerable.t()
 

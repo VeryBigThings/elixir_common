@@ -12,7 +12,7 @@ defmodule VBT.MixProject do
       preferred_cli_env: preferred_cli_env(),
       dialyzer: dialyzer(),
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix] ++ Mix.compilers(),
+      compilers: Mix.compilers(),
       source_url: "https://github.com/VeryBigThings/elixir_common_private/",
       docs: docs()
     ]
@@ -44,9 +44,9 @@ defmodule VBT.MixProject do
       {:mox, "~> 1.0", only: :test},
       {:oban, "~> 2.8"},
       {:parent, "~> 0.12.0"},
-      {:phoenix_html, "~> 2.13"},
-      {:phoenix_live_view, "~> 0.14", optional: true},
-      {:phoenix, "~> 1.5.12"},
+      {:phoenix_html, "~> 3.3"},
+      {:phoenix_live_view, "~> 0.20.1", optional: true},
+      {:phoenix, "~> 1.7.8"},
       {:plug_cowboy, "~> 2.5"},
       {:provider, github: "VeryBigThings/provider"},
       {:sentry, "~> 8.0"},
