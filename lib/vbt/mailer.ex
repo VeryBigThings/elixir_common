@@ -294,7 +294,7 @@ defmodule VBT.Mailer do
           |> Path.relative_to_cwd()
           |> Path.join(unquote(templates_path))
 
-        use Phoenix.View, root: root, namespace: __MODULE__
+        use Phoenix.Template, root: root, namespace: __MODULE__
       end
     end
   end

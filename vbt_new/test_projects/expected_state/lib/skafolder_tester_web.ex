@@ -58,7 +58,7 @@ defmodule SkafolderTesterWeb do
 
   def view do
     quote do
-      use Phoenix.View,
+      use Phoenix.Template,
         root: "lib/skafolder_tester_web/templates",
         namespace: SkafolderTesterWeb
 
@@ -93,7 +93,7 @@ defmodule SkafolderTesterWeb do
       use Phoenix.HTML
 
       # Import basic rendering functionality (render, render_layout, etc)
-      import Phoenix.View
+      import Phoenix.Template
 
       import SkafolderTesterWeb.ErrorHelpers
       import SkafolderTesterWeb.Gettext
