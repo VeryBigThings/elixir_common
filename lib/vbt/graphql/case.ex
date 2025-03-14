@@ -130,7 +130,7 @@ defmodule VBT.Graphql.Case do
   defp add_header(conn, {key, value}), do: Plug.Conn.put_req_header(conn, key, value)
 
   using opts do
-    quote bind_quoted: [opts: opts, module: unquote(__MODULE__)] do
+    quote bind_quoted: [opts: opts, module: __MODULE__] do
       import VBT.Graphql.Case, except: [set_config: 1]
 
       setup do

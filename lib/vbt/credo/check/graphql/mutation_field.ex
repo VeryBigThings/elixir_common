@@ -21,7 +21,7 @@ defmodule VBT.Credo.Check.Graphql.MutationField do
       """
     ]
 
-  alias alias Credo.Code
+  alias Credo.Code
 
   def run(source_file, params \\ []) do
     {_, state} =
