@@ -44,12 +44,12 @@ defmodule VBT.MixProject do
       {:mox, "~> 1.2", only: :test},
       {:oban, "~> 2.19"},
       {:parent, "~> 0.12.1"},
-      {:phoenix_html, "~> 4.2"},
-      {:phoenix_live_view, "~> 1.0", optional: true},
-      {:phoenix, "~> 1.7"},
+      {:phoenix_html, "~> 2.13"},
+      {:phoenix_live_view, "~> 0.14", optional: true},
+      {:phoenix, "~> 1.5.12"},
       {:plug_cowboy, "~> 2.7"},
       {:provider, github: "VeryBigThings/provider"},
-      {:sentry, "~> 10.8"},
+      {:sentry, "~> 8.0"},
       {:stream_data, "~> 1.1.3", only: [:test, :dev]}
     ]
   end

@@ -28,7 +28,7 @@ jobs:
           elixir-version: 1.12.2
 
       - name: Restore cached deps
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: vbt_new/deps
           key: vbt_new_deps-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/mix.lock')) }}
@@ -37,7 +37,7 @@ jobs:
             vbt_new_deps-${{ env.CACHE_VERSION }}-
 
       - name: Restore cached build
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: vbt_new/_build
           key: vbt_new_build-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/mix.lock')) }}
@@ -46,7 +46,7 @@ jobs:
             vbt_new_build-${{ env.CACHE_VERSION }}-
 
       - name: Restore cached tmp
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: vbt_new/tmp
           key: vbt_new_tmp-${{ env.CACHE_VERSION }}-${{ github.ref }}-${{ hashFiles(format('{0}{1}', github.workspace, '/vbt_new/test_projects/expected_state/mix.lock')) }}
