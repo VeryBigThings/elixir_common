@@ -6,7 +6,7 @@ defmodule VBT.Repo do
   import Ecto.Query
 
   @type trans_fun ::
-          (() -> {:ok, any} | {:error, any})
+          (-> {:ok, any} | {:error, any})
           | (module -> {:ok, any} | {:error, any})
 
   @type fetch_opts :: [{:tag, String.t()} | {:error, String.t()} | {atom, any}]
@@ -61,7 +61,7 @@ defmodule VBT.Repo do
   - If the lambda returns any other kind of result, an exception is raised, and the transaction
     is rolled back.
   """
-  @callback transact((() -> result) | (module -> result), Keyword.t()) :: result
+  @callback transact((-> result) | (module -> result), Keyword.t()) :: result
             when result: {:ok, any} | {:error, any}
 
   @doc """

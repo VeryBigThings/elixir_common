@@ -182,7 +182,7 @@ defmodule VBT.Accounts.Token do
             retention: pos_integer,
             config: VBT.Accounts.config(),
             telemetry_id: any,
-            resolve_pid: (() -> pid),
+            resolve_pid: (-> pid),
             mode: :auto | :manual
           ]
 

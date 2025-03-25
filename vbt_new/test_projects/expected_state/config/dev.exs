@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 # Configure your database
 config :skafolder_tester, SkafolderTester.Repo, show_sensitive_data_on_connection_error: true

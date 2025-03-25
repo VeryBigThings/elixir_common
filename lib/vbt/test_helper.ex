@@ -133,7 +133,7 @@ defmodule VBT.TestHelper do
     - `:attempts` - The number of attempts before giving up. The default value is 10.
     - `:delay` - Sleep time in ms between two consecutive attempts. The default value is 100.
   """
-  @spec eventually((() -> res), attempts: pos_integer, delay: non_neg_integer) :: res
+  @spec eventually((-> res), attempts: pos_integer, delay: non_neg_integer) :: res
         when res: var
   def eventually(fun, opts \\ []),
     do: eventually(fun, Keyword.get(opts, :attempts, 10), Keyword.get(opts, :delay, 100))
