@@ -48,7 +48,7 @@ defmodule VBT.MixProject do
       {:phoenix_live_view, "~> 0.14", optional: true},
       {:phoenix, "~> 1.5.12"},
       {:plug_cowboy, "~> 2.7"},
-      {:provider, git: "https://github.com/VeryBigThings/provider"},
+      {:provider, "~> 0.2.1"},
       {:sentry, "~> 8.0"},
       {:stream_data, "~> 1.1.3", only: [:test, :dev]}
     ]
