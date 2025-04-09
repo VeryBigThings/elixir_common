@@ -34,6 +34,7 @@ defmodule VBT.MixProject do
       {:bamboo, "~> 2.4"},
       {:bamboo_phoenix, "~> 1.0.0"},
       {:bcrypt_elixir, "~> 3.2"},
+      {:boundary, "~> 0.8", runtime: false},
       {:credo, "~> 1.7", runtime: false},
       {:dialyxir, "~> 1.4", runtime: false},
       {:ecto_enum, "~> 1.4"},
@@ -48,7 +49,6 @@ defmodule VBT.MixProject do
       {:phoenix_live_view, "~> 0.14", optional: true},
       {:phoenix, "~> 1.5.12"},
       {:plug_cowboy, "~> 2.7"},
-      {:provider, "~> 0.2.1"},
       {:sentry, "~> 8.0"},
       {:stream_data, "~> 1.1.3", only: [:test, :dev]}
     ]
