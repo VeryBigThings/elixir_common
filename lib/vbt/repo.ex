@@ -105,7 +105,7 @@ defmodule VBT.Repo do
       def fetch_one(queryable, opts \\ []), do: VBT.Repo.fetch_one(__MODULE__, queryable, opts)
 
       @impl VBT.Repo
-      def transact(fun, opts \\ []), do: VBT.Repo.transact(__MODULE__, fun, opts)
+      def transact(fun, opts), do: VBT.Repo.transact(__MODULE__, fun, opts)
 
       @impl VBT.Repo
       def delete_one(query), do: VBT.Repo.delete_one(__MODULE__, query)
