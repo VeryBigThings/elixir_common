@@ -167,7 +167,7 @@ defmodule VBT.Repo do
 
   @doc false
   # credo:disable-for-next-line Credo.Check.Readability.Specs
-  def transact(repo, fun, opts \\ []) do
+  def transact(repo, fun, opts) do
     repo.transaction(
       fn repo ->
         Function.info(fun, :arity)
@@ -188,7 +188,7 @@ defmodule VBT.Repo do
   # credo:disable-for-next-line Credo.Check.Readability.Specs
   def delete_one(repo, query) do
     # deleting in transaction so we can rollback if multiple rows are deleted
-    case transact(repo, fn -> unsafe_delete_one(repo, query) end) do
+    case transact(repo, fn -> unsafe_delete_one(repo, query) end, []) do
       {:ok, nil} -> :ok
       {:ok, [record]} -> {:ok, record}
       {:error, _reason} = error -> error
