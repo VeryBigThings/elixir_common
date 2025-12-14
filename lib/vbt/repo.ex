@@ -48,37 +48,37 @@ defmodule VBT.Repo do
   """
   @callback fetch_one(Ecto.Queryable.t(), fetch_opts) :: {:ok, any} | {:error, String.t()}
 
-  @doc """
-  Runs the given function inside a transaction.
+  # @doc """
+  # Runs the given function inside a transaction.
 
-  This function is a wrapper around `Ecto.Repo.transaction`, with the following differences:
+  # This function is a wrapper around `Ecto.Repo.transaction`, with the following differences:
 
-  - It accepts only a lambda of arity 0 or 1 (i.e. it doesn't work with multi).
-  - If the lambda returns `{:ok, result}` the transaction is committed, and `{:ok, result}` is
-    returned.
-  - If the lambda returns `{:error, reason}` the transaction is rolled back, and
-    `{:error, reason}` is returned.
-  - If the lambda returns any other kind of result, an exception is raised, and the transaction
-    is rolled back.
-  """
+  # - It accepts only a lambda of arity 0 or 1 (i.e. it doesn't work with multi).
+  # - If the lambda returns `{:ok, result}` the transaction is committed, and `{:ok, result}` is
+  #   returned.
+  # - If the lambda returns `{:error, reason}` the transaction is rolled back, and
+  #   `{:error, reason}` is returned.
+  # - If the lambda returns any other kind of result, an exception is raised, and the transaction
+  #   is rolled back.
+  # """
 
   # @callback transact((-> result) | (module -> result), Keyword.t()) :: result
   #           when result: {:ok, any} | {:error, any}
 
-  @doc """
-  Deletes a single database row matching the given query.
+  # @doc """
+  # Deletes a single database row matching the given query.
 
-  This function allows you to delete a single database row, without needing to load it from the
-  database first.
+  # This function allows you to delete a single database row, without needing to load it from the
+  # database first.
 
-  The function can optionally return the deleted row if you provide the `:select` clause in the
-  input query. In this case, the function will return `{:ok, selected_term}` on success. If
-  the `:select` clause is not present, the function will return `:ok` on success.
+  # The function can optionally return the deleted row if you provide the `:select` clause in the
+  # input query. In this case, the function will return `{:ok, selected_term}` on success. If
+  # the `:select` clause is not present, the function will return `:ok` on success.
 
-  The function succeeds only if exactly one row is matched by the given query. If there are
-  multiple rows matching the given query, nothing will be deleted, and an error is returned.
-  Likewise, the function returns an error if there are no rows matching the given query.
-  """
+  # The function succeeds only if exactly one row is matched by the given query. If there are
+  # multiple rows matching the given query, nothing will be deleted, and an error is returned.
+  # Likewise, the function returns an error if there are no rows matching the given query.
+  # """
 
   # @callback delete_one(Ecto.Queryable.t()) ::
   #             :ok | {:ok, any} | {:error, :not_found | :multiple_rows}
@@ -164,7 +164,7 @@ defmodule VBT.Repo do
     end
   end
 
-  @doc false
+  # @doc false
   # credo:disable-for-next-line Credo.Check.Readability.Specs
   # def transact(repo, fun, opts) do
   #   repo.transaction(
