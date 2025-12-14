@@ -181,24 +181,24 @@ defmodule VBT.Repo do
   #   )
   # end
 
-  @doc false
+  #  @doc false
   # credo:disable-for-next-line Credo.Check.Readability.Specs
-  def delete_one(repo, query) do
-    # deleting in transaction so we can rollback if multiple rows are deleted
-    case transact(repo, fn -> unsafe_delete_one(repo, query) end, []) do
-      {:ok, nil} -> :ok
-      {:ok, [record]} -> {:ok, record}
-      {:error, _reason} = error -> error
-    end
-  end
+  # def delete_one(repo, query) do
+  #   # deleting in transaction so we can rollback if multiple rows are deleted
+  #   case Ecto.Repo.transact(fn -> unsafe_delete_one(repo, query) end, []) do
+  #     {:ok, nil} -> :ok
+  #     {:ok, [record]} -> {:ok, record}
+  #     {:error, _reason} = error -> error
+  #   end
+  # end
 
-  defp unsafe_delete_one(repo, query) do
-    case repo.delete_all(query) do
-      {1, result} -> {:ok, result}
-      {0, _} -> {:error, :not_found}
-      _ -> {:error, :multiple_rows}
-    end
-  end
+  # defp unsafe_delete_one(repo, query) do
+  #   case repo.delete_all(query) do
+  #     {1, result} -> {:ok, result}
+  #     {0, _} -> {:error, :not_found}
+  #     _ -> {:error, :multiple_rows}
+  #   end
+  # end
 
   defp schema_module?(queryable),
     do: is_atom(queryable) and function_exported?(queryable, :__schema__, 1)

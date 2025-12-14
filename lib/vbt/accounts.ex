@@ -134,8 +134,7 @@ defmodule VBT.Accounts do
   def authenticate(login, password, config) do
     # We're always hashing the input password, even if the account doesn't exist, to prevent a possible
     # enumeration attack (https://www.owasp.org/index.php/Testing_for_User_Enumeration_and_Guessable_User_Account_(OWASP-AT-002)#Description_of_the_Issue).
-    account = get(login, config)
-    if password_ok?(account, password, config), do: {:ok, account}, else: {:error, :invalid}
+    if password_ok?(password, config), do: {:ok, get(login, config)}, else: {:error, :invalid}
   end
 
   @doc """
@@ -146,7 +145,7 @@ defmodule VBT.Accounts do
   @spec change_password(Ecto.Schema.t(), String.t(), String.t(), config) ::
           {:ok, Ecto.Schema.t()} | {:error, :invalid | Ecto.Changeset.t()}
   def change_password(account, current_password, new_password, config) do
-    if password_ok?(account, current_password),
+    if password_ok?(current_password, config),
       do: set_password(account, new_password, config),
       else: {:error, :invalid}
   end
@@ -232,9 +231,6 @@ defmodule VBT.Accounts do
     end
   end
 
-  defp password_ok?(account, password),
-    do: match?({:ok, _}, Bcrypt.check_pass(account, password, hash_key: :password_hash))
-
   defp password_hash(password), do: Bcrypt.hash_pwd_salt(password)
 
   defp to_changeset(data), do: change(data)
@@ -275,10 +271,7 @@ defmodule VBT.Accounts do
 
   defp validate_login(changeset, _field), do: changeset
 
-  defp password_ok?(account, password, config) do
-    match?(
-      {:ok, _},
-      Bcrypt.check_pass(account, password, hash_key: config.password_hash_field)
-    )
+  defp password_ok?(password, config) do
+    Bcrypt.verify_pass(password, config.password_hash_field)
   end
 end
