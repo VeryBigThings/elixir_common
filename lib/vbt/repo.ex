@@ -61,8 +61,9 @@ defmodule VBT.Repo do
   - If the lambda returns any other kind of result, an exception is raised, and the transaction
     is rolled back.
   """
-  @callback transact((-> result) | (module -> result), Keyword.t()) :: result
-            when result: {:ok, any} | {:error, any}
+
+  # @callback transact((-> result) | (module -> result), Keyword.t()) :: result
+  #           when result: {:ok, any} | {:error, any}
 
   @doc """
   Deletes a single database row matching the given query.
