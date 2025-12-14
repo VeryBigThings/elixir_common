@@ -37,6 +37,7 @@ defmodule VBT.MixProject do
       {:boundary, "~> 0.8", runtime: false},
       {:credo, "~> 1.7", runtime: false},
       {:dialyxir, "~> 1.4", runtime: false},
+      {:ecto, "~> 3.13"},
       {:ecto_enum, "~> 1.4"},
       {:ecto_sql, "~> 3.12"},
       {:ex_aws_s3, "~> 2.5"},

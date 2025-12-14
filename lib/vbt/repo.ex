@@ -105,9 +105,6 @@ defmodule VBT.Repo do
       def fetch_one(queryable, opts \\ []), do: VBT.Repo.fetch_one(__MODULE__, queryable, opts)
 
       @impl VBT.Repo
-      def transact(fun, opts), do: VBT.Repo.transact(__MODULE__, fun, opts)
-
-      @impl VBT.Repo
       def delete_one(query), do: VBT.Repo.delete_one(__MODULE__, query)
     end
   end
@@ -167,22 +164,22 @@ defmodule VBT.Repo do
 
   @doc false
   # credo:disable-for-next-line Credo.Check.Readability.Specs
-  def transact(repo, fun, opts) do
-    repo.transaction(
-      fn repo ->
-        Function.info(fun, :arity)
-        |> case do
-          {:arity, 0} -> fun.()
-          {:arity, 1} -> fun.(repo)
-        end
-        |> case do
-          {:ok, result} -> result
-          {:error, reason} -> repo.rollback(reason)
-        end
-      end,
-      opts
-    )
-  end
+  # def transact(repo, fun, opts) do
+  #   repo.transaction(
+  #     fn repo ->
+  #       Function.info(fun, :arity)
+  #       |> case do
+  #         {:arity, 0} -> fun.()
+  #         {:arity, 1} -> fun.(repo)
+  #       end
+  #       |> case do
+  #         {:ok, result} -> result
+  #         {:error, reason} -> repo.rollback(reason)
+  #       end
+  #     end,
+  #     opts
+  #   )
+  # end
 
   @doc false
   # credo:disable-for-next-line Credo.Check.Readability.Specs
