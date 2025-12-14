@@ -78,8 +78,9 @@ defmodule VBT.Repo do
   multiple rows matching the given query, nothing will be deleted, and an error is returned.
   Likewise, the function returns an error if there are no rows matching the given query.
   """
-  @callback delete_one(Ecto.Queryable.t()) ::
-              :ok | {:ok, any} | {:error, :not_found | :multiple_rows}
+
+  # @callback delete_one(Ecto.Queryable.t()) ::
+  #             :ok | {:ok, any} | {:error, :not_found | :multiple_rows}
 
   @doc """
   Wrapper around `use Ecto.Repo`.
@@ -104,8 +105,8 @@ defmodule VBT.Repo do
       @impl VBT.Repo
       def fetch_one(queryable, opts \\ []), do: VBT.Repo.fetch_one(__MODULE__, queryable, opts)
 
-      @impl VBT.Repo
-      def delete_one(query), do: VBT.Repo.delete_one(__MODULE__, query)
+      # @impl VBT.Repo
+      # def delete_one(query), do: VBT.Repo.delete_one(__MODULE__, query)
     end
   end
 
